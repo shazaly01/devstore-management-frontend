@@ -1,0 +1,142 @@
+<!--src\views\items\components\ItemUnitPricesGrid.vue--->
+<template>
+  <div class="space-y-3">
+    <h4 class="text-xs font-bold text-text-secondary">مصفوفة أسعار فئات البيع والخصومات المدرجة</h4>
+
+    <div class="space-y-3 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
+      <div
+        v-for="(priceRow, pIdx) in props.prices"
+        :key="priceRow.price_list_id"
+        class="p-3 bg-surface-ground rounded-xl border border-surface-border space-y-2.5 transition-all hover:border-surface-border/80 shadow-sm"
+      >
+        <!-- ترويسة الفئة السعرية -->
+        <div class="flex justify-between items-center border-b border-surface-border/40 pb-1.5">
+          <span class="text-xs font-black text-primary">
+            {{ priceRow.price_list_name || 'فئة غير معرّفة' }}
+          </span>
+          <span class="text-[10px] text-text-muted font-medium font-mono">
+            العملة الافتراضية: {{ DEFAULT_CURRENCY }}
+          </span>
+        </div>
+
+        <!-- شبكة الحقول الحسابية -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- 1. نسبة الخصم الفئوية -->
+          <div>
+            <label class="block text-[10px] text-text-muted mb-1 text-center font-bold"
+              >الخصم (%)</label
+            >
+            <input
+              :value="priceRow.discount_percentage"
+              @input="
+                (e) => handleDiscountInput(pIdx, e.target.value === '' ? 0 : Number(e.target.value))
+              "
+              type="number"
+              min="0"
+              max="100"
+              step="0.01"
+              class="block w-full px-2 py-1.5 border border-surface-border rounded-lg bg-surface-section text-text-primary text-xs font-mono text-center outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            />
+          </div>
+
+          <!-- 2. السعر النهائي للبيع -->
+          <div>
+            <label class="block text-[10px] text-text-muted mb-1 text-center font-bold"
+              >السعر النهائي</label
+            >
+            <input
+              :value="priceRow.price"
+              @input="
+                (e) => handlePriceInput(pIdx, e.target.value === '' ? 0 : Number(e.target.value))
+              "
+              type="number"
+              step="0.01"
+              min="0"
+              class="block w-full px-2 py-1.5 border border-surface-border rounded-lg bg-surface-section text-text-primary text-xs font-mono text-center outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script setup>
+import { DEFAULT_CURRENCY } from '@/utils/formatters'
+
+const props = defineProps({
+  prices: { type: Array, required: true, default: () => [] },
+  basePrice: { type: Number, required: true, default: 0 },
+})
+
+const emit = defineEmits(['update:prices'])
+
+/**
+ * أتمتة احتساب السعر النهائي للفئة بناءً على قيمة الخصم المدخلة حديثاً بالواجهة
+ */
+const handleDiscountInput = (index, discountValue) => {
+  const currentBasePrice = props.basePrice || 0
+  const calculatedPrice = Number((currentBasePrice * (1 - discountValue / 100)).toFixed(4))
+
+  const updatedPrices = props.prices.map((priceObj, idx) => {
+    if (idx !== index) return priceObj
+    return {
+      ...priceObj,
+      discount_percentage: discountValue,
+      price: calculatedPrice,
+    }
+  })
+
+  emit('update:prices', updatedPrices)
+}
+
+/**
+ * أتمتة احتساب نسبة الخصم المترتبة تلقائياً في حال قام العميل بتغيير السعر النهائي يدوياً
+ */
+const handlePriceInput = (index, priceValue) => {
+  const currentBasePrice = props.basePrice || 0
+
+  let calculatedDiscount = 0
+  if (currentBasePrice > 0) {
+    const difference = currentBasePrice - priceValue
+    calculatedDiscount = Number(((difference / currentBasePrice) * 100).toFixed(2))
+  }
+
+  const updatedPrices = props.prices.map((priceObj, idx) => {
+    if (idx !== index) return priceObj
+    return {
+      ...priceObj,
+      discount_percentage: calculatedDiscount,
+      price: priceValue,
+    }
+  })
+
+  emit('update:prices', updatedPrices)
+}
+</script>
+
+<style scoped>
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 10px;
+}
+:global(.dark) .custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #4b5563;
+}
+
+/* إخفاء أسهم حقول الأرقام الافتراضية لتوحيد مظهر المحاذاة */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+</style>
