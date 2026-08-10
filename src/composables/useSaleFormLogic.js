@@ -33,7 +33,7 @@ export function useSaleFormLogic() {
     bank_id: '',
     customer_id: '',
     invoice_date: new Date().toISOString().substr(0, 10),
-    payment_type: 'cash',
+    payment_type: 'card',
     discount_amount: 0,
     tax_amount: 0,
     customer_name_text: null,
@@ -313,6 +313,22 @@ export function useSaleFormLogic() {
         form.value.treasury_id = authStore.user.treasury_id || ''
         form.value.bank_id = authStore.user.bank_id || ''
         form.value.customer_name_text = null
+      }
+
+      // 1. تأكيد اختيار طريقة الدفع (شبكة / دفع إلكتروني) وتعيين البنك المربوط ببيانات المستخدم
+      form.value.payment_type = 'card'
+      if (authStore.user?.bank_id) {
+        form.value.bank_id = authStore.user.bank_id
+      }
+
+      // 2. البحث عن عميل عام أو عميل مباشر واختياره تلقائياً من قائمة العملاء
+      const defaultCustomer = customerStore.customers?.find((c) => {
+        const name = (c.name || c.display_label || '').trim()
+        return name.includes('عميل عام') || name.includes('عميل مباشر')
+      })
+
+      if (defaultCustomer) {
+        form.value.customer_id = defaultCustomer.id
       }
     }
 

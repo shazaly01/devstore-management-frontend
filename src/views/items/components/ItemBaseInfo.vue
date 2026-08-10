@@ -179,7 +179,7 @@ const itemTypes = [
 const categoryOptions = computed(() => {
   return categoryStore.categories.map((cat) => ({
     id: cat.id,
-    name: cat.name,
+    name: cat.full_path || cat.indent_name || cat.name,
   }))
 })
 

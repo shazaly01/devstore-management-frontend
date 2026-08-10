@@ -1,3 +1,4 @@
+<!--src\views\stock-adjustments\StockAdjustmentForm.vue--->
 <template>
   <div class="space-y-4 text-right font-sans pb-24" dir="rtl">
     <div class="flex justify-between items-center py-1 border-b border-surface-border/60">
@@ -25,7 +26,7 @@
     <AppCard>
       <div class="p-3 space-y-3">
         <div
-          class="w-full text-xs bg-slate-950 p-1.5 rounded-lg border border-primary/50 shadow-[0_0_10px_rgba(30,129,255,0.15)]"
+          class="w-full text-xs bg-[#e05e2b] p-1 rounded-lg shadow-[0_0_15px_rgba(224,94,43,0.25)] border border-[#e05e2b]"
         >
           <SmartSearchGrid
             :data="searchableItems"
@@ -33,9 +34,9 @@
               { key: 'id_display', label: 'رقم الصنف', class: 'text-right' },
               { key: 'name', label: 'اسم الصنف التجاري المعتمد', class: 'text-right font-bold' },
               { key: 'price_display', label: 'السعر الافتراضي', class: 'text-center' },
-              { key: 'stock_display', label: 'الالكمية المتاحة حالياً', class: 'text-center' },
+              { key: 'stock_display', label: 'الكمية المتاحة حالياً', class: 'text-center' },
             ]"
-            :search-keys="['id', 'name', 'code']"
+            :search-keys="['id', 'name', 'code', 'all_barcodes']"
             placeholder="اكتب اسم المنتج أو رقم الصنف لمزامنة تسوية المخزون اللحظية..."
             @select="handleGlobalItemSelect"
           />
@@ -43,7 +44,7 @@
 
         <p
           v-if="getValidationError('items')"
-          class="p-2 bg-rose-50 text-rose-600 rounded-lg text-xs font-bold border border-rose-100"
+          class="p-2 bg-rose-950/40 text-rose-400 rounded-lg text-xs font-bold border border-rose-900/50"
         >
           {{ getValidationError('items') }}
         </p>
@@ -61,14 +62,14 @@
                 @change="syncUnitCostAndFields(row)"
                 :disabled="!row.available_units || row.available_units.length === 0"
                 style="color-scheme: dark"
-                class="w-full p-1 bg-transparent text-text-primary border border-transparent hover:border-surface-border focus:border-primary focus:bg-surface-card rounded-md text-xs font-bold outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed text-right appearance-none"
+                class="w-full p-1 bg-transparent text-white border border-transparent hover:border-gray-500 focus:border-[#e05e2b] rounded-md text-xs font-bold outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed text-right appearance-none"
               >
-                <option value="" class="bg-surface-card text-text-primary">اختر الوحدة...</option>
+                <option value="" class="bg-[#16171b] text-gray-400">اختر الوحدة...</option>
                 <option
                   v-for="u in row.available_units"
                   :key="u.id"
                   :value="u.id"
-                  class="bg-surface-card text-text-primary"
+                  class="bg-[#16171b] text-white"
                 >
                   {{ u.unit_name || 'وحدة مجهولة' }}
                 </option>
@@ -84,10 +85,10 @@
 
           <template #cell-quantity_difference="{ row }">
             <div class="w-full text-center font-mono font-black text-xs">
-              <span v-if="row.quantity_difference > 0" class="text-emerald-500">
+              <span v-if="row.quantity_difference > 0" class="text-emerald-400">
                 +{{ row.quantity_difference }} (فائض)
               </span>
-              <span v-else-if="row.quantity_difference < 0" class="text-rose-500">
+              <span v-else-if="row.quantity_difference < 0" class="text-rose-400">
                 {{ row.quantity_difference }} (عجز)
               </span>
               <span v-else class="text-text-muted">0.00</span>
@@ -169,15 +170,33 @@ const items = ref([])
 
 const searchableItems = computed(() => {
   if (!itemStore.items) return []
-  return itemStore.items.map((item) => ({
-    ...item,
-    id_display: `PRD-${item.id}`,
-    name: item.name || '',
-    price_display: item.units?.[0]
-      ? `${parseFloat(item.units[0].price).toFixed(2)} د.ل`
-      : '0.00 د.ل',
-    stock_display: item.current_stock !== undefined ? `${item.current_stock}` : '0',
-  }))
+  return itemStore.items.map((item) => {
+    // استخراج وتجميع الباركودات المباشرة وتلك التابعة للوحدات
+    const directBarcodes = Array.isArray(item.barcodes)
+      ? item.barcodes.map((b) => (typeof b === 'object' ? b.barcode : b))
+      : []
+
+    const unitBarcodes = Array.isArray(item.units)
+      ? item.units.flatMap((u) =>
+          Array.isArray(u.barcodes)
+            ? u.barcodes.map((b) => (typeof b === 'object' ? b.barcode : b))
+            : [],
+        )
+      : []
+
+    const allBarcodes = [...new Set([...directBarcodes, ...unitBarcodes])].filter(Boolean)
+
+    return {
+      ...item,
+      id_display: `PRD-${item.id}`,
+      name: item.name || '',
+      price_display: item.units?.[0]
+        ? `${parseFloat(item.units[0].price).toFixed(2)} د.ل`
+        : '0.00 د.ل',
+      stock_display: item.current_stock !== undefined ? `${item.current_stock}` : '0',
+      all_barcodes: allBarcodes,
+    }
+  })
 })
 
 const detailSchema = [
@@ -293,12 +312,9 @@ watch(
   () => form.value.store_id,
   async (newStoreId) => {
     if (isHydrating.value) return
-    if (!newStoreId) {
-      itemStore.items = []
-      return
-    }
+    if (!newStoreId) return
 
-    await itemStore.fetchItems(1, { is_active: 1, store_id: newStoreId })
+    await itemStore.fetchItems(1, { is_active: 1, store_id: newStoreId, all: true })
 
     const activeItemIds = items.value.map((row) => row.item_id).filter((id) => id)
 
@@ -378,7 +394,7 @@ onMounted(async () => {
       }
 
       if (cur.store_id) {
-        await itemStore.fetchItems(1, { is_active: 1, store_id: cur.store_id })
+        await itemStore.fetchItems(1, { is_active: 1, store_id: cur.store_id, all: true })
       }
     }
     isHydrating.value = false

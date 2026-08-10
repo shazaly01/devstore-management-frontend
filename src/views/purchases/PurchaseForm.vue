@@ -1,3 +1,4 @@
+<!--src\views\purchases\PurchaseForm.vue--->
 <template>
   <div class="space-y-4 text-right font-sans pb-24" dir="rtl">
     <div class="flex justify-between items-center py-1 border-b border-surface-border/60">
@@ -31,7 +32,7 @@
               { key: 'price_display', label: 'السعر الافتراضي', class: 'text-center' },
               { key: 'stock_display', label: 'الكمية المتاحة حالياً', class: 'text-center' },
             ]"
-            :search-keys="['id', 'name', 'code']"
+            :search-keys="['id', 'name', 'code', 'all_barcodes']"
             placeholder="اكتب اسم المنتج أو رقم الصنف للمزامنة اللحظية الفورية..."
             @select="handleGlobalItemSelect"
           />
@@ -264,20 +265,38 @@ watch(
 
 const searchableItems = computed(() => {
   if (!itemStore.items) return []
-  return itemStore.items.map((item) => ({
-    ...item,
-    id_display: `PRD-${item.id}`,
-    name: item.name || '',
-    price_display: item.units?.[0]
-      ? `${parseFloat(item.units[0].price).toFixed(2)} د.ل`
-      : '0.00 د.ل',
-    stock_display:
-      item.current_stock !== undefined
-        ? `${item.current_stock}`
-        : item.stock !== undefined
-          ? `${item.stock}`
-          : '0',
-  }))
+  return itemStore.items.map((item) => {
+    // تجميع واستخراج كافة الباركودات المباشرة والتابعة للوحدات
+    const directBarcodes = Array.isArray(item.barcodes)
+      ? item.barcodes.map((b) => (typeof b === 'object' ? b.barcode : b))
+      : []
+
+    const unitBarcodes = Array.isArray(item.units)
+      ? item.units.flatMap((u) =>
+          Array.isArray(u.barcodes)
+            ? u.barcodes.map((b) => (typeof b === 'object' ? b.barcode : b))
+            : [],
+        )
+      : []
+
+    const allBarcodes = [...new Set([...directBarcodes, ...unitBarcodes])].filter(Boolean)
+
+    return {
+      ...item,
+      id_display: `PRD-${item.id}`,
+      name: item.name || '',
+      price_display: item.units?.[0]
+        ? `${parseFloat(item.units[0].price).toFixed(2)} د.ل`
+        : '0.00 د.ل',
+      stock_display:
+        item.current_stock !== undefined
+          ? `${item.current_stock}`
+          : item.stock !== undefined
+            ? `${item.stock}`
+            : '0',
+      all_barcodes: allBarcodes,
+    }
+  })
 })
 
 const visibleTableSchema = computed(() => detailSchema.filter((col) => col.label))
@@ -292,12 +311,8 @@ watch(
   () => form.value.store_id,
   async (newStoreId) => {
     if (isHydrating.value) return
-    if (!newStoreId) {
-      itemStore.items = []
-      return
-    }
+    if (!newStoreId) return
 
-    // [التعديل]: تم دمج معامل "all: true" لضمان جلب كافة الـ 100 صنف دفعة واحدة عند تغيير المخزن
     await itemStore.fetchItems(1, { is_active: 1, store_id: newStoreId, all: true })
 
     const activeItemIds = items.value.map((row) => row.item_id).filter((id) => id)
@@ -395,7 +410,6 @@ onMounted(async () => {
 
       // 3. شحن لوحة البحث بناءً على مستودع الفاتورة المعدلة
       if (cur.store_id) {
-        // [التعديل]: إضافة معامل الجلب الشامل "all: true" لضمان تحميل الـ 100 صنف كاملة عند تعديل الفاتورة
         await itemStore.fetchItems(1, { is_active: 1, store_id: cur.store_id, all: true })
       }
     }

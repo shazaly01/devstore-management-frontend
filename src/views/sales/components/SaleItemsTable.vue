@@ -17,7 +17,7 @@ const props = defineProps({
   removeRow: { type: Function, required: true },
   triggerAddNewEmptyLine: { type: Function, required: true },
   handleGlobalItemSelect: { type: Function, required: true },
-  isFormLoaded: { type: Boolean, default: false }, // استقبال بوابة التحكم بدورة حياة النموذج لمنع تضارب الأسعار المحفوظة
+  isFormLoaded: { type: Boolean, default: false },
 })
 
 const itemStore = useItemStore()
@@ -25,21 +25,39 @@ const customerStore = useCustomerStore()
 
 const searchableItems = computed(() => {
   if (!itemStore.items) return []
-  return itemStore.items.map((item) => ({
-    ...item,
-    id_display: `PRD-${item.id}`,
-    name: item.name || '',
-    price_display: item.units?.[0] ? `${parseFloat(item.units[0].price).toFixed(2)}` : '0.00',
-    stock_display:
-      item.current_stock !== undefined
-        ? `${item.current_stock}`
-        : item.stock !== undefined
-          ? `${item.stock}`
-          : '0',
-  }))
+  return itemStore.items.map((item) => {
+    // تجميع واستخرج كافة الباركودات المرتبطة بالصنف المباشرة وتلك التابعة لوحداته
+    const directBarcodes = Array.isArray(item.barcodes)
+      ? item.barcodes.map((b) => (typeof b === 'object' ? b.barcode : b))
+      : []
+
+    const unitBarcodes = Array.isArray(item.units)
+      ? item.units.flatMap((u) =>
+          Array.isArray(u.barcodes)
+            ? u.barcodes.map((b) => (typeof b === 'object' ? b.barcode : b))
+            : [],
+        )
+      : []
+
+    const allBarcodes = [...new Set([...directBarcodes, ...unitBarcodes])].filter(Boolean)
+
+    return {
+      ...item,
+      id_display: `PRD-${item.id}`,
+      name: item.name || '',
+      price_display: item.units?.[0] ? `${parseFloat(item.units[0].price).toFixed(2)}` : '0.00',
+      stock_display:
+        item.current_stock !== undefined
+          ? `${item.current_stock}`
+          : item.stock !== undefined
+            ? `${item.stock}`
+            : '0',
+      all_barcodes: allBarcodes,
+    }
+  })
 })
 
-// مراقبة مستودع الفاتورة لجلب وتحديث المخزون بشكل لحظي لأسطر الجدول
+// مراقبة مستودع الفاتورة لجلب وتحديث المخزون بشكل لحظي لأسطر الجدول مع التفعيل الفوري عند التحميل الأول
 watch(
   () => props.form.store_id,
   async (newStoreId) => {
@@ -71,13 +89,13 @@ watch(
       }
     }
   },
+  { immediate: true },
 )
 
 // مراقبة تغيير العميل لإعادة حساب أسعار الأسطر الحالية وفقاً لفئته السعرية فوراً
 watch(
   () => props.form.customer_id,
   () => {
-    // منع إعادة حساب الأسعار طالما أن الفاتورة في مرحلة التحميل الأولي
     if (!props.isFormLoaded) return
 
     props.items?.forEach((row) => {
@@ -91,7 +109,7 @@ watch(
 // تحديث دالة إدخال السعر اليدوي لتفعيل علم التجاوز
 const handleUnitPriceInput = (row, value) => {
   row.unit_price = props.unformatNumber(value)
-  row.is_price_overridden = true // تفعيل علم الحماية اللحظي للسعر المعدل يدوياً
+  row.is_price_overridden = true
 }
 
 // تحديث دالة حساب السعر لتعتمد على الفئة السعرية القياسية
@@ -137,7 +155,7 @@ const syncUnitSalePrice = (row) => {
           { key: 'price_display', label: 'السعر الافتراضي', class: 'text-center' },
           { key: 'stock_display', label: 'الكمية المتاحة حالياً', class: 'text-center' },
         ]"
-        :search-keys="['id', 'name', 'code']"
+        :search-keys="['id', 'name', 'code', 'all_barcodes']"
         placeholder="اكتب اسم المنتج أو رقم الصنف للمزامنة اللحظية الفورية للمبيعات..."
         @select="handleGlobalItemSelect"
       />

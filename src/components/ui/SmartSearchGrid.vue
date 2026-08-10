@@ -70,7 +70,7 @@
               :key="col.key"
               class="px-4 py-2 font-medium text-gray-800 dark:text-gray-200"
             >
-              {{ getNestedValue(item, col.key) || '---' }}
+              {{ getDisplayValue(item, col.key) }}
             </td>
           </tr>
         </tbody>
@@ -105,6 +105,66 @@ const searchQuery = ref('')
 const isOpen = ref(false)
 const highlightedIndex = ref(0)
 
+const getNestedValue = (obj, path) => {
+  if (!obj || !path) return null
+  const parts = path.split('.')
+  let current = obj
+
+  for (let i = 0; i < parts.length; i++) {
+    if (current === null || current === undefined) return null
+
+    if (Array.isArray(current)) {
+      const subKey = parts.slice(i).join('.')
+      return current.flatMap((item) => getNestedValue(item, subKey)).filter(Boolean)
+    }
+
+    current = current[parts[i]]
+  }
+
+  return current
+}
+
+const getDisplayValue = (item, key) => {
+  const val = getNestedValue(item, key)
+  if (val === null || val === undefined || val === '') return '---'
+  if (Array.isArray(val)) return val.join(', ')
+  return val
+}
+
+const findExactMatch = (query) => {
+  if (!query) return null
+  const cleanQuery = String(query).replace(/\s+/g, '').toLowerCase()
+
+  return props.data.find((item) => {
+    if (Array.isArray(item.all_barcodes) && item.all_barcodes.length > 0) {
+      const barcodeFound = item.all_barcodes.some((b) => {
+        const strBarcode = String(typeof b === 'object' ? b.barcode : b)
+          .replace(/\s+/g, '')
+          .toLowerCase()
+        return strBarcode === cleanQuery
+      })
+      if (barcodeFound) return true
+    }
+
+    if (Array.isArray(item.barcodes) && item.barcodes.length > 0) {
+      const barcodeFound = item.barcodes.some((b) => {
+        const strBarcode = String(typeof b === 'object' ? b.barcode : b)
+          .replace(/\s+/g, '')
+          .toLowerCase()
+        return strBarcode === cleanQuery
+      })
+      if (barcodeFound) return true
+    }
+
+    if (item.code && String(item.code).replace(/\s+/g, '').toLowerCase() === cleanQuery) return true
+    if (item.id && String(item.id) === cleanQuery) return true
+    if (item.id_display && String(item.id_display).replace(/\s+/g, '').toLowerCase() === cleanQuery)
+      return true
+
+    return false
+  })
+}
+
 const filteredData = computed(() => {
   if (!searchQuery.value.trim()) return []
 
@@ -114,47 +174,70 @@ const filteredData = computed(() => {
     .filter((item) => {
       return props.searchKeys.some((key) => {
         const val = getNestedValue(item, key)
-        return val ? String(val).toLowerCase().includes(query) : false
+        if (val === null || val === undefined) return false
+
+        if (Array.isArray(val)) {
+          return val.some((v) => {
+            const strVal = typeof v === 'object' ? v.barcode || JSON.stringify(v) : String(v)
+            return strVal.toLowerCase().includes(query)
+          })
+        }
+
+        return String(val).toLowerCase().includes(query)
       })
     })
     .slice(0, 50)
 })
 
 const handleInput = () => {
+  const query = searchQuery.value.trim()
+
+  if (!query) {
+    isOpen.value = false
+    return
+  }
+
   isOpen.value = true
   highlightedIndex.value = 0
 }
 
 const openDropdown = () => {
-  if (searchQuery.value.trim()) isOpen.value = true
+  if (searchQuery.value.trim()) {
+    isOpen.value = true
+  }
 }
 
 const handleKeydown = (e) => {
-  if (!isOpen.value && e.key !== 'Enter') return
+  if (e.key === 'Enter') {
+    e.preventDefault()
 
-  if (e.key === 'ArrowDown') {
+    const rawValue = e.target?.value || searchQuery.value || ''
+    const query = String(rawValue).trim()
+
+    if (!query) return
+
+    const exactMatch = findExactMatch(query)
+
+    if (exactMatch) {
+      selectItem(exactMatch)
+      return
+    }
+
+    if (filteredData.value.length > 0) {
+      const targetIndex =
+        highlightedIndex.value >= 0 && highlightedIndex.value < filteredData.value.length
+          ? highlightedIndex.value
+          : 0
+      selectItem(filteredData.value[targetIndex])
+    }
+  } else if (e.key === 'ArrowDown') {
+    if (!isOpen.value) return
     e.preventDefault()
     if (highlightedIndex.value < filteredData.value.length - 1) highlightedIndex.value++
   } else if (e.key === 'ArrowUp') {
+    if (!isOpen.value) return
     e.preventDefault()
     if (highlightedIndex.value > 0) highlightedIndex.value--
-  } else if (e.key === 'Enter') {
-    e.preventDefault()
-
-    if (filteredData.value.length > 0) {
-      const exactMatch = filteredData.value.find((item) =>
-        props.searchKeys.some((key) => {
-          const val = getNestedValue(item, key)
-          return String(val).toLowerCase() === searchQuery.value.toLowerCase().trim()
-        }),
-      )
-
-      if (exactMatch) {
-        selectItem(exactMatch)
-      } else {
-        selectItem(filteredData.value[highlightedIndex.value])
-      }
-    }
   } else if (e.key === 'Escape') {
     isOpen.value = false
   }
@@ -172,10 +255,6 @@ const selectItem = (item) => {
   nextTick(() => {
     inputRef.value?.focus()
   })
-}
-
-const getNestedValue = (obj, path) => {
-  return path.split('.').reduce((acc, part) => acc && acc[part], obj)
 }
 
 const handleClickOutside = (event) => {

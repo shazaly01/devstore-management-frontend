@@ -199,8 +199,8 @@
             class="block w-full h-full pr-10 pl-10 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <option value="cash" class="bg-[#16171b]">نقدي (Cash)</option>
-            <option value="card" class="bg-[#16171b]">شبكة / دفع إلكتروني (Card)</option>
-            <option value="credit" class="bg-[#16171b]">آجل / ذمم (Credit)</option>
+            <option value="card" class="bg-[#16171b]">دفع بنكك (Card)</option>
+            <option value="credit" class="bg-[#16171b]">دفع آجل (Credit)</option>
           </select>
 
           <span class="absolute left-4 text-gray-500 pointer-events-none text-[10px]">▼</span>

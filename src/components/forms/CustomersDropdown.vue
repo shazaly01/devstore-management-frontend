@@ -1,4 +1,3 @@
-<!--src\components\forms\CustomersDropdown.vue--->
 <template>
   <div>
     <AppDropdown
@@ -6,6 +5,7 @@
       :model-value="modelValue"
       @update:model-value="$emit('update:modelValue', $event)"
       :options="customers"
+      option-label="display_label"
       :loading="loading"
       :required="required"
       :variant="variant"

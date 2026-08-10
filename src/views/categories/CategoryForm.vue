@@ -60,7 +60,6 @@ import { ref, watch, reactive, computed } from 'vue'
 import { useCategoryStore } from '@/stores/categoryStore'
 import { storeToRefs } from 'pinia'
 
-// استيراد مكونات الواجهة الأساسية القياسية لنظامك
 import AppInput from '@/components/ui/AppInput.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import AppButton from '@/components/ui/AppButton.vue'
@@ -79,15 +78,12 @@ const props = defineProps({
 const emit = defineEmits(['submit', 'cancel'])
 
 const categoryStore = useCategoryStore()
-// [تعديل التوافق]: استخراج validationErrors من الستور لربطها وعرضها بالواجهة
 const { categories, validationErrors } = storeToRefs(categoryStore)
 
-// إدارة أخطاء الإدخال المحلية
 const errors = reactive({
   name: false,
 })
 
-// تصفير وتجهيز كائن النموذج الافتراضي
 const createFreshForm = () => ({
   id: null,
   name: '',
@@ -96,21 +92,19 @@ const createFreshForm = () => ({
 
 const form = ref(createFreshForm())
 
-// فلترة التصنيفات المتاحة لتكون خيارات للتصنيف الأب
+// فلترة التصنيفات المتاحة واختيار المسار النصي المقروء للعرض
 const parentOptions = computed(() => {
   return categories.value
     .filter((cat) => !form.value.id || cat.id !== form.value.id)
     .map((cat) => ({
       id: cat.id,
-      name: cat.path || cat.name,
+      name: cat.full_path || cat.name,
     }))
 })
 
-// مراقبة البيانات الممررة لتهيئة حقول النموذج عند التعديل أو الإضافة
 watch(
   () => props.initialData,
   (newData) => {
-    // تصفير أخطاء الباك إند السابقة عند فتح المودال أو تبديل البيانات
     if (categoryStore.validationErrors) {
       categoryStore.validationErrors = null
     }
@@ -128,14 +122,12 @@ watch(
   { immediate: true, deep: true },
 )
 
-// دالة لتنظيف خطأ محدد بمجرد قيام المستخدم بالتعديل والكتابة لتبسيط الـ UX
 const clearBackendError = (field) => {
   if (validationErrors.value && validationErrors.value[field]) {
     delete validationErrors.value[field]
   }
 }
 
-// دالة التحقق اليدوي والإرسال
 const handleSubmit = () => {
   errors.name = false
 
@@ -144,7 +136,6 @@ const handleSubmit = () => {
     return
   }
 
-  // تحويل القيمة إلى رقم أو إرسالها فارغة للباك إند
   const payload = {
     ...form.value,
     parent_id: form.value.parent_id ? Number(form.value.parent_id) : null,

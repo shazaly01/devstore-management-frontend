@@ -9,22 +9,25 @@
     >
       <template #cell-category_info="{ item }">
         <div class="flex flex-col gap-1 py-1">
-          <span class="font-bold text-text-primary text-base leading-tight">
-            {{ item.name }}
+          <span class="font-bold text-text-primary text-base leading-tight font-mono">
+            {{ item.indent_name || item.name }}
           </span>
           <span
-            v-if="item.path"
-            class="text-xs text-text-muted font-mono bg-surface-ground/50 px-2 py-0.5 rounded border border-surface-border/60 self-start"
+            v-if="item.full_path"
+            class="text-xs text-text-muted bg-surface-ground/50 px-2 py-0.5 rounded border border-surface-border/60 self-start"
           >
-            {{ item.path }}
+            {{ item.full_path }}
           </span>
         </div>
       </template>
 
       <template #cell-parent_info="{ item }">
         <div class="flex items-center gap-1.5">
-          <span v-if="item.parent?.name" class="font-medium text-sm text-text-primary">
-            {{ item.parent.name }}
+          <span
+            v-if="item.parent_name || item.parent?.name"
+            class="font-medium text-sm text-text-primary"
+          >
+            {{ item.parent_name || item.parent?.name }}
           </span>
           <span
             v-else
