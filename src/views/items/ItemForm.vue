@@ -1,4 +1,3 @@
-<!--src\views\items\ItemForm.vue--->
 <template>
   <div class="max-w-7xl mx-auto pb-12">
     <div class="mb-5">
@@ -67,7 +66,7 @@ const toast = useToast()
 const isEditMode = computed(() => !!route.params.id)
 const loading = computed(() => itemStore.loading)
 
-// تأسيس كائن الحالة الشجرية بالكامل مع حقن المتغيرات الخاصة بالصنف التجميعي
+// تأسيس كائن الحالة الشجرية بالكامل مع حقن المتغيرات الخاصة بالصنف التجميعي وتاريخ الصلاحية
 const form = reactive({
   name: '',
   item_type: 'product',
@@ -77,6 +76,7 @@ const form = reactive({
   base_unit_id: null,
   is_active: true,
   is_composite: false,
+  expiry_date: null,
   components: [],
   units: [],
 })
@@ -106,6 +106,7 @@ onMounted(async () => {
       form.base_unit_id = rawItem.base_unit_id
       form.is_active = !!rawItem.is_active
       form.is_composite = !!rawItem.is_composite
+      form.expiry_date = rawItem.expiry_date || null
 
       // سحب مصفوفة المكونات المرتبطة وتثبيتها بالواجهة
       form.components = (rawItem.components || []).map((comp) => ({
@@ -156,6 +157,7 @@ const preparePayload = () => {
     base_unit_id: form.base_unit_id,
     is_active: form.is_active ? 1 : 0,
     is_composite: form.is_composite ? 1 : 0,
+    expiry_date: form.expiry_date || null,
 
     // شحن المكونات فقط في حال كان الصنف تجميعياً بشكل فعلي
     components: form.is_composite

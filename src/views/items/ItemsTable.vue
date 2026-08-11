@@ -63,7 +63,14 @@
         </span>
       </template>
 
-      <!-- 6. عمود مصفوفة الوحدات -->
+      <!-- 6. عمود تاريخ الصلاحية -->
+      <template #cell-expiry_date_info="{ item }">
+        <span class="text-xs font-bold text-text-secondary font-mono tracking-wider">
+          {{ item.expiry_date || '-' }}
+        </span>
+      </template>
+
+      <!-- 7. عمود مصفوفة الوحدات -->
       <template #cell-matrix_units="{ item }">
         <div
           class="flex flex-wrap items-center gap-x-2 gap-y-1 max-w-md text-xs font-medium text-text-secondary"
@@ -91,7 +98,7 @@
         </div>
       </template>
 
-      <!-- 7. عمود الحالة الإدارية -->
+      <!-- 8. عمود الحالة الإدارية -->
       <template #cell-status="{ item }">
         <span
           :class="[
@@ -108,7 +115,7 @@
         </span>
       </template>
 
-      <!-- 8. عمود الإجراءات والتحكم -->
+      <!-- 9. عمود الإجراءات والتحكم -->
       <template #cell-actions="{ item }">
         <div class="flex items-center justify-end space-x-1 space-x-reverse">
           <button
@@ -192,6 +199,7 @@ const tableHeaders = computed(() => {
     { key: 'base_unit_info', label: 'الوحدة الصغرى' },
     { key: 'current_stock_info', label: 'الرصيد المتاح', class: 'font-bold' },
     { key: 'reorder_level_info', label: 'حد الطلب', class: 'font-bold' },
+    { key: 'expiry_date_info', label: 'تاريخ الصلاحية' },
     { key: 'matrix_units', label: 'مصفوفة الوحدات', class: 'max-w-md' },
     { key: 'status', label: 'الحالة' },
   ]

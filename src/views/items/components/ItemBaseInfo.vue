@@ -1,4 +1,3 @@
-<!--src\views\items\components\ItemBaseInfo.vue--->
 <template>
   <AppCard>
     <div class="p-4 space-y-4">
@@ -72,7 +71,7 @@
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
         <div>
           <AppInput
             id="profit-margin"
@@ -133,6 +132,25 @@
           <div v-if="validationErrors && validationErrors.base_unit_id" class="mt-1">
             <p
               v-for="(err, i) in validationErrors.base_unit_id"
+              :key="i"
+              class="text-rose-500 text-xs font-bold"
+            >
+              {{ err }}
+            </p>
+          </div>
+        </div>
+
+        <div>
+          <AppInput
+            id="expiry-date"
+            label="تاريخ الصلاحية"
+            :model-value="props.formState.expiry_date"
+            @update:model-value="(val) => updateField('expiry_date', val)"
+            type="date"
+          />
+          <div v-if="validationErrors && validationErrors.expiry_date" class="mt-1">
+            <p
+              v-for="(err, i) in validationErrors.expiry_date"
               :key="i"
               class="text-rose-500 text-xs font-bold"
             >
