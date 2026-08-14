@@ -1,4 +1,4 @@
-<!--src\views\purchases\PurchaseForm.vue--->
+<!--src\views\purchases\PurchaseForm.vue-->
 <template>
   <div class="space-y-4 text-right font-sans pb-24" dir="rtl">
     <div class="flex justify-between items-center py-1 border-b border-surface-border/60">
@@ -140,7 +140,7 @@ const authStore = useAuthStore()
 const isEdit = computed(() => !!route.params.id)
 const isHydrating = ref(false)
 
-// كائن البيانات مع إضافة الحسابات المالية المفقودة (treasury_id و bank_id)
+// كائن البيانات مع إضافة الحسابات المالية (treasury_id و bank_id)
 const form = ref({
   invoice_type: 'purchase',
   parent_id: null,
@@ -157,7 +157,7 @@ const form = ref({
 
 const items = ref([])
 
-// مصفوفة التكوين الحسابي لجدول الأصناف مدمجة بالكامل بدون تقسيم
+// مصفوفة التكوين الحسابي لجدول الأصناف مع حقل نسبة الربح وسعر البيع
 const detailSchema = [
   {
     key: 'item_id_display',
@@ -170,7 +170,7 @@ const detailSchema = [
   {
     key: 'item_name',
     label: 'اسم الصنف التجاري المعتمد',
-    widthClass: 'w-1/3',
+    widthClass: 'w-1/4',
     readonly: true,
     type: 'text',
     extractFromItem: (item) => item.name || '',
@@ -188,7 +188,7 @@ const detailSchema = [
     key: 'item_unit_id',
     label: 'وحدة التعبئة',
     slot: 'cell-item_unit_id',
-    widthClass: 'w-1/6',
+    widthClass: 'w-1/12',
     type: 'text',
     extractFromItem: (item) => item.units?.[0]?.id || '',
   },
@@ -223,8 +223,34 @@ const detailSchema = [
     label: 'تكلفة الوحدة',
     type: 'number',
     defaultValue: 0,
-    widthClass: 'w-1/8',
+    widthClass: 'w-1/12',
     extractFromItem: (item) => item.units?.[0]?.cost || 0,
+  },
+  {
+    key: 'profit_margin',
+    label: 'نسبة الربح %',
+    type: 'number',
+    defaultValue: 0,
+    widthClass: 'w-1/12',
+    extractFromItem: (item) => parseFloat(item.profit_margin) || 0,
+  },
+  {
+    key: 'selling_price',
+    label: 'سعر البيع',
+    type: 'number',
+    defaultValue: 0,
+    widthClass: 'w-1/12',
+    extractFromItem: (item) => {
+      const unitPrice = item.units?.[0]?.price || 0
+      const unitCost = item.units?.[0]?.cost || 0
+      const margin = parseFloat(item.profit_margin) || 0
+
+      if (unitPrice > 0) return unitPrice
+      if (unitCost > 0 && margin > 0) {
+        return parseFloat((unitCost * (1 + margin / 100)).toFixed(4))
+      }
+      return 0
+    },
   },
   {
     key: 'grand_total',
@@ -263,10 +289,48 @@ watch(
   },
 )
 
+// محرك الحساب التلقائي ثنائي الاتجاه بين التكلفة، نسبة الربح، وسعر البيع
+watch(
+  () =>
+    items.value.map((row) => ({
+      cost: row.unit_cost,
+      margin: row.profit_margin,
+      price: row.selling_price,
+    })),
+  (newVals, oldVals) => {
+    if (isHydrating.value) return
+
+    newVals.forEach((val, index) => {
+      const old = oldVals?.[index]
+      const row = items.value[index]
+      if (!row || !old) return
+
+      const cost = parseFloat(row.unit_cost) || 0
+      const margin = parseFloat(row.profit_margin) || 0
+      const price = parseFloat(row.selling_price) || 0
+
+      // 1. إذا تغيرت التكلفة أو نسبة الربح -> تحديث سعر البيع فورياً
+      if (val.cost !== old.cost || val.margin !== old.margin) {
+        if (cost > 0) {
+          const calculatedPrice = cost * (1 + margin / 100)
+          row.selling_price = parseFloat(calculatedPrice.toFixed(4))
+        }
+      }
+      // 2. إذا تم تعديل سعر البيع يدوياً -> احتساب وتحديث نسبة الربح الناتجة
+      else if (val.price !== old.price) {
+        if (cost > 0) {
+          const calculatedMargin = ((price - cost) / cost) * 100
+          row.profit_margin = parseFloat(calculatedMargin.toFixed(2))
+        }
+      }
+    })
+  },
+  { deep: true },
+)
+
 const searchableItems = computed(() => {
   if (!itemStore.items) return []
   return itemStore.items.map((item) => {
-    // تجميع واستخراج كافة الباركودات المباشرة والتابعة للوحدات
     const directBarcodes = Array.isArray(item.barcodes)
       ? item.barcodes.map((b) => (typeof b === 'object' ? b.barcode : b))
       : []
@@ -350,7 +414,19 @@ const triggerAddNewEmptyLine = () => {
 const syncUnitCostPrice = (row) => {
   const matchedUnit = row.available_units?.find((u) => String(u.id) === String(row.item_unit_id))
   if (matchedUnit) {
-    row.unit_cost = matchedUnit.cost || 0
+    row.unit_cost = parseFloat(matchedUnit.cost) || 0
+    row.selling_price = parseFloat(matchedUnit.price) || 0
+
+    // احتساب نسبة الربح بناءً على التكلفة وسعر الوحدة المحددة
+    if (row.unit_cost > 0 && row.selling_price > 0) {
+      row.profit_margin = parseFloat(
+        (((row.selling_price - row.unit_cost) / row.unit_cost) * 100).toFixed(2),
+      )
+    } else if (row.unit_cost > 0 && parseFloat(row.profit_margin) > 0) {
+      row.selling_price = parseFloat(
+        (row.unit_cost * (1 + parseFloat(row.profit_margin) / 100)).toFixed(4),
+      )
+    }
   }
 }
 
@@ -376,15 +452,32 @@ onMounted(async () => {
     if (purchaseStore.currentPurchase) {
       const cur = purchaseStore.currentPurchase
 
-      // 1. شحن سطور مستند المشتريات المسترجع من السيرفر
+      // 1. شحن سطور مستند المشتريات المسترجع من السيرفر مع نسبة الربح وسعر البيع
       items.value = cur.items.map((it) => {
+        const cost = parseFloat(it.unit_cost) || 0
+        const price =
+          it.selling_price !== null && it.selling_price !== undefined
+            ? parseFloat(it.selling_price)
+            : parseFloat(
+                it.available_units?.find((u) => String(u.id) === String(it.item_unit_id))?.price,
+              ) || 0
+
+        const margin =
+          it.profit_margin !== null && it.profit_margin !== undefined
+            ? parseFloat(it.profit_margin)
+            : cost > 0 && price > 0
+              ? parseFloat((((price - cost) / cost) * 100).toFixed(2))
+              : 0
+
         return {
           item_id_display: it.item_id ? `PRD-${it.item_id}` : '',
           item_name: it.item_name || '',
           item_id: it.item_id,
           item_unit_id: it.item_unit_id,
           quantity: it.quantity,
-          unit_cost: it.unit_cost,
+          unit_cost: cost,
+          profit_margin: margin,
+          selling_price: price,
           grand_total: it.grand_total,
           available_units: it.available_units || [],
           base_stock: parseFloat(it.current_stock) || 0,
@@ -432,6 +525,8 @@ const handleSubmit = async () => {
       item_unit_id: row.item_unit_id,
       quantity: parseFloat(row.quantity) || 0,
       unit_cost: parseFloat(row.unit_cost) || 0,
+      profit_margin: parseFloat(row.profit_margin) || 0,
+      selling_price: parseFloat(row.selling_price) || 0,
       subtotal: parseFloat(row.grand_total) || 0,
       discount_amount: 0,
       grand_total: parseFloat(row.grand_total) || 0,
