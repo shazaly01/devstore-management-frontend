@@ -140,7 +140,10 @@ const authStore = useAuthStore()
 const isEdit = computed(() => !!route.params.id)
 const isHydrating = ref(false)
 
-// كائن البيانات مع إضافة الحسابات المالية (treasury_id و bank_id)
+// قفل برمجي لمنع الحلقة المفرغة أثناء الحسابات التلقائية
+let isRecalculating = false
+
+// كائن البيانات مع الحسابات المالية
 const form = ref({
   invoice_type: 'purchase',
   parent_id: null,
@@ -157,7 +160,7 @@ const form = ref({
 
 const items = ref([])
 
-// مصفوفة التكوين الحسابي لجدول الأصناف مع حقل نسبة الربح وسعر البيع
+// مصفوفة التكوين الحسابي لجدول الأصناف مع حقول نسبة الربح وسعر البيع وتاريخ الصلاحية
 const detailSchema = [
   {
     key: 'item_id_display',
@@ -170,7 +173,7 @@ const detailSchema = [
   {
     key: 'item_name',
     label: 'اسم الصنف التجاري المعتمد',
-    widthClass: 'w-1/4',
+    widthClass: 'w-1/5',
     readonly: true,
     type: 'text',
     extractFromItem: (item) => item.name || '',
@@ -253,6 +256,14 @@ const detailSchema = [
     },
   },
   {
+    key: 'expiry_date',
+    label: 'تاريخ الصلاحية',
+    type: 'date',
+    defaultValue: '',
+    widthClass: 'w-1/12',
+    extractFromItem: (item) => (item.expiry_date ? String(item.expiry_date).substring(0, 10) : ''),
+  },
+  {
     key: 'grand_total',
     label: 'الاجمالى',
     type: 'calculated',
@@ -266,7 +277,7 @@ const detailSchema = [
   },
 ]
 
-// محرك مراقبة طريقة الدفع الديناميكي لمنع اختفاء أو تصفير بيانات الحسابات النقدية والبنكية
+// مراقبة طريقة الدفع
 watch(
   () => form.value.payment_type,
   (newType) => {
@@ -289,7 +300,7 @@ watch(
   },
 )
 
-// محرك الحساب التلقائي ثنائي الاتجاه بين التكلفة، نسبة الربح، وسعر البيع
+// محرك الحساب التلقائي ثنائي الاتجاه الدقيق والمحمي من التكرار الدائري
 watch(
   () =>
     items.value.map((row) => ({
@@ -298,7 +309,7 @@ watch(
       price: row.selling_price,
     })),
   (newVals, oldVals) => {
-    if (isHydrating.value) return
+    if (isHydrating.value || isRecalculating) return
 
     newVals.forEach((val, index) => {
       const old = oldVals?.[index]
@@ -309,18 +320,41 @@ watch(
       const margin = parseFloat(row.profit_margin) || 0
       const price = parseFloat(row.selling_price) || 0
 
-      // 1. إذا تغيرت التكلفة أو نسبة الربح -> تحديث سعر البيع فورياً
-      if (val.cost !== old.cost || val.margin !== old.margin) {
+      const costChanged = val.cost !== old.cost
+      const marginChanged = val.margin !== old.margin
+      const priceChanged = val.price !== old.price
+
+      // 1. إذا قام المستخدم بتعديل سعر البيع يدوياً -> نحسب نسبة الربح فقط دون المساس بسعر البيع المدخل
+      if (priceChanged && !marginChanged && !costChanged) {
         if (cost > 0) {
-          const calculatedPrice = cost * (1 + margin / 100)
-          row.selling_price = parseFloat(calculatedPrice.toFixed(4))
-        }
-      }
-      // 2. إذا تم تعديل سعر البيع يدوياً -> احتساب وتحديث نسبة الربح الناتجة
-      else if (val.price !== old.price) {
-        if (cost > 0) {
+          isRecalculating = true
           const calculatedMargin = ((price - cost) / cost) * 100
           row.profit_margin = parseFloat(calculatedMargin.toFixed(2))
+          setTimeout(() => {
+            isRecalculating = false
+          }, 50)
+        }
+      }
+      // 2. إذا قام المستخدم بتعديل نسبة الربح -> نحدث سعر البيع
+      else if (marginChanged && !priceChanged && !costChanged) {
+        if (cost > 0) {
+          isRecalculating = true
+          const calculatedPrice = cost * (1 + margin / 100)
+          row.selling_price = parseFloat(calculatedPrice.toFixed(4))
+          setTimeout(() => {
+            isRecalculating = false
+          }, 50)
+        }
+      }
+      // 3. إذا تغيرت التكلفة -> نحدث سعر البيع بناءً على نسبة الربح الحالية
+      else if (costChanged) {
+        if (cost > 0 && margin > 0) {
+          isRecalculating = true
+          const calculatedPrice = cost * (1 + margin / 100)
+          row.selling_price = parseFloat(calculatedPrice.toFixed(4))
+          setTimeout(() => {
+            isRecalculating = false
+          }, 50)
         }
       }
     })
@@ -370,7 +404,7 @@ const { createEmptyRow, handleItemSelected, removeRow } = useDynamicDetails(item
   mergeQtyKey: 'quantity',
 })
 
-// مراقب تغيير مستودع الاستلام لتحديث جرد لوحة البحث والأسطر الحالية فوراً
+// مراقب تغيير مستودع الاستلام
 watch(
   () => form.value.store_id,
   async (newStoreId) => {
@@ -417,7 +451,6 @@ const syncUnitCostPrice = (row) => {
     row.unit_cost = parseFloat(matchedUnit.cost) || 0
     row.selling_price = parseFloat(matchedUnit.price) || 0
 
-    // احتساب نسبة الربح بناءً على التكلفة وسعر الوحدة المحددة
     if (row.unit_cost > 0 && row.selling_price > 0) {
       row.profit_margin = parseFloat(
         (((row.selling_price - row.unit_cost) / row.unit_cost) * 100).toFixed(2),
@@ -452,7 +485,7 @@ onMounted(async () => {
     if (purchaseStore.currentPurchase) {
       const cur = purchaseStore.currentPurchase
 
-      // 1. شحن سطور مستند المشتريات المسترجع من السيرفر مع نسبة الربح وسعر البيع
+      // 1. شحن سطور مستند المشتريات
       items.value = cur.items.map((it) => {
         const cost = parseFloat(it.unit_cost) || 0
         const price =
@@ -478,6 +511,7 @@ onMounted(async () => {
           unit_cost: cost,
           profit_margin: margin,
           selling_price: price,
+          expiry_date: it.expiry_date ? String(it.expiry_date).substring(0, 10) : '',
           grand_total: it.grand_total,
           available_units: it.available_units || [],
           base_stock: parseFloat(it.current_stock) || 0,
@@ -486,7 +520,7 @@ onMounted(async () => {
         }
       })
 
-      // 2. ترطيب وشحن بيانات رأس الفاتورة بالكامل
+      // 2. ترطيب بيانات رأس الفاتورة
       form.value = {
         invoice_type: cur.invoice_type,
         parent_id: cur.parent_id,
@@ -501,14 +535,13 @@ onMounted(async () => {
         notes: cur.notes || '',
       }
 
-      // 3. شحن لوحة البحث بناءً على مستودع الفاتورة المعدلة
+      // 3. شحن لوحة البحث
       if (cur.store_id) {
         await itemStore.fetchItems(1, { is_active: 1, store_id: cur.store_id, all: true })
       }
     }
     isHydrating.value = false
   } else {
-    // التعبئة التلقائية الذكية للمستند الجديد بناءً على صلاحيات المستخدم الحالية
     if (authStore.user) {
       form.value.store_id = authStore.user.store_id || ''
       form.value.treasury_id = authStore.user.treasury_id || ''
@@ -527,6 +560,7 @@ const handleSubmit = async () => {
       unit_cost: parseFloat(row.unit_cost) || 0,
       profit_margin: parseFloat(row.profit_margin) || 0,
       selling_price: parseFloat(row.selling_price) || 0,
+      expiry_date: row.expiry_date ? row.expiry_date : null,
       subtotal: parseFloat(row.grand_total) || 0,
       discount_amount: 0,
       grand_total: parseFloat(row.grand_total) || 0,

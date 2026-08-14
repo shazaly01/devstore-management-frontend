@@ -10,7 +10,7 @@ export const detailSchema = [
   {
     key: 'item_name',
     label: 'اسم الصنف التجاري المعتمد',
-    widthClass: 'w-1/4',
+    widthClass: 'w-1/5',
     readonly: true,
     type: 'text',
     extractFromItem: (item) => item.name || '',
@@ -80,7 +80,25 @@ export const detailSchema = [
     type: 'number',
     defaultValue: 0,
     widthClass: 'w-1/12',
-    extractFromItem: (item) => item.units?.[0]?.price || 0,
+    extractFromItem: (item) => {
+      const unitPrice = item.units?.[0]?.price || 0
+      const unitCost = item.units?.[0]?.cost || 0
+      const margin = parseFloat(item.profit_margin) || 0
+
+      if (unitPrice > 0) return unitPrice
+      if (unitCost > 0 && margin > 0) {
+        return parseFloat((unitCost * (1 + margin / 100)).toFixed(4))
+      }
+      return 0
+    },
+  },
+  {
+    key: 'expiry_date',
+    label: 'تاريخ الصلاحية',
+    type: 'date',
+    defaultValue: '',
+    widthClass: 'w-1/12',
+    extractFromItem: (item) => (item.expiry_date ? String(item.expiry_date).substring(0, 10) : ''),
   },
   {
     key: 'grand_total',
