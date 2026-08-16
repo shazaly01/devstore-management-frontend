@@ -1,3 +1,4 @@
+<!---src\views\users\UserForm.vue--->
 <template>
   <form @submit.prevent="handleSubmit">
     <div class="space-y-4">
@@ -35,7 +36,7 @@
 
       <div class="border-t border-surface-border pt-4 mt-4">
         <h4 class="font-semibold text-text-secondary mb-3">
-          إعدادات الربط الافتراضي لنظام العمل (اختياري)
+          إعدادات الربط الافتراضي ونظام العمل (اختياري)
         </h4>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
           <StoresDropdown id="user-store" label="المخزن الافتراضي" v-model="form.store_id" />
@@ -47,6 +48,27 @@
           />
 
           <BanksDropdown id="user-bank" label="البنك الافتراضي" v-model="form.bank_id" />
+        </div>
+
+        <!-- خيار تفعيل الرقابة المخزنية والتحقق من الكميات -->
+        <div class="mt-4 pt-3 border-t border-surface-border/50">
+          <label class="flex items-center space-x-3 space-x-reverse cursor-pointer select-none">
+            <input
+              type="checkbox"
+              id="user-stock-control"
+              v-model="form.stock_control"
+              class="w-4 h-4 rounded border-surface-border text-primary focus:ring-primary focus:ring-offset-0 cursor-pointer"
+            />
+            <div class="flex flex-col">
+              <span class="text-sm font-medium text-text-primary">
+                تفعيل الرقابة على المخزون (التحكم بالمخزون)
+              </span>
+              <span class="text-xs text-text-secondary">
+                عند التفعيل، لن يتمكن المستخدم من إتمام عمليات البيع إذا كان رصيد الصنف غير كافٍ أو
+                مصفراً في المخزن.
+              </span>
+            </div>
+          </label>
         </div>
       </div>
 
@@ -133,6 +155,7 @@ const form = ref({
   store_id: null,
   treasury_id: null,
   bank_id: null,
+  stock_control: false,
 })
 
 watch(
@@ -150,6 +173,7 @@ watch(
         store_id: newData.store_id || null,
         treasury_id: newData.treasury_id || null,
         bank_id: newData.bank_id || null,
+        stock_control: Boolean(newData.stock_control),
       }
     } else {
       form.value = {
@@ -163,6 +187,7 @@ watch(
         store_id: null,
         treasury_id: null,
         bank_id: null,
+        stock_control: false,
       }
     }
   },

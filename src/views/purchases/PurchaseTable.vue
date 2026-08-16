@@ -1,3 +1,4 @@
+<!--src\views\purchases\PurchaseTable.vue-->
 <template>
   <AppCard>
     <AppTable
@@ -37,9 +38,11 @@
       <template #cell-entities="{ item }">
         <div class="flex flex-col justify-center">
           <span class="font-bold text-sm text-text-primary">
-            المورد: {{ item.supplier?.name || '-' }}
+            المورد: {{ item.supplier_name || item.supplier?.name || '-' }}
           </span>
-          <span class="text-xs text-text-secondary"> المستودع: {{ item.store?.name || '-' }} </span>
+          <span class="text-xs text-text-secondary">
+            المستودع: {{ item.store_name || item.store?.name || '-' }}
+          </span>
         </div>
       </template>
 

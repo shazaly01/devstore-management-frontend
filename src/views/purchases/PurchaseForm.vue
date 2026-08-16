@@ -21,21 +21,65 @@
 
     <AppCard>
       <div class="p-3 space-y-3">
-        <div
-          class="w-full text-xs bg-[#e05e2b] p-1 rounded-lg shadow-[0_0_15px_rgba(224,94,43,0.25)] border border-[#e05e2b]"
-        >
-          <SmartSearchGrid
-            :data="searchableItems"
-            :columns="[
-              { key: 'id_display', label: 'رقم الصنف', class: 'text-right' },
-              { key: 'name', label: 'اسم الصنف التجاري المعتمد', class: 'text-right font-bold' },
-              { key: 'price_display', label: 'السعر الافتراضي', class: 'text-center' },
-              { key: 'stock_display', label: 'الكمية المتاحة حالياً', class: 'text-center' },
-            ]"
-            :search-keys="['id', 'name', 'code', 'all_barcodes']"
-            placeholder="اكتب اسم المنتج أو رقم الصنف للمزامنة اللحظية الفورية..."
-            @select="handleGlobalItemSelect"
-          />
+        <!-- شريط البحث مدمج مع حقل نسبة الربح العامة في نفس السطر -->
+        <div class="flex flex-col md:flex-row items-center gap-3">
+          <div
+            class="flex-1 w-full text-xs bg-[#e05e2b] p-1 rounded-lg shadow-[0_0_15px_rgba(224,94,43,0.25)] border border-[#e05e2b]"
+          >
+            <SmartSearchGrid
+              :data="searchableItems"
+              :columns="[
+                { key: 'id_display', label: 'رقم الصنف', class: 'text-right' },
+                { key: 'name', label: 'اسم الصنف التجاري المعتمد', class: 'text-right font-bold' },
+                { key: 'price_display', label: 'السعر الافتراضي', class: 'text-center' },
+                { key: 'stock_display', label: 'الكمية المتاحة حالياً', class: 'text-center' },
+              ]"
+              :search-keys="['id', 'name', 'code', 'all_barcodes']"
+              placeholder="اكتب اسم المنتج أو رقم الصنف للمزامنة اللحظية الفورية..."
+              @select="handleGlobalItemSelect"
+            />
+          </div>
+
+          <!-- أداة نسبة الربح العامة المدمجة -->
+          <div
+            class="w-full md:w-auto flex items-center justify-between md:justify-start gap-2 bg-[#16171b] border border-[#3e414c] hover:border-[#e05e2b] focus-within:border-[#e05e2b] px-3 py-1.5 rounded-lg shadow-md transition-all duration-200"
+          >
+            <div class="flex items-center gap-1.5 text-[#e05e2b]">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                />
+              </svg>
+              <span class="text-xs font-bold text-gray-200 whitespace-nowrap"
+                >نسبة الربح العامة:</span
+              >
+            </div>
+
+            <div class="relative flex items-center">
+              <input
+                type="number"
+                v-model.number="globalProfitMargin"
+                @keyup.enter="applyGlobalProfitMargin"
+                placeholder="0"
+                min="0"
+                step="0.5"
+                class="w-16 p-1 bg-[#23252e] text-white border border-[#3e414c] focus:border-[#e05e2b] rounded-md text-xs font-bold text-center outline-none transition-all"
+              />
+              <span class="mr-1 text-xs font-bold text-gray-400">%</span>
+            </div>
+
+            <button
+              type="button"
+              @click="applyGlobalProfitMargin"
+              class="px-2.5 py-1 bg-[#e05e2b] hover:bg-[#c94e1f] active:scale-95 text-white text-xs font-bold rounded-md shadow transition-all whitespace-nowrap"
+              title="تطبيق النسبة على كل الأصناف الحالية"
+            >
+              تطبيق
+            </button>
+          </div>
         </div>
 
         <p
@@ -140,6 +184,9 @@ const authStore = useAuthStore()
 const isEdit = computed(() => !!route.params.id)
 const isHydrating = ref(false)
 
+// متغير نسبة الربح العامة
+const globalProfitMargin = ref(null)
+
 // قفل برمجي لمنع الحلقة المفرغة أثناء الحسابات التلقائية
 let isRecalculating = false
 
@@ -235,7 +282,16 @@ const detailSchema = [
     type: 'number',
     defaultValue: 0,
     widthClass: 'w-1/12',
-    extractFromItem: (item) => parseFloat(item.profit_margin) || 0,
+    extractFromItem: (item) => {
+      if (
+        globalProfitMargin.value !== null &&
+        globalProfitMargin.value !== '' &&
+        parseFloat(globalProfitMargin.value) >= 0
+      ) {
+        return parseFloat(globalProfitMargin.value)
+      }
+      return parseFloat(item.profit_margin) || 0
+    },
   },
   {
     key: 'selling_price',
@@ -244,14 +300,19 @@ const detailSchema = [
     defaultValue: 0,
     widthClass: 'w-1/12',
     extractFromItem: (item) => {
-      const unitPrice = item.units?.[0]?.price || 0
       const unitCost = item.units?.[0]?.cost || 0
-      const margin = parseFloat(item.profit_margin) || 0
+      const margin =
+        globalProfitMargin.value !== null &&
+        globalProfitMargin.value !== '' &&
+        parseFloat(globalProfitMargin.value) >= 0
+          ? parseFloat(globalProfitMargin.value)
+          : parseFloat(item.profit_margin) || 0
 
-      if (unitPrice > 0) return unitPrice
       if (unitCost > 0 && margin > 0) {
         return parseFloat((unitCost * (1 + margin / 100)).toFixed(4))
       }
+      const unitPrice = item.units?.[0]?.price || 0
+      if (unitPrice > 0) return unitPrice
       return 0
     },
   },
@@ -276,6 +337,36 @@ const detailSchema = [
     },
   },
 ]
+
+// دالة تطبيق نسبة الربح العامة على جميع الأصناف في الجدول
+const applyGlobalProfitMargin = () => {
+  const margin = parseFloat(globalProfitMargin.value)
+  if (isNaN(margin) || margin < 0) {
+    toast.warning('يرجى إدخال نسبة ربح صالحة.')
+    return
+  }
+
+  if (items.value.length === 0) {
+    toast.info('لا توجد أصناف حالياً في الجدول لتطبيق النسبة عليها.')
+    return
+  }
+
+  isRecalculating = true
+  items.value.forEach((row) => {
+    row.profit_margin = margin
+    const cost = parseFloat(row.unit_cost) || 0
+    if (cost > 0) {
+      const calculatedPrice = cost * (1 + margin / 100)
+      row.selling_price = parseFloat(calculatedPrice.toFixed(4))
+    }
+  })
+
+  setTimeout(() => {
+    isRecalculating = false
+  }, 50)
+
+  toast.success(`تم تطبيق نسبة ربح ${margin}% على جميع الأصناف بنجاح.`)
+}
 
 // مراقبة طريقة الدفع
 watch(
@@ -439,10 +530,34 @@ watch(
 const handleGlobalItemSelect = (selectedItem) => {
   if (!selectedItem) return
   handleItemSelected(selectedItem)
+
+  if (
+    globalProfitMargin.value !== null &&
+    globalProfitMargin.value !== '' &&
+    parseFloat(globalProfitMargin.value) >= 0
+  ) {
+    const margin = parseFloat(globalProfitMargin.value)
+    const targetRow = items.value.find((r) => r.item_id === selectedItem.id)
+    if (targetRow) {
+      targetRow.profit_margin = margin
+      const cost = parseFloat(targetRow.unit_cost) || 0
+      if (cost > 0) {
+        targetRow.selling_price = parseFloat((cost * (1 + margin / 100)).toFixed(4))
+      }
+    }
+  }
 }
 
 const triggerAddNewEmptyLine = () => {
-  items.value.push(createEmptyRow())
+  const newRow = createEmptyRow()
+  if (
+    globalProfitMargin.value !== null &&
+    globalProfitMargin.value !== '' &&
+    parseFloat(globalProfitMargin.value) >= 0
+  ) {
+    newRow.profit_margin = parseFloat(globalProfitMargin.value)
+  }
+  items.value.push(newRow)
 }
 
 const syncUnitCostPrice = (row) => {
@@ -451,7 +566,18 @@ const syncUnitCostPrice = (row) => {
     row.unit_cost = parseFloat(matchedUnit.cost) || 0
     row.selling_price = parseFloat(matchedUnit.price) || 0
 
-    if (row.unit_cost > 0 && row.selling_price > 0) {
+    if (
+      globalProfitMargin.value !== null &&
+      globalProfitMargin.value !== '' &&
+      parseFloat(globalProfitMargin.value) >= 0
+    ) {
+      row.profit_margin = parseFloat(globalProfitMargin.value)
+      if (row.unit_cost > 0) {
+        row.selling_price = parseFloat(
+          (row.unit_cost * (1 + parseFloat(row.profit_margin) / 100)).toFixed(4),
+        )
+      }
+    } else if (row.unit_cost > 0 && row.selling_price > 0) {
       row.profit_margin = parseFloat(
         (((row.selling_price - row.unit_cost) / row.unit_cost) * 100).toFixed(2),
       )

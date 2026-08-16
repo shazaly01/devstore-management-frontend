@@ -1,3 +1,4 @@
+<!---src\views\users\UsersList.vue--->
 <template>
   <div>
     <div class="flex justify-between items-center mb-6">
@@ -43,18 +44,33 @@
           <span v-else class="text-text-muted text-sm">—</span>
         </template>
 
+        <template #cell-stock_control="{ item }">
+          <span
+            v-if="item.stock_control"
+            class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-300"
+          >
+            مفعّل
+          </span>
+          <span
+            v-else
+            class="px-2.5 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-600 dark:bg-surface-border dark:text-text-secondary"
+          >
+            غير مفعّل
+          </span>
+        </template>
+
         <template #cell-actions="{ item }">
           <div class="flex justify-end space-x-4 space-x-reverse">
             <button
               @click.stop="openUserModal(item)"
-              class="font-semibold text-blue-500 hover:text-blue-700"
+              class="font-semibold text-blue-500 hover:text-blue-700 cursor-pointer"
             >
               تعديل
             </button>
             <button
               v-if="!hasSuperAdminRole(item)"
               @click.stop="openDeleteDialog(item)"
-              class="font-semibold text-danger hover:text-red-700"
+              class="font-semibold text-danger hover:text-red-700 cursor-pointer"
             >
               حذف
             </button>
@@ -100,7 +116,7 @@ const userStore = useUserStore()
 const { users, loading, pagination } = storeToRefs(userStore)
 const toast = useToast()
 
-// تعريف أعمدة الجدول بعد إضافة حقول الربط اللوجستي والمالي
+// تعريف أعمدة الجدول بعد إضافة عمود التحكم بالمخزون
 const tableHeaders = [
   { key: 'id', label: '#' },
   { key: 'full_name', label: 'الاسم الكامل' },
@@ -109,6 +125,7 @@ const tableHeaders = [
   { key: 'store', label: 'المخزن الافتراضي' },
   { key: 'treasury', label: 'الخزنة الافتراضية' },
   { key: 'bank', label: 'البنك الافتراضي' },
+  { key: 'stock_control', label: 'التحكم بالمخزون' },
   { key: 'created_at', label: 'تاريخ الإنشاء' },
   { key: 'actions', label: 'إجراءات', class: 'text-left' },
 ]
