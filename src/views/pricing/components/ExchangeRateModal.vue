@@ -92,13 +92,12 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <AppInput
+                <AppCurrencyInput
                   id="exchange-rate-value"
-                  type="number"
-                  step="0.0001"
                   label="سعر الصرف الجديد *"
                   v-model="form.rate"
                   placeholder="0.00"
+                  :precision="4"
                   required
                 />
                 <div v-if="validationErrors?.rate">
@@ -172,6 +171,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue'
 import AppInput from '@/components/ui/AppInput.vue'
+import AppCurrencyInput from '@/components/ui/AppCurrencyInput.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 

@@ -75,13 +75,12 @@
 
       <!-- التكلفة الأجنبية المقترحة (حقل إدخال فوري قابل للتعديل) -->
       <template #cell-suggested_foreign="{ item }">
-        <div class="w-32">
-          <input
-            type="number"
-            step="0.0001"
-            min="0"
-            v-model.number="item.suggested_foreign_cost"
-            class="w-full text-left font-mono font-bold px-2.5 py-1 text-sm border-2 rounded-md bg-white dark:bg-surface-ground border-primary focus:outline-none focus:ring-2 focus:ring-primary"
+        <div class="w-36">
+          <AppCurrencyInput
+            :id="`suggested-foreign-cost-${item.item_unit_id}`"
+            v-model="item.suggested_foreign_cost"
+            :precision="4"
+            input-class="!py-1 text-xs"
           />
         </div>
       </template>
@@ -129,6 +128,7 @@
 import { ref, watch } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
+import AppCurrencyInput from '@/components/ui/AppCurrencyInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 
 const props = defineProps({

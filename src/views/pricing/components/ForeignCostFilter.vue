@@ -73,15 +73,14 @@
 
         <!-- 4. سعر الصرف المرجعي للاحتساب -->
         <div>
-          <AppInput
+          <AppCurrencyInput
             id="fc-exchange-rate"
-            type="number"
-            step="0.0001"
             label="سعر الصرف المرجعي *"
             v-model="form.exchange_rate"
             placeholder="0.00"
+            :precision="4"
             required
-            @input="clearBackendError('exchange_rate')"
+            @update:model-value="clearBackendError('exchange_rate')"
           />
           <div v-if="validationErrors?.exchange_rate">
             <p
@@ -199,6 +198,7 @@ import { ref, computed, watch } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import AppInput from '@/components/ui/AppInput.vue'
+import AppCurrencyInput from '@/components/ui/AppCurrencyInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 
 const props = defineProps({

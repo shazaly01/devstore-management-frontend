@@ -77,14 +77,13 @@
 
       <!-- السعر المقترح (قابل للتعديل المباشر) -->
       <template #cell-suggested_price="{ item }">
-        <div class="w-32">
-          <input
-            type="number"
-            step="0.01"
-            min="0.01"
-            v-model.number="item.suggested_price"
-            @input="recalculateItemMargin(item)"
-            class="w-full text-left font-mono font-bold px-2.5 py-1 text-sm border-2 rounded-md bg-white dark:bg-surface-ground border-emerald-400 dark:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+        <div class="w-36">
+          <AppCurrencyInput
+            :id="`suggested-price-${item.item_id}-${item.item_unit_id}`"
+            v-model="item.suggested_price"
+            :precision="2"
+            input-class="!py-1 text-xs"
+            @update:model-value="recalculateItemMargin(item)"
           />
         </div>
       </template>
@@ -177,6 +176,7 @@ import { ref, watch } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppInput from '@/components/ui/AppInput.vue'
+import AppCurrencyInput from '@/components/ui/AppCurrencyInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 
 const props = defineProps({
