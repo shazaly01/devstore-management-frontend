@@ -1,3 +1,4 @@
+<!--src\views\items\components\ItemUnitsMasterTable.vue--->
 <template>
   <AppCard>
     <div class="p-5">
@@ -5,7 +6,7 @@
         <div>
           <h3 class="text-sm font-bold text-text-primary">وحدات القياس المتعددة</h3>
           <p class="text-[11px] text-text-muted mt-0.5">
-            اضبط أسطر الوحدات، التكلفة، وسعر الجمهور الأساسي
+            عرض وتعديل أسطر الوحدات، التكلفة بالعملة الأجنبية والمحلية، وسعر بيع الجمهور
           </p>
         </div>
         <AppButton
@@ -45,8 +46,9 @@
             ◀
           </div>
 
-          <div class="grid grid-cols-12 gap-2 items-end pr-1">
-            <div class="col-span-3">
+          <div class="grid grid-cols-12 gap-2 items-start pr-1">
+            <!-- 1. اختيار الوحدة -->
+            <div :class="isForeignCurrency ? 'col-span-2' : 'col-span-3'">
               <label class="block text-[10px] font-bold text-text-secondary mb-1">الوحدة</label>
               <AppDropdown
                 :id="'unit-dropdown-' + index"
@@ -64,7 +66,8 @@
               />
             </div>
 
-            <div class="col-span-2">
+            <!-- 2. معامل التحويل -->
+            <div :class="isForeignCurrency ? 'col-span-2' : 'col-span-2'">
               <label class="block text-[10px] font-bold text-text-secondary mb-1 text-center"
                 >المعامل</label
               >
@@ -82,42 +85,90 @@
               />
             </div>
 
-            <div class="col-span-3">
-              <label class="block text-[10px] font-bold text-text-secondary mb-1 text-right"
-                >التكلفة</label
+            <!-- 3. حقل التكلفة بالعملة الأجنبية (يثبت ويخزن في foreign_cost) -->
+            <div v-if="isForeignCurrency" class="col-span-2">
+              <label
+                class="block text-[10px] font-bold text-amber-600 dark:text-amber-400 mb-1 text-right truncate"
               >
-              <AppCurrencyInput
-                :id="'unit-cost-' + index"
-                :model-value="row.cost"
-                @update:model-value="
-                  (val) => modifyUnitRowField(index, 'cost', val !== null ? Number(val) : 0)
+                التكلفة ({{ selectedCurrency.code }})
+              </label>
+              <input
+                :id="'unit-foreign-cost-' + index"
+                type="number"
+                step="0.0001"
+                min="0"
+                :value="displayForeignCost(row)"
+                @input="
+                  (e) =>
+                    modifyUnitRowField(
+                      index,
+                      'foreign_cost',
+                      e.target.value === '' ? 0 : Number(e.target.value),
+                    )
                 "
-                placeholder="0"
                 @click.stop
+                placeholder="0"
+                class="block w-full px-2.5 py-2 border border-surface-border rounded-lg bg-surface-section text-text-primary text-xs font-mono font-bold text-right outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </div>
 
-            <div class="col-span-3">
-              <label class="block text-[10px] font-bold text-text-secondary mb-1 text-right"
-                >سعر الجمهور</label
-              >
-              <AppCurrencyInput
+            <!-- 4. حقل التكلفة بالعملة المحلية (دائماً معروض) -->
+            <div :class="isForeignCurrency ? 'col-span-3' : 'col-span-3'">
+              <label class="block text-[10px] font-bold text-text-secondary mb-1 text-right">
+                التكلفة المحلية
+              </label>
+              <input
+                :id="'unit-local-cost-' + index"
+                type="number"
+                step="0.01"
+                min="0"
+                :value="row.cost"
+                @input="
+                  (e) =>
+                    modifyUnitRowField(
+                      index,
+                      'cost',
+                      e.target.value === '' ? 0 : Number(e.target.value),
+                    )
+                "
+                @click.stop
+                placeholder="0"
+                class="block w-full px-2.5 py-2 border border-surface-border rounded-lg bg-surface-section text-text-primary text-xs font-mono font-bold text-right outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              />
+            </div>
+
+            <!-- 5. سعر الجمهور (بالعملة المحلية) -->
+            <div :class="isForeignCurrency ? 'col-span-2' : 'col-span-3'">
+              <label class="block text-[10px] font-bold text-text-secondary mb-1 text-right">
+                سعر الجمهور
+              </label>
+              <input
                 :id="'unit-price-' + index"
-                :model-value="row.price"
-                @update:model-value="
-                  (val) => modifyUnitRowField(index, 'price', val !== null ? Number(val) : 0)
+                type="number"
+                step="0.01"
+                min="0"
+                :value="row.price"
+                @input="
+                  (e) =>
+                    modifyUnitRowField(
+                      index,
+                      'price',
+                      e.target.value === '' ? 0 : Number(e.target.value),
+                    )
                 "
-                placeholder="0"
                 @click.stop
+                placeholder="0"
+                class="block w-full px-2.5 py-2 border border-surface-border rounded-lg bg-surface-section text-text-primary text-xs font-mono font-bold text-right outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </div>
 
-            <div class="col-span-1 flex justify-center items-center">
+            <!-- 6. زر الحذف -->
+            <div class="col-span-1 flex justify-center items-center pt-5">
               <button
                 v-if="index > 0"
                 type="button"
                 @click.stop="removeUnitRow(index)"
-                class="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded transition-colors mb-2 opacity-0 group-hover:opacity-100 shrink-0"
+                class="p-1 text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded transition-colors opacity-0 group-hover:opacity-100 shrink-0"
                 title="حذف هذه الوحدة"
               >
                 ✕
@@ -145,11 +196,12 @@
 </template>
 
 <script setup>
+import { computed } from 'vue'
 import { useItemStore } from '@/stores/itemStore'
 import { useUnitStore } from '@/stores/unitStore'
+import { useCurrencyStore } from '@/stores/currencyStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppButton from '@/components/ui/AppButton.vue'
-import AppCurrencyInput from '@/components/ui/AppCurrencyInput.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 
@@ -162,69 +214,273 @@ const emit = defineEmits(['update:formState', 'update:activeIndex', 'clear-error
 
 const itemStore = useItemStore()
 const unitStore = useUnitStore()
+const currencyStore = useCurrencyStore()
 
 /**
- * تعديل الحقول محلياً مع تفعيل المعايرة الحسابية المتقاطعة وتمرير البيانات للأب
+ * جلب العملة المرجعية المحددة وسعر صرفها النشط
+ */
+const selectedCurrency = computed(() => {
+  if (!props.formState.purchase_currency_id) return null
+  const curr = currencyStore.currencies.find((c) => c.id === props.formState.purchase_currency_id)
+  if (!curr) return null
+
+  const rateVal = curr.latest_exchange_rate?.rate || curr.exchange_rate || curr.rate || 1
+
+  return {
+    id: curr.id,
+    name: curr.name,
+    code: curr.code,
+    exchange_rate: Number(rateVal),
+  }
+})
+
+const isForeignCurrency = computed(() => {
+  return !!selectedCurrency.value && selectedCurrency.value.exchange_rate > 0
+})
+
+/**
+ * استخراج قيمة التكلفة بالعملة الأجنبية للعرض داخل الحقل
+ */
+const displayForeignCost = (row) => {
+  if (!isForeignCurrency.value) return 0
+  if (row.foreign_cost !== undefined && row.foreign_cost !== null && row.foreign_cost > 0) {
+    return Number(row.foreign_cost)
+  }
+  const rate = selectedCurrency.value.exchange_rate || 1
+  return Number((Number(row.cost || 0) / rate).toFixed(4))
+}
+
+/**
+ * تطبيق قواعد التقريب السعري المعتمدة في النظام
+ */
+const applyRounding = (price, rule = 'none') => {
+  if (!price || price <= 0) return 0
+
+  switch (rule) {
+    case 'nearest_50':
+      return Math.round(price / 50) * 50
+    case 'nearest_100':
+      return Math.round(price / 100) * 100
+    case 'nearest_500':
+      return Math.round(price / 500) * 500
+    case 'psychological_90': {
+      const base = 100
+      const ending = 90
+      if (price <= ending) return ending
+      const remainder = price % base
+      const baseFloor = Math.floor(price / base) * base
+      return remainder <= ending ? baseFloor + ending : baseFloor + base + ending
+    }
+    case 'psychological_900': {
+      const base = 1000
+      const ending = 900
+      if (price <= ending) return ending
+      const remainder = price % base
+      const baseFloor = Math.floor(price / base) * base
+      return remainder <= ending ? baseFloor + ending : baseFloor + base + ending
+    }
+    default:
+      return Number(price.toFixed(2))
+  }
+}
+
+/**
+ * دالة مساعدة لتحديث مصفوفة فئات الأسعار التابعة للوحدة
+ */
+const updatePricesArray = (pricesList, newPrice, roundingRule) => {
+  if (!pricesList || pricesList.length === 0) return []
+  return pricesList.map((pr) => {
+    const discount = Number(pr.discount_percentage || 0)
+    const discountedPrice = newPrice * (1 - discount / 100)
+    return {
+      ...pr,
+      price: applyRounding(discountedPrice, roundingRule),
+    }
+  })
+}
+
+/**
+ * تعديل الحقول ومزامنة foreign_cost و cost والاشتقاق الشجري التلقائي
  */
 const modifyUnitRowField = (index, field, value) => {
   emit('clear-error', 'units')
 
-  const clonedUnits = props.formState.units.map((unit, idx) => {
-    if (idx !== index) return unit
+  const roundingRule = props.formState.rounding_rule || 'none'
+  const margin = Number(props.formState.profit_margin || 0)
+  const rate = selectedCurrency.value?.exchange_rate || 1
 
-    const updatedUnit = { ...unit, [field]: value }
+  let clonedUnits = JSON.parse(JSON.stringify(props.formState.units))
 
-    // أ) إذا قام العميل بتغيير "التكلفة"
-    if (field === 'cost') {
-      const margin = props.formState.profit_margin || 0
-      const calculatedPrice = Number((value * (1 + margin / 100)).toFixed(4))
-      updatedUnit.price = calculatedPrice
+  // 1. التعديل على الوحدة القياسية الصغرى (السطر الأول index 0)
+  if (index === 0) {
+    if (field === 'foreign_cost') {
+      const baseForeignCost = Number(value)
+      const baseCost = Number((baseForeignCost * rate).toFixed(4))
+      const rawBasePrice = baseCost * (1 + margin / 100)
+      const basePrice = applyRounding(rawBasePrice, roundingRule)
 
-      if (updatedUnit.prices && updatedUnit.prices.length > 0) {
-        updatedUnit.prices = updatedUnit.prices.map((pr) => ({
-          ...pr,
-          price: Number((calculatedPrice * (1 - (pr.discount_percentage || 0) / 100)).toFixed(4)),
-        }))
+      clonedUnits[0].foreign_cost = baseForeignCost
+      clonedUnits[0].cost = baseCost
+      clonedUnits[0].price = basePrice
+      clonedUnits[0].prices = updatePricesArray(clonedUnits[0].prices, basePrice, roundingRule)
+
+      // توريث الحقول تلقائياً لكافة الوحدات الكبرى المرتبطة
+      for (let i = 1; i < clonedUnits.length; i++) {
+        const factor = Number(clonedUnits[i].conversion_factor || 1)
+        const unitForeignCost = Number((baseForeignCost * factor).toFixed(4))
+        const unitCost = Number((baseCost * factor).toFixed(4))
+        const unitPrice = applyRounding(basePrice * factor, roundingRule)
+
+        clonedUnits[i].foreign_cost = unitForeignCost
+        clonedUnits[i].cost = unitCost
+        clonedUnits[i].price = unitPrice
+        clonedUnits[i].prices = updatePricesArray(clonedUnits[i].prices, unitPrice, roundingRule)
       }
-    }
+    } else if (field === 'cost') {
+      const baseCost = Number(value)
+      const baseForeignCost = isForeignCurrency.value ? Number((baseCost / rate).toFixed(4)) : null
+      const rawBasePrice = baseCost * (1 + margin / 100)
+      const basePrice = applyRounding(rawBasePrice, roundingRule)
 
-    // ب) إذا قام العميل بتعديل "سعر الجمهور" يدوياً
-    if (field === 'price') {
-      if (updatedUnit.prices && updatedUnit.prices.length > 0) {
-        updatedUnit.prices = updatedUnit.prices.map((pr) => ({
-          ...pr,
-          price: Number((value * (1 - (pr.discount_percentage || 0) / 100)).toFixed(4)),
-        }))
+      clonedUnits[0].cost = baseCost
+      clonedUnits[0].foreign_cost = baseForeignCost
+      clonedUnits[0].price = basePrice
+      clonedUnits[0].prices = updatePricesArray(clonedUnits[0].prices, basePrice, roundingRule)
+
+      // توريث الحقول لكافة الوحدات الكبرى
+      for (let i = 1; i < clonedUnits.length; i++) {
+        const factor = Number(clonedUnits[i].conversion_factor || 1)
+        const unitCost = Number((baseCost * factor).toFixed(4))
+        const unitForeignCost = isForeignCurrency.value
+          ? Number((baseForeignCost * factor).toFixed(4))
+          : null
+        const unitPrice = applyRounding(basePrice * factor, roundingRule)
+
+        clonedUnits[i].cost = unitCost
+        clonedUnits[i].foreign_cost = unitForeignCost
+        clonedUnits[i].price = unitPrice
+        clonedUnits[i].prices = updatePricesArray(clonedUnits[i].prices, unitPrice, roundingRule)
       }
-    }
+    } else if (field === 'price') {
+      const basePrice = Number(value)
+      clonedUnits[0].price = basePrice
+      clonedUnits[0].prices = updatePricesArray(clonedUnits[0].prices, basePrice, roundingRule)
 
-    return updatedUnit
-  })
+      for (let i = 1; i < clonedUnits.length; i++) {
+        const factor = Number(clonedUnits[i].conversion_factor || 1)
+        const unitPrice = applyRounding(basePrice * factor, roundingRule)
+
+        clonedUnits[i].price = unitPrice
+        clonedUnits[i].prices = updatePricesArray(clonedUnits[i].prices, unitPrice, roundingRule)
+      }
+    } else {
+      clonedUnits[0][field] = value
+    }
+  } else {
+    // 2. التعديل على إحدى الوحدات الإضافية (index > 0)
+    const baseUnit = clonedUnits[0] || { cost: 0, price: 0, foreign_cost: null }
+
+    if (field === 'conversion_factor') {
+      const factor = Number(value > 0 ? value : 1)
+      const derivedCost = Number((Number(baseUnit.cost || 0) * factor).toFixed(4))
+      const derivedForeignCost =
+        isForeignCurrency.value && baseUnit.foreign_cost !== null
+          ? Number((Number(baseUnit.foreign_cost || 0) * factor).toFixed(4))
+          : isForeignCurrency.value
+            ? Number((derivedCost / rate).toFixed(4))
+            : null
+      const derivedPrice = applyRounding(Number(baseUnit.price || 0) * factor, roundingRule)
+
+      clonedUnits[index].conversion_factor = value
+      clonedUnits[index].cost = derivedCost
+      clonedUnits[index].foreign_cost = derivedForeignCost
+      clonedUnits[index].price = derivedPrice
+      clonedUnits[index].prices = updatePricesArray(
+        clonedUnits[index].prices,
+        derivedPrice,
+        roundingRule,
+      )
+    } else if (field === 'foreign_cost') {
+      const customForeignCost = Number(value)
+      const customCost = Number((customForeignCost * rate).toFixed(4))
+      const rawPrice = customCost * (1 + margin / 100)
+      const calculatedPrice = applyRounding(rawPrice, roundingRule)
+
+      clonedUnits[index].foreign_cost = customForeignCost
+      clonedUnits[index].cost = customCost
+      clonedUnits[index].price = calculatedPrice
+      clonedUnits[index].prices = updatePricesArray(
+        clonedUnits[index].prices,
+        calculatedPrice,
+        roundingRule,
+      )
+    } else if (field === 'cost') {
+      const customCost = Number(value)
+      const customForeignCost = isForeignCurrency.value
+        ? Number((customCost / rate).toFixed(4))
+        : null
+      const rawPrice = customCost * (1 + margin / 100)
+      const calculatedPrice = applyRounding(rawPrice, roundingRule)
+
+      clonedUnits[index].cost = customCost
+      clonedUnits[index].foreign_cost = customForeignCost
+      clonedUnits[index].price = calculatedPrice
+      clonedUnits[index].prices = updatePricesArray(
+        clonedUnits[index].prices,
+        calculatedPrice,
+        roundingRule,
+      )
+    } else if (field === 'price') {
+      const customPrice = Number(value)
+      clonedUnits[index].price = customPrice
+      clonedUnits[index].prices = updatePricesArray(
+        clonedUnits[index].prices,
+        customPrice,
+        roundingRule,
+      )
+    } else {
+      clonedUnits[index][field] = value
+    }
+  }
 
   emit('update:formState', { ...props.formState, units: clonedUnits })
 }
 
 /**
- * إضافة سطر وحدة إضافية جديد مع تأسيس فئات الأسعار وأسعار العمليات الافتراضية
+ * إضافة سطر وحدة إضافية مع تثبيت foreign_cost واشتقاقه فورياً من الوحدة الصغرى
  */
 const addUnitRow = () => {
-  // [تعديل]: حقن أسعار العمليات (البارز والليزر) كقيم فارغة لضمان تفاعلية الحقول الجديدة في الواجهة
-  const defaultPrices = itemStore.priceLists.map((pl) => ({
-    price_list_id: pl.id,
-    price_list_name: pl.name,
-    discount_percentage: 0,
-    price: 0,
-    embossed_price: null, // [إضافة]
-    laser_price: null, // [إضافة]
-  }))
+  const baseUnit = props.formState.units[0] || { cost: 0, price: 0, foreign_cost: null }
+  const roundingRule = props.formState.rounding_rule || 'none'
+  const rate = selectedCurrency.value?.exchange_rate || 1
+  const initialFactor = 1
+
+  const initialCost = Number(baseUnit.cost || 0) * initialFactor
+  const initialForeignCost = isForeignCurrency.value
+    ? baseUnit.foreign_cost !== null && baseUnit.foreign_cost !== undefined
+      ? Number(baseUnit.foreign_cost) * initialFactor
+      : Number((initialCost / rate).toFixed(4))
+    : null
+
+  const initialPrice = Number(baseUnit.price || 0) * initialFactor
+
+  const defaultPrices = itemStore.priceLists.map((pl) => {
+    return {
+      price_list_id: pl.id,
+      price_list_name: pl.name,
+      discount_percentage: 0,
+      price: applyRounding(initialPrice, roundingRule),
+    }
+  })
 
   const updatedUnits = [
     ...props.formState.units,
     {
       unit_id: null,
-      conversion_factor: 1,
-      cost: 0,
-      price: 0,
+      conversion_factor: initialFactor,
+      cost: initialCost,
+      foreign_cost: initialForeignCost,
+      price: initialPrice,
       barcodes: [],
       prices: defaultPrices,
     },
@@ -261,5 +517,14 @@ const removeUnitRow = (index) => {
 }
 :global(.dark) .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: #4b5563;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
 }
 </style>

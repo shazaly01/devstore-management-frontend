@@ -1,3 +1,4 @@
+//src\services\categoryService.js
 import apiClient from './apiClient'
 
 const resource = '/categories'

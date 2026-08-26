@@ -36,6 +36,7 @@
           <ItemUnitPricesGrid
             :prices="activeUnitRow.prices"
             :base-price="activeUnitRow.price"
+            :rounding-rule="props.formState.rounding_rule"
             @update:prices="(updatedPrices) => updateActiveUnitSubArray('prices', updatedPrices)"
           />
         </div>

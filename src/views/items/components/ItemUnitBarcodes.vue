@@ -1,3 +1,4 @@
+<!--src\views\items\components\ItemUnitBarcodes.vue---->
 <template>
   <div class="space-y-2">
     <label class="block text-xs font-bold text-text-secondary">

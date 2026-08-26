@@ -67,16 +67,52 @@ import { DEFAULT_CURRENCY } from '@/utils/formatters'
 const props = defineProps({
   prices: { type: Array, required: true, default: () => [] },
   basePrice: { type: Number, required: true, default: 0 },
+  roundingRule: { type: String, default: 'none' },
 })
 
 const emit = defineEmits(['update:prices'])
 
 /**
- * أتمتة احتساب السعر النهائي للفئة بناءً على قيمة الخصم المدخلة حديثاً بالواجهة
+ * تطبيق قاعدة التقريب المحددة للصنف على السعر
+ */
+const applyRounding = (price, rule = 'none') => {
+  if (!price || price <= 0) return 0
+
+  switch (rule) {
+    case 'nearest_50':
+      return Math.round(price / 50) * 50
+    case 'nearest_100':
+      return Math.round(price / 100) * 100
+    case 'nearest_500':
+      return Math.round(price / 500) * 500
+    case 'psychological_90': {
+      const base = 100
+      const ending = 90
+      if (price <= ending) return ending
+      const remainder = price % base
+      const baseFloor = Math.floor(price / base) * base
+      return remainder <= ending ? baseFloor + ending : baseFloor + base + ending
+    }
+    case 'psychological_900': {
+      const base = 1000
+      const ending = 900
+      if (price <= ending) return ending
+      const remainder = price % base
+      const baseFloor = Math.floor(price / base) * base
+      return remainder <= ending ? baseFloor + ending : baseFloor + base + ending
+    }
+    default:
+      return Number(price.toFixed(2))
+  }
+}
+
+/**
+ * أتمتة احتساب السعر النهائي للفئة بناءً على قيمة الخصم المدخلة مع تطبيق قاعدة التقريب
  */
 const handleDiscountInput = (index, discountValue) => {
   const currentBasePrice = props.basePrice || 0
-  const calculatedPrice = Number((currentBasePrice * (1 - discountValue / 100)).toFixed(4))
+  const rawPrice = currentBasePrice * (1 - discountValue / 100)
+  const calculatedPrice = applyRounding(rawPrice, props.roundingRule)
 
   const updatedPrices = props.prices.map((priceObj, idx) => {
     if (idx !== index) return priceObj

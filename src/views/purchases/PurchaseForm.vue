@@ -139,7 +139,8 @@
       class="fixed bottom-0 right-0 left-0 bg-surface-card border-t border-surface-border p-3 shadow-[0_-4px_10px_rgba(0,0,0,0.06)] z-40 flex justify-between items-center px-6"
     >
       <div class="text-xs text-text-secondary font-medium">
-        مستند المشتريات والمدخلات المالية الحالية تخضع للمراقبة الجردية والتدقيق اللحظي للأرصدة.
+        مستند المشتريات والمدخلات المالية الحالية تخضع للمراقبة الجردية والتدقيق اللحظي للأرصدة
+        وتكلفة الاستبدال.
       </div>
       <div class="flex items-center gap-3">
         <AppButton type="button" variant="secondary" size="sm" @click="handleCancel">
@@ -190,7 +191,7 @@ const globalProfitMargin = ref(null)
 // قفل برمجي لمنع الحلقة المفرغة أثناء الحسابات التلقائية
 let isRecalculating = false
 
-// كائن البيانات مع الحسابات المالية
+// كائن البيانات مع الحسابات المالية والعملات
 const form = ref({
   invoice_type: 'purchase',
   parent_id: null,
@@ -198,6 +199,8 @@ const form = ref({
   treasury_id: '',
   bank_id: '',
   supplier_id: '',
+  currency_id: null,
+  exchange_rate: 1,
   invoice_date: new Date().toISOString().substr(0, 10),
   payment_type: 'cash',
   discount_amount: 0,
@@ -207,7 +210,7 @@ const form = ref({
 
 const items = ref([])
 
-// مصفوفة التكوين الحسابي لجدول الأصناف مع حقول نسبة الربح وسعر البيع وتاريخ الصلاحية
+// مصفوفة التكوين الحسابي لجدول الأصناف مع حقول التكلفة الأجنبية، نسبة الربح، وسعر البيع
 const detailSchema = [
   {
     key: 'item_id_display',
@@ -269,8 +272,16 @@ const detailSchema = [
     widthClass: 'w-1/12',
   },
   {
+    key: 'foreign_unit_cost',
+    label: 'التكلفة بالعملة الأجنبية',
+    type: 'number',
+    defaultValue: null,
+    widthClass: 'w-1/12',
+    extractFromItem: () => null,
+  },
+  {
     key: 'unit_cost',
-    label: 'تكلفة الوحدة',
+    label: 'تكلفة الوحدة (محلي)',
     type: 'number',
     defaultValue: 0,
     widthClass: 'w-1/12',
@@ -391,10 +402,34 @@ watch(
   },
 )
 
+// مراقبة تغير سعر الصرف وتحديث التكلفة المحلية للأصناف المسعرة بالعملة الأجنبية
+watch(
+  () => form.value.exchange_rate,
+  (newRate) => {
+    const rate = parseFloat(newRate) || 1
+    if (rate > 0 && form.value.currency_id) {
+      isRecalculating = true
+      items.value.forEach((row) => {
+        if (row.foreign_unit_cost && parseFloat(row.foreign_unit_cost) > 0) {
+          row.unit_cost = parseFloat((parseFloat(row.foreign_unit_cost) * rate).toFixed(4))
+          const margin = parseFloat(row.profit_margin) || 0
+          if (margin > 0) {
+            row.selling_price = parseFloat((row.unit_cost * (1 + margin / 100)).toFixed(4))
+          }
+        }
+      })
+      setTimeout(() => {
+        isRecalculating = false
+      }, 50)
+    }
+  },
+)
+
 // محرك الحساب التلقائي ثنائي الاتجاه الدقيق والمحمي من التكرار الدائري
 watch(
   () =>
     items.value.map((row) => ({
+      foreign_cost: row.foreign_unit_cost,
       cost: row.unit_cost,
       margin: row.profit_margin,
       price: row.selling_price,
@@ -407,15 +442,39 @@ watch(
       const row = items.value[index]
       if (!row || !old) return
 
-      const cost = parseFloat(row.unit_cost) || 0
-      const margin = parseFloat(row.profit_margin) || 0
-      const price = parseFloat(row.selling_price) || 0
-
+      const foreignChanged = val.foreign_cost !== old.foreign_cost
       const costChanged = val.cost !== old.cost
       const marginChanged = val.margin !== old.margin
       const priceChanged = val.price !== old.price
 
-      // 1. إذا قام المستخدم بتعديل سعر البيع يدوياً -> نحسب نسبة الربح فقط دون المساس بسعر البيع المدخل
+      const exchangeRate = parseFloat(form.value.exchange_rate) || 1
+
+      // 0. إذا تم إدخال أو تعديل التكلفة بالعملة الأجنبية -> تحديث التكلفة المحلية
+      if (foreignChanged) {
+        isRecalculating = true
+        if (
+          row.foreign_unit_cost !== null &&
+          row.foreign_unit_cost !== '' &&
+          parseFloat(row.foreign_unit_cost) > 0
+        ) {
+          row.unit_cost = parseFloat((parseFloat(row.foreign_unit_cost) * exchangeRate).toFixed(4))
+        }
+        const cost = parseFloat(row.unit_cost) || 0
+        const margin = parseFloat(row.profit_margin) || 0
+        if (cost > 0 && margin > 0) {
+          row.selling_price = parseFloat((cost * (1 + margin / 100)).toFixed(4))
+        }
+        setTimeout(() => {
+          isRecalculating = false
+        }, 50)
+        return
+      }
+
+      const cost = parseFloat(row.unit_cost) || 0
+      const margin = parseFloat(row.profit_margin) || 0
+      const price = parseFloat(row.selling_price) || 0
+
+      // 1. إذا قام المستخدم بتعديل سعر البيع يدوياً -> نحسب نسبة الربح
       if (priceChanged && !marginChanged && !costChanged) {
         if (cost > 0) {
           isRecalculating = true
@@ -635,6 +694,10 @@ onMounted(async () => {
           item_unit_id: it.item_unit_id,
           quantity: it.quantity,
           unit_cost: cost,
+          foreign_unit_cost:
+            it.foreign_unit_cost !== null && it.foreign_unit_cost !== undefined
+              ? parseFloat(it.foreign_unit_cost)
+              : null,
           profit_margin: margin,
           selling_price: price,
           expiry_date: it.expiry_date ? String(it.expiry_date).substring(0, 10) : '',
@@ -654,6 +717,8 @@ onMounted(async () => {
         treasury_id: cur.treasury_id || '',
         bank_id: cur.bank_id || '',
         supplier_id: cur.supplier_id,
+        currency_id: cur.currency_id || null,
+        exchange_rate: cur.exchange_rate ? parseFloat(cur.exchange_rate) : 1,
         invoice_date: cur.invoice_date.substr(0, 10),
         payment_type: cur.payment_type,
         discount_amount: cur.discount_amount || 0,
@@ -684,6 +749,10 @@ const handleSubmit = async () => {
       item_unit_id: row.item_unit_id,
       quantity: parseFloat(row.quantity) || 0,
       unit_cost: parseFloat(row.unit_cost) || 0,
+      foreign_unit_cost:
+        row.foreign_unit_cost !== null && row.foreign_unit_cost !== ''
+          ? parseFloat(row.foreign_unit_cost)
+          : null,
       profit_margin: parseFloat(row.profit_margin) || 0,
       selling_price: parseFloat(row.selling_price) || 0,
       expiry_date: row.expiry_date ? row.expiry_date : null,
@@ -694,6 +763,8 @@ const handleSubmit = async () => {
 
   const finalPayload = {
     ...form.value,
+    currency_id: form.value.currency_id || null,
+    exchange_rate: form.value.exchange_rate ? parseFloat(form.value.exchange_rate) : null,
     subtotal: headerSubtotal.value,
     grand_total: headerGrandTotal.value,
     items: dynamicItemsPayload,

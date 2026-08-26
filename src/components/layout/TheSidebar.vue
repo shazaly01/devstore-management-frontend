@@ -96,7 +96,12 @@
 import { computed, shallowRef, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
-import { ArrowLeftOnRectangleIcon, XMarkIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
+import {
+  ArrowLeftOnRectangleIcon,
+  XMarkIcon,
+  ChevronDownIcon,
+  CurrencyDollarIcon,
+} from '@heroicons/vue/24/outline'
 const backendUrl = import.meta.env.VITE_API_URL
   ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
   : ''

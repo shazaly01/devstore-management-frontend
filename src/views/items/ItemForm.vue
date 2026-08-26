@@ -1,3 +1,4 @@
+<!--src\views\items\ItemForm.vue---->
 <template>
   <div class="max-w-7xl mx-auto pb-12">
     <div class="mb-5">
@@ -5,12 +6,12 @@
         {{ isEditMode ? 'تعديل بيانات الصنف ومصفوفته السعرية' : 'إضافة صنف جديد' }}
       </h1>
       <p class="text-[11px] text-text-muted mt-0.5">
-        نافذة الإدخال الفوري المتكامل للأصناف والباركودات المتعددة
+        نافذة الإدخال الفوري المتكامل للأصناف والباركودات المتعددة وسياسات التسعير
       </p>
     </div>
 
     <div class="space-y-4">
-      <!-- 1. كرت البيانات الأساسية للصنف -->
+      <!-- 1. كرت البيانات الأساسية للصنف وسياسات التسعير -->
       <ItemBaseInfo
         :form-state="form"
         @update:form-state="handleFormStateUpdate"
@@ -66,11 +67,15 @@ const toast = useToast()
 const isEditMode = computed(() => !!route.params.id)
 const loading = computed(() => itemStore.loading)
 
-// تأسيس كائن الحالة الشجرية بالكامل مع حقن المتغيرات الخاصة بالصنف التجميعي وتاريخ الصلاحية
+// تأسيس كائن الحالة الشجرية بالكامل مع حقن متغيرات التسعير والعملة والصنف التجميعي
 const form = reactive({
   name: '',
   item_type: 'product',
   profit_margin: 0,
+  purchase_currency_id: null,
+  pricing_policy: 'manual',
+  min_margin_percentage: 0,
+  rounding_rule: 'none',
   category_id: null,
   category_path: '',
   base_unit_id: null,
@@ -101,6 +106,10 @@ onMounted(async () => {
       form.name = rawItem.name
       form.item_type = rawItem.item_type
       form.profit_margin = rawItem.profit_margin
+      form.purchase_currency_id = rawItem.purchase_currency_id ?? null
+      form.pricing_policy = rawItem.pricing_policy || 'manual'
+      form.min_margin_percentage = rawItem.min_margin_percentage ?? 0
+      form.rounding_rule = rawItem.rounding_rule || 'none'
       form.category_id = rawItem.category_id
       form.category_path = rawItem.category_path
       form.base_unit_id = rawItem.base_unit_id
@@ -120,6 +129,10 @@ onMounted(async () => {
           unit_id: unit.unit_id,
           conversion_factor: unit.conversion_factor,
           cost: unit.cost,
+          foreign_cost:
+            unit.foreign_cost !== null && unit.foreign_cost !== undefined
+              ? Number(unit.foreign_cost)
+              : null,
           price: unit.price,
           barcodes: (unit.barcodes || []).map((b) => (typeof b === 'object' ? b.barcode : b)),
           prices: (unit.prices || []).map((p) => ({
@@ -151,7 +164,11 @@ const preparePayload = () => {
   return {
     name: form.name,
     item_type: form.item_type,
-    profit_margin: form.profit_margin,
+    profit_margin: Number(form.profit_margin || 0),
+    purchase_currency_id: form.purchase_currency_id || null,
+    pricing_policy: form.pricing_policy || 'manual',
+    min_margin_percentage: Number(form.min_margin_percentage || 0),
+    rounding_rule: form.rounding_rule || 'none',
     category_id: form.category_id,
     category_path: form.category_path,
     base_unit_id: form.base_unit_id,
@@ -172,6 +189,13 @@ const preparePayload = () => {
       unit_id: unit.unit_id,
       conversion_factor: Number(unit.conversion_factor),
       cost: Number(unit.cost),
+      foreign_cost:
+        unit.foreign_cost !== null &&
+        unit.foreign_cost !== '' &&
+        unit.foreign_cost !== undefined &&
+        !isNaN(unit.foreign_cost)
+          ? Number(unit.foreign_cost)
+          : null,
       price: Number(unit.price),
       barcodes: unit.barcodes.map((b) => (typeof b === 'object' ? b.barcode : String(b).trim())),
       prices: unit.prices.map((p) => ({

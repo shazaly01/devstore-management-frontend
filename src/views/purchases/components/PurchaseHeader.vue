@@ -4,6 +4,7 @@
     class="p-5 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl space-y-4 text-right font-sans"
     dir="rtl"
   >
+    <!-- الصف الأول: نوع الفاتورة، المستودع، وحساب الدفع (خزنة/بنك) -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="relative w-full" key="purchase-invoice-type-container">
         <div
@@ -123,6 +124,7 @@
       </div>
     </div>
 
+    <!-- الصف الثاني: طريقة الدفع، المورد، وتاريخ الفاتورة -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="relative w-full" key="purchase-payment-type-container">
         <div
@@ -223,56 +225,136 @@
           {{ getFieldError('invoice_date') }}
         </p>
       </div>
+    </div>
 
-      <div
-        v-if="formData.invoice_type === 'return'"
-        key="purchase-parent-invoice-container"
-        class="relative w-full md:col-span-3 animate-fade-in mt-1"
-      >
+    <!-- الصف الثالث: العملة وسعر الصرف المعتمد للفاتورة -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-[#3e414c]/60">
+      <div class="relative w-full" key="purchase-currency-container">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-dashed border-[#e05e2b]/40 rounded-lg flex items-center"
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b]"
         >
           <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
-            <svg
-              class="w-5 h-5 text-[#e05e2b]"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
                 stroke-linejoin="round"
                 stroke-width="2"
-                d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
               />
             </svg>
           </span>
 
           <select
-            v-model="formData.parent_id"
-            :disabled="!formData.supplier_id"
+            v-model="formData.currency_id"
+            @change="handleCurrencyChange"
             style="color-scheme: dark"
-            class="block w-full h-full pr-10 pl-10 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            class="block w-full h-full pr-10 pl-10 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer"
           >
-            <option :value="null" class="bg-[#16171b]">
-              {{ formData.supplier_id ? 'اختر مستند الشراء الأم...' : 'حدد المورد أولاً...' }}
-            </option>
+            <option :value="null" class="bg-[#16171b]">العملة المحلية الافتراضية</option>
             <option
-              v-for="invoice in originalInvoices"
-              :key="invoice.id"
-              :value="invoice.id"
+              v-for="curr in currencyStore.currencies"
+              :key="curr.id"
+              :value="curr.id"
               class="bg-[#16171b]"
             >
-              #{{ invoice.id }} - {{ invoice.invoice_date }}
+              {{ curr.name }} ({{ curr.code }})
             </option>
           </select>
 
           <span class="absolute left-4 text-gray-500 pointer-events-none text-[10px]">▼</span>
         </div>
-        <p v-if="getFieldError('parent_id')" class="text-rose-500 text-[10px] font-bold mt-1 pr-1">
-          {{ getFieldError('parent_id') }}
+        <p
+          v-if="getFieldError('currency_id')"
+          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
+        >
+          {{ getFieldError('currency_id') }}
         </p>
       </div>
+
+      <div class="relative w-full" key="purchase-exchange-rate-container">
+        <div
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b]"
+        >
+          <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+              />
+            </svg>
+          </span>
+
+          <input
+            type="number"
+            step="0.0001"
+            min="0.0001"
+            :disabled="!formData.currency_id"
+            v-model.number="formData.exchange_rate"
+            placeholder="سعر الصرف..."
+            class="block w-full h-full pr-10 pl-24 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right disabled:opacity-40 disabled:cursor-not-allowed"
+          />
+
+          <span
+            class="absolute left-3 text-gray-400 pointer-events-none flex items-center gap-1 text-[11px] font-bold"
+          >
+            سعر الصرف
+          </span>
+        </div>
+        <p
+          v-if="getFieldError('exchange_rate')"
+          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
+        >
+          {{ getFieldError('exchange_rate') }}
+        </p>
+      </div>
+    </div>
+
+    <!-- الصف الرابع الشرطي: اختيار الفاتورة الأصلية في حال المرتجع -->
+    <div
+      v-if="formData.invoice_type === 'return'"
+      key="purchase-parent-invoice-container"
+      class="relative w-full animate-fade-in mt-1"
+    >
+      <div
+        class="relative w-full h-11 bg-[#16171b] border border-dashed border-[#e05e2b]/40 rounded-lg flex items-center"
+      >
+        <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
+          <svg class="w-5 h-5 text-[#e05e2b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
+            />
+          </svg>
+        </span>
+
+        <select
+          v-model="formData.parent_id"
+          :disabled="!formData.supplier_id"
+          style="color-scheme: dark"
+          class="block w-full h-full pr-10 pl-10 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+        >
+          <option :value="null" class="bg-[#16171b]">
+            {{ formData.supplier_id ? 'اختر مستند الشراء الأم...' : 'حدد المورد أولاً...' }}
+          </option>
+          <option
+            v-for="invoice in originalInvoices"
+            :key="invoice.id"
+            :value="invoice.id"
+            class="bg-[#16171b]"
+          >
+            #{{ invoice.id }} - {{ invoice.invoice_date }}
+          </option>
+        </select>
+
+        <span class="absolute left-4 text-gray-500 pointer-events-none text-[10px]">▼</span>
+      </div>
+      <p v-if="getFieldError('parent_id')" class="text-rose-500 text-[10px] font-bold mt-1 pr-1">
+        {{ getFieldError('parent_id') }}
+      </p>
     </div>
   </div>
 </template>
@@ -282,6 +364,7 @@ import { onMounted, ref, watch } from 'vue'
 import { useStoreStore } from '@/stores/storeStore'
 import { useSupplierStore } from '@/stores/supplierStore'
 import { usePurchaseStore } from '@/stores/purchaseStore'
+import { useCurrencyStore } from '@/stores/currencyStore'
 import StoresDropdown from '@/components/forms/StoresDropdown.vue'
 import TreasuriesDropdown from '@/components/forms/TreasuriesDropdown.vue'
 import BanksDropdown from '@/components/forms/BanksDropdown.vue'
@@ -296,8 +379,24 @@ const props = defineProps({
 const storeStore = useStoreStore()
 const supplierStore = useSupplierStore()
 const purchaseStore = usePurchaseStore()
+const currencyStore = useCurrencyStore()
 
 const originalInvoices = ref([])
+
+const handleCurrencyChange = () => {
+  if (!formData.value.currency_id) {
+    formData.value.exchange_rate = 1
+    return
+  }
+
+  const selectedCurrency = currencyStore.currencies.find(
+    (c) => Number(c.id) === Number(formData.value.currency_id),
+  )
+
+  if (selectedCurrency && selectedCurrency.latest_exchange_rate?.rate) {
+    formData.value.exchange_rate = Number(selectedCurrency.latest_exchange_rate.rate)
+  }
+}
 
 const loadOriginalInvoices = async () => {
   if (formData.value.invoice_type === 'return' && formData.value.supplier_id) {
@@ -333,6 +432,7 @@ onMounted(async () => {
   await Promise.all([
     storeStore.fetchStores(1, { is_active: 1 }),
     supplierStore.fetchSuppliers(1, { is_active: 1 }),
+    currencyStore.fetchCurrencies(),
   ])
 
   if (formData.value.invoice_type === 'return' && formData.value.supplier_id) {

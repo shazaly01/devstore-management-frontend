@@ -1,3 +1,4 @@
+// src/config/navigation.js
 import {
   HomeIcon,
   Squares2X2Icon,
@@ -5,11 +6,12 @@ import {
   DocumentChartBarIcon,
   Cog6ToothIcon,
   WrenchScrewdriverIcon,
-  DocumentTextIcon, // أيقونة كشف الحساب المساعد
-  ShoppingCartIcon, // أيقونة فواتير المبيعات
-  ShoppingBagIcon, // أيقونة فواتير المشتريات
-  ReceiptRefundIcon, // أيقونة سندات القبض والصرف
-  AdjustmentsHorizontalIcon, // [إضافة]: أيقونة مخصصة للتسويات الجردية المباشرة
+  DocumentTextIcon,
+  ShoppingCartIcon,
+  ShoppingBagIcon,
+  ReceiptRefundIcon,
+  AdjustmentsHorizontalIcon,
+  CalculatorIcon, // أيقونة محرك وسياسات التسعير
 } from '@heroicons/vue/24/outline'
 
 /**
@@ -70,14 +72,6 @@ export const navigationConfig = [
     permission: 'sale.swap_raw_materials',
   },
 
-  // [الأسطر المعلقة للعمليات المباشرة المستقبيلية]
-  // {
-  //   name: 'بضاعة أول المدة',
-  //   routeName: 'OpeningStocksList',
-  //   icon: ArrowPathIcon,
-  //   permission: 'opening_stock.view',
-  // },
-
   // ==========================================================================
   // الكتلة الثانية: المجموعات المنسدلة للتهيئة والتقارير (Bottom - Dropdown Menus)
   // ==========================================================================
@@ -109,6 +103,11 @@ export const navigationConfig = [
         permission: 'item.view',
       },
       {
+        name: 'محرك وسياسات التسعير',
+        routeName: 'PricingView',
+        permission: 'pricing.view',
+      },
+      {
         name: 'إدارة العملاء',
         routeName: 'CustomersList',
         permission: 'customer.view',
@@ -127,11 +126,6 @@ export const navigationConfig = [
     icon: BanknotesIcon,
     permission: 'account.view',
     children: [
-      // {
-      //   name: 'شجرة الحسابات',
-      //   routeName: 'AccountsList',
-      //   permission: 'account.view',
-      // },
       {
         name: 'الخزائن المالية',
         routeName: 'TreasuriesList',
@@ -147,11 +141,6 @@ export const navigationConfig = [
         routeName: 'ExpensesList',
         permission: 'expense.view',
       },
-      // {
-      //   name: 'القيود اليومية المركبة',
-      //   routeName: 'JournalEntriesList',
-      //   permission: 'journal_entry.view',
-      // },
     ],
   },
 

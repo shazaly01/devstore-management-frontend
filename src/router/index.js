@@ -57,6 +57,9 @@ const RolesList = () => import('@/views/roles/RolesList.vue')
 const BackupsList = () => import('@/views/settings/BackupsList.vue')
 const PrintSummary = () => import('@/views/reports/PrintSummary.vue')
 
+// --- مسارات موديول التسعير المتقدم وأسعار الصرف ---
+const PricingView = () => import('@/views/pricing/PricingView.vue')
+
 const routes = [
   // --- المسارات العامة (لا تتطلب مصادقة) ---
   {
@@ -121,6 +124,15 @@ const routes = [
         name: 'ItemEdit',
         component: ItemForm,
         meta: { permission: 'item.update' },
+      },
+      // ==========================================
+      // موديول التسعير المتقدم وأسعار الصرف
+      // ==========================================
+      {
+        path: 'pricing',
+        name: 'PricingView',
+        component: PricingView,
+        meta: { permission: 'pricing.view' },
       },
       {
         path: 'customers',
