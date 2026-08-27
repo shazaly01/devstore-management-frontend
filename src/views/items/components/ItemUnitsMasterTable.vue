@@ -85,80 +85,63 @@
               />
             </div>
 
-            <!-- 3. حقل التكلفة بالعملة الأجنبية (يثبت ويخزن في foreign_cost) -->
-            <div v-if="isForeignCurrency" class="col-span-2">
-              <label
-                class="block text-[10px] font-bold text-amber-600 dark:text-amber-400 mb-1 text-right truncate"
-              >
-                التكلفة ({{ selectedCurrency.code }})
-              </label>
-              <input
+            <!-- 3. حقل التكلفة بالعملة الأجنبية (يقرأ foreign_cost مباشرة) -->
+            <div v-if="isForeignCurrency" class="col-span-2" @click.stop>
+              <AppCurrencyInput
                 :id="'unit-foreign-cost-' + index"
-                type="number"
-                step="0.0001"
-                min="0"
-                :value="displayForeignCost(row)"
-                @input="
-                  (e) =>
+                :label="'التكلفة (' + (selectedCurrency?.code || '') + ')'"
+                :model-value="row.foreign_cost"
+                :precision="4"
+                label-class="!text-[10px] !font-bold text-amber-600 dark:text-amber-400 !mb-1 text-right truncate"
+                input-class="!px-2.5 !py-2 !text-xs !font-mono !font-bold !text-right !bg-surface-section !border-surface-border"
+                @update:model-value="
+                  (val) =>
                     modifyUnitRowField(
                       index,
                       'foreign_cost',
-                      e.target.value === '' ? 0 : Number(e.target.value),
+                      val !== null && val !== undefined ? Number(val) : 0,
                     )
                 "
-                @click.stop
-                placeholder="0"
-                class="block w-full px-2.5 py-2 border border-surface-border rounded-lg bg-surface-section text-text-primary text-xs font-mono font-bold text-right outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </div>
 
-            <!-- 4. حقل التكلفة بالعملة المحلية (دائماً معروض) -->
-            <div :class="isForeignCurrency ? 'col-span-3' : 'col-span-3'">
-              <label class="block text-[10px] font-bold text-text-secondary mb-1 text-right">
-                التكلفة المحلية
-              </label>
-              <input
+            <!-- 4. حقل التكلفة بالعملة المحلية -->
+            <div :class="isForeignCurrency ? 'col-span-3' : 'col-span-3'" @click.stop>
+              <AppCurrencyInput
                 :id="'unit-local-cost-' + index"
-                type="number"
-                step="0.01"
-                min="0"
-                :value="row.cost"
-                @input="
-                  (e) =>
+                label="التكلفة المحلية"
+                :model-value="row.cost"
+                :precision="2"
+                label-class="!text-[10px] !font-bold text-text-secondary !mb-1 text-right"
+                input-class="!px-2.5 !py-2 !text-xs !font-mono !font-bold !text-right !bg-surface-section !border-surface-border"
+                @update:model-value="
+                  (val) =>
                     modifyUnitRowField(
                       index,
                       'cost',
-                      e.target.value === '' ? 0 : Number(e.target.value),
+                      val !== null && val !== undefined ? Number(val) : 0,
                     )
                 "
-                @click.stop
-                placeholder="0"
-                class="block w-full px-2.5 py-2 border border-surface-border rounded-lg bg-surface-section text-text-primary text-xs font-mono font-bold text-right outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </div>
 
             <!-- 5. سعر الجمهور (بالعملة المحلية) -->
-            <div :class="isForeignCurrency ? 'col-span-2' : 'col-span-3'">
-              <label class="block text-[10px] font-bold text-text-secondary mb-1 text-right">
-                سعر الجمهور
-              </label>
-              <input
+            <div :class="isForeignCurrency ? 'col-span-2' : 'col-span-3'" @click.stop>
+              <AppCurrencyInput
                 :id="'unit-price-' + index"
-                type="number"
-                step="0.01"
-                min="0"
-                :value="row.price"
-                @input="
-                  (e) =>
+                label="سعر الجمهور"
+                :model-value="row.price"
+                :precision="2"
+                label-class="!text-[10px] !font-bold text-text-secondary !mb-1 text-right"
+                input-class="!px-2.5 !py-2 !text-xs !font-mono !font-bold !text-right !bg-surface-section !border-surface-border"
+                @update:model-value="
+                  (val) =>
                     modifyUnitRowField(
                       index,
                       'price',
-                      e.target.value === '' ? 0 : Number(e.target.value),
+                      val !== null && val !== undefined ? Number(val) : 0,
                     )
                 "
-                @click.stop
-                placeholder="0"
-                class="block w-full px-2.5 py-2 border border-surface-border rounded-lg bg-surface-section text-text-primary text-xs font-mono font-bold text-right outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               />
             </div>
 
@@ -204,6 +187,7 @@ import AppCard from '@/components/ui/AppCard.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 import AppInput from '@/components/ui/AppInput.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
+import AppCurrencyInput from '@/components/ui/AppCurrencyInput.vue'
 
 const props = defineProps({
   formState: { type: Object, required: true },
@@ -237,18 +221,6 @@ const selectedCurrency = computed(() => {
 const isForeignCurrency = computed(() => {
   return !!selectedCurrency.value && selectedCurrency.value.exchange_rate > 0
 })
-
-/**
- * استخراج قيمة التكلفة بالعملة الأجنبية للعرض داخل الحقل
- */
-const displayForeignCost = (row) => {
-  if (!isForeignCurrency.value) return 0
-  if (row.foreign_cost !== undefined && row.foreign_cost !== null && row.foreign_cost > 0) {
-    return Number(row.foreign_cost)
-  }
-  const rate = selectedCurrency.value.exchange_rate || 1
-  return Number((Number(row.cost || 0) / rate).toFixed(4))
-}
 
 /**
  * تطبيق قواعد التقريب السعري المعتمدة في النظام
@@ -300,7 +272,7 @@ const updatePricesArray = (pricesList, newPrice, roundingRule) => {
 }
 
 /**
- * تعديل الحقول ومزامنة foreign_cost و cost والاشتقاق الشجري التلقائي
+ * تعديل الحقول ومزامنة foreign_cost و cost والاشتقاق الشجري التلقائي (عند الإدخال اليدوي فقط)
  */
 const modifyUnitRowField = (index, field, value) => {
   emit('clear-error', 'units')
@@ -517,14 +489,5 @@ const removeUnitRow = (index) => {
 }
 :global(.dark) .custom-scrollbar::-webkit-scrollbar-thumb {
   background-color: #4b5563;
-}
-
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-input[type='number'] {
-  -moz-appearance: textfield;
 }
 </style>

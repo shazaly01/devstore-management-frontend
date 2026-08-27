@@ -97,7 +97,7 @@ onMounted(async () => {
     await categoryStore.fetchCategories(1)
   }
 
-  // في حالة التعديل: قراءة الملف التاريخي للصنف وإعادة توزيعه على الـ Reactivity State
+  // في حالة التعديل: قراءة الملف التاريخي للصنف وتعبئة الحالة بالقيم المحفوظة كما هي
   if (isEditMode.value) {
     await itemStore.fetchItem(route.params.id)
     if (itemStore.currentItem) {
@@ -105,10 +105,16 @@ onMounted(async () => {
 
       form.name = rawItem.name
       form.item_type = rawItem.item_type
-      form.profit_margin = rawItem.profit_margin
+      form.profit_margin =
+        rawItem.profit_margin !== null && rawItem.profit_margin !== undefined
+          ? Number(rawItem.profit_margin)
+          : 0
       form.purchase_currency_id = rawItem.purchase_currency_id ?? null
       form.pricing_policy = rawItem.pricing_policy || 'manual'
-      form.min_margin_percentage = rawItem.min_margin_percentage ?? 0
+      form.min_margin_percentage =
+        rawItem.min_margin_percentage !== null && rawItem.min_margin_percentage !== undefined
+          ? Number(rawItem.min_margin_percentage)
+          : 0
       form.rounding_rule = rawItem.rounding_rule || 'none'
       form.category_id = rawItem.category_id
       form.category_path = rawItem.category_path
@@ -123,23 +129,25 @@ onMounted(async () => {
         quantity: Number(comp.quantity),
       }))
 
-      // مزامنة الوحدات والباركودات وفئات الأسعار
+      // مزامنة الوحدات والباركودات وفئات الأسعار بالقيم المحفوظة في قاعدة البيانات
       form.units = (rawItem.units || []).map((unit) => {
         return {
           unit_id: unit.unit_id,
-          conversion_factor: unit.conversion_factor,
-          cost: unit.cost,
+          conversion_factor: Number(unit.conversion_factor),
+          cost: Number(unit.cost),
           foreign_cost:
-            unit.foreign_cost !== null && unit.foreign_cost !== undefined
+            unit.foreign_cost !== null &&
+            unit.foreign_cost !== undefined &&
+            unit.foreign_cost !== ''
               ? Number(unit.foreign_cost)
               : null,
-          price: unit.price,
+          price: Number(unit.price),
           barcodes: (unit.barcodes || []).map((b) => (typeof b === 'object' ? b.barcode : b)),
           prices: (unit.prices || []).map((p) => ({
             price_list_id: p.price_list_id,
             price_list_name: p.price_list_name,
-            discount_percentage: p.discount_percentage,
-            price: p.price,
+            discount_percentage: Number(p.discount_percentage || 0),
+            price: Number(p.price),
           })),
         }
       })

@@ -17,7 +17,7 @@
         <div
           class="text-xs bg-surface-ground px-3 py-1.5 rounded-lg border border-surface-border font-medium"
         >
-          عدد الوحدات المعروضة:
+          إجمالي الوحدات المستهدفة:
           <span class="font-bold text-primary">{{ editableItems.length }}</span>
         </div>
       </div>
@@ -26,7 +26,7 @@
     <!-- جدول المعاينة والتعديل -->
     <AppTable
       :headers="tableHeaders"
-      :items="editableItems"
+      :items="paginatedItems"
       :is-loading="isLoading"
       :row-clickable="false"
     >
@@ -62,15 +62,23 @@
         </div>
       </template>
 
-      <!-- التكلفة الأجنبية السابقة إن وجدت -->
+      <!-- التكلفة الأجنبية السابقة مع نوع العملة -->
       <template #cell-current_foreign="{ item }">
-        <span class="font-mono text-xs text-text-muted">
-          {{
-            item.current_foreign_cost !== null
-              ? formatNumber(item.current_foreign_cost)
-              : 'غير محددة'
-          }}
-        </span>
+        <div
+          v-if="item.current_foreign_cost !== null"
+          class="flex items-center gap-1.5 font-mono text-xs"
+        >
+          <span class="text-text-primary font-bold">
+            {{ formatNumber(item.current_foreign_cost) }}
+          </span>
+          <span
+            v-if="item.purchase_currency_code"
+            class="text-[10px] font-bold px-1.5 py-0.5 rounded bg-surface-ground border border-surface-border text-primary"
+          >
+            {{ item.purchase_currency_code }}
+          </span>
+        </div>
+        <span v-else class="text-xs text-text-muted font-mono"> غير محددة </span>
       </template>
 
       <!-- التكلفة الأجنبية المقترحة (حقل إدخال فوري قابل للتعديل) -->
@@ -96,13 +104,68 @@
       </template>
     </AppTable>
 
+    <!-- شريط الترقيم والتنقل بين الصفحات -->
+    <div
+      v-if="editableItems.length > 0"
+      class="px-4 py-3 border-t border-surface-border flex flex-col sm:flex-row justify-between items-center gap-3 bg-surface-ground/50"
+    >
+      <div class="flex items-center gap-2 text-xs text-text-muted">
+        <span>عرض</span>
+        <select
+          v-model="perPage"
+          @change="currentPage = 1"
+          class="bg-surface-section border border-surface-border rounded-lg text-xs font-bold py-1 px-2 text-text-primary outline-none focus:border-primary cursor-pointer"
+        >
+          <option :value="25">25</option>
+          <option :value="50">50</option>
+          <option :value="100">100</option>
+          <option :value="editableItems.length">الكل ({{ editableItems.length }})</option>
+        </select>
+        <span>عنصر |</span>
+        <span>
+          عرض <strong>{{ startIndex + 1 }}</strong> - <strong>{{ endIndex }}</strong> من أصل
+          <strong>{{ editableItems.length }}</strong> وحدة
+        </span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-text-muted font-medium">
+          صفحة <strong>{{ currentPage }}</strong> من <strong>{{ totalPages }}</strong>
+        </span>
+
+        <div class="flex items-center gap-1">
+          <AppButton
+            type="button"
+            variant="secondary"
+            size="sm"
+            :disabled="currentPage === 1"
+            @click="currentPage--"
+            class="!px-2.5 !py-1 !text-xs font-bold"
+          >
+            السابق
+          </AppButton>
+          <AppButton
+            type="button"
+            variant="secondary"
+            size="sm"
+            :disabled="currentPage >= totalPages"
+            @click="currentPage++"
+            class="!px-2.5 !py-1 !text-xs font-bold"
+          >
+            التالي
+          </AppButton>
+        </div>
+      </div>
+    </div>
+
     <!-- شريط تثبيت واعتماد التكلفة الأجنبية -->
     <div
       v-if="editableItems.length > 0"
       class="p-4 bg-surface-ground border-t border-surface-border flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4"
     >
       <div class="text-xs text-text-muted">
-        سيتم تثبيت التكلفة بالعملة الأجنبية لجميع الوحدات المذكورة وربط الصنف بالعملة المحددة.
+        سيتم تثبيت التكلفة بالعملة الأجنبية لجميع الوحدات المذكورة في كافة الصفحات وربط الصنف
+        بالعملة المحددة.
       </div>
 
       <div class="flex items-center gap-3 justify-end">
@@ -117,7 +180,9 @@
           class="bg-primary hover:bg-primary-hover text-white font-bold"
         >
           <span v-if="isSaving">جاري التثبيت والحفظ...</span>
-          <span v-else>اعتماد وتثبيت التكلفة الأجنبية ({{ editableItems.length }})</span>
+          <span v-else
+            >اعتماد وتثبيت التكلفة الأجنبية لكافة الأصناف ({{ editableItems.length }})</span
+          >
         </AppButton>
       </div>
     </div>
@@ -125,7 +190,7 @@
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppCurrencyInput from '@/components/ui/AppCurrencyInput.vue'
@@ -142,6 +207,8 @@ const props = defineProps({
 const emit = defineEmits(['apply', 'cancel'])
 
 const editableItems = ref([])
+const currentPage = ref(1)
+const perPage = ref(25)
 
 const tableHeaders = [
   { key: 'item_info', label: 'بيانات الصنف' },
@@ -155,8 +222,11 @@ const tableHeaders = [
 watch(
   () => props.previewData,
   (newData) => {
+    currentPage.value = 1
     editableItems.value = (newData || []).map((row) => ({
       ...row,
+      purchase_currency_code: row.purchase_currency_code || null,
+      purchase_currency_name: row.purchase_currency_name || null,
       suggested_foreign_cost:
         row.suggested_foreign_cost !== undefined && row.suggested_foreign_cost !== null
           ? Number(row.suggested_foreign_cost)
@@ -168,6 +238,22 @@ watch(
   },
   { immediate: true, deep: true },
 )
+
+const totalPages = computed(() => {
+  if (!editableItems.value.length || perPage.value >= editableItems.value.length) return 1
+  return Math.ceil(editableItems.value.length / perPage.value)
+})
+
+const startIndex = computed(() => (currentPage.value - 1) * perPage.value)
+
+const endIndex = computed(() => {
+  const calculatedEnd = startIndex.value + perPage.value
+  return calculatedEnd > editableItems.value.length ? editableItems.value.length : calculatedEnd
+})
+
+const paginatedItems = computed(() => {
+  return editableItems.value.slice(startIndex.value, endIndex.value)
+})
 
 const formatNumber = (val) => {
   if (val === null || val === undefined || isNaN(val)) return '0.00'

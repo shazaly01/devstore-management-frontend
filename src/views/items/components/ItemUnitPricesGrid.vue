@@ -20,13 +20,14 @@
         </div>
 
         <!-- شبكة الحقول الحسابية -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
           <!-- 1. نسبة الخصم الفئوية -->
           <div>
-            <label class="block text-[10px] text-text-muted mb-1 text-center font-bold"
-              >الخصم (%)</label
-            >
+            <label class="block text-[10px] text-text-muted mb-1 text-center font-bold">
+              الخصم (%)
+            </label>
             <input
+              :id="'discount-input-' + pIdx"
               :value="priceRow.discount_percentage"
               @input="
                 (e) => handleDiscountInput(pIdx, e.target.value === '' ? 0 : Number(e.target.value))
@@ -39,20 +40,18 @@
             />
           </div>
 
-          <!-- 2. السعر النهائي للبيع -->
+          <!-- 2. السعر النهائي للبيع باستخدام AppCurrencyInput -->
           <div>
-            <label class="block text-[10px] text-text-muted mb-1 text-center font-bold"
-              >السعر النهائي</label
-            >
-            <input
-              :value="priceRow.price"
-              @input="
-                (e) => handlePriceInput(pIdx, e.target.value === '' ? 0 : Number(e.target.value))
+            <AppCurrencyInput
+              :id="'category-price-input-' + pIdx"
+              label="السعر النهائي"
+              :model-value="priceRow.price"
+              :precision="2"
+              label-class="!text-[10px] !text-text-muted !mb-1 text-center !font-bold"
+              input-class="!px-2 !py-1.5 !text-xs !font-mono !text-center !bg-surface-section !border-surface-border"
+              @update:model-value="
+                (val) => handlePriceInput(pIdx, val !== null && val !== undefined ? Number(val) : 0)
               "
-              type="number"
-              step="0.01"
-              min="0"
-              class="block w-full px-2 py-1.5 border border-surface-border rounded-lg bg-surface-section text-text-primary text-xs font-mono text-center outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
             />
           </div>
         </div>
@@ -63,6 +62,7 @@
 
 <script setup>
 import { DEFAULT_CURRENCY } from '@/utils/formatters'
+import AppCurrencyInput from '@/components/ui/AppCurrencyInput.vue'
 
 const props = defineProps({
   prices: { type: Array, required: true, default: () => [] },
@@ -107,7 +107,7 @@ const applyRounding = (price, rule = 'none') => {
 }
 
 /**
- * أتمتة احتساب السعر النهائي للفئة بناءً على قيمة الخصم المدخلة مع تطبيق قاعدة التقريب
+ * أتمتة احتساب السعر النهائي للفئة بناءً على قيمة الخصم المدخلة يدوياً
  */
 const handleDiscountInput = (index, discountValue) => {
   const currentBasePrice = props.basePrice || 0
@@ -127,7 +127,7 @@ const handleDiscountInput = (index, discountValue) => {
 }
 
 /**
- * أتمتة احتساب نسبة الخصم المترتبة تلقائياً في حال قام العميل بتغيير السعر النهائي يدوياً
+ * أتمتة احتساب نسبة الخصم تلقائياً عند تغيير السعر النهائي يدوياً
  */
 const handlePriceInput = (index, priceValue) => {
   const currentBasePrice = props.basePrice || 0
@@ -166,7 +166,6 @@ const handlePriceInput = (index, priceValue) => {
   background-color: #4b5563;
 }
 
-/* إخفاء أسهم حقول الأرقام الافتراضية لتوحيد مظهر المحاذاة */
 input::-webkit-outer-spin-button,
 input::-webkit-inner-spin-button {
   -webkit-appearance: none;
