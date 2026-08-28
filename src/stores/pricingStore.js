@@ -1,4 +1,3 @@
-// src/stores/pricingStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import pricingService from '@/services/pricingService'
@@ -8,6 +7,9 @@ export const usePricingStore = defineStore('pricing', () => {
   const previewItems = ref([])
   const foreignCostPreviewItems = ref([])
   const radarItems = ref([])
+  const batches = ref([])
+  const batchesPagination = ref({})
+  const currentBatch = ref(null)
   const historyItems = ref([])
   const historyPagination = ref({})
   const loading = ref(false)
@@ -65,6 +67,70 @@ export const usePricingStore = defineStore('pricing', () => {
         validationErrors.value = err.response.data.errors
       }
       error.value = err.response?.data?.message || 'فشل في تطبيق وتحديث الأسعار.'
+      console.error(err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * جلب أرشيف مجموعات التسعير (Batches) مع الفلترة والترقيم
+   */
+  async function fetchBatches(page = 1, filters = {}) {
+    loading.value = true
+    error.value = null
+    const cleaned = cleanFilters(filters)
+    try {
+      const response = await pricingService.getBatches(page, cleaned)
+      batches.value = response.data.data || []
+      batchesPagination.value = response.data.meta || {}
+      return response.data
+    } catch (err) {
+      error.value = 'فشل في جلب أرشيف مجموعات التسعير.'
+      console.error(err)
+      batches.value = []
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * جلب تفاصيل مجموعة تسعير محددة مع الأصناف التابعة لها
+   */
+  async function fetchBatchDetails(id) {
+    loading.value = true
+    error.value = null
+    try {
+      const response = await pricingService.getBatchDetails(id)
+      currentBatch.value = response.data.data || response.data
+      return currentBatch.value
+    } catch (err) {
+      error.value = 'فشل في جلب تفاصيل مجموعة التسعير.'
+      console.error(err)
+      currentBatch.value = null
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  /**
+   * التراجع عن مجموعة تسعير كاملة
+   */
+  async function rollbackBatch(payload) {
+    loading.value = true
+    error.value = null
+    validationErrors.value = null
+    try {
+      const response = await pricingService.rollback(payload)
+      return response.data
+    } catch (err) {
+      if (err.response?.status === 422) {
+        validationErrors.value = err.response.data.errors
+      }
+      error.value = err.response?.data?.message || 'فشل في التراجع عن مجموعة التسعير.'
       console.error(err)
       throw err
     } finally {
@@ -140,29 +206,7 @@ export const usePricingStore = defineStore('pricing', () => {
   }
 
   /**
-   * التراجع عن دفعة تسعير كاملة
-   */
-  async function rollbackBatch(payload) {
-    loading.value = true
-    error.value = null
-    validationErrors.value = null
-    try {
-      const response = await pricingService.rollback(payload)
-      return response.data
-    } catch (err) {
-      if (err.response?.status === 422) {
-        validationErrors.value = err.response.data.errors
-      }
-      error.value = err.response?.data?.message || 'فشل في التراجع عن دفعة التسعير.'
-      console.error(err)
-      throw err
-    } finally {
-      loading.value = false
-    }
-  }
-
-  /**
-   * جلب سجل تاريخ تعديلات الأسعار مع الترقيم والفلترة
+   * جلب سجل تاريخ تعديلات الأسعار الفردي مع الترقيم والفلترة
    */
   async function fetchHistory(page = 1, filters = {}) {
     loading.value = true
@@ -184,11 +228,12 @@ export const usePricingStore = defineStore('pricing', () => {
   }
 
   /**
-   * تفريغ جداول المعاينة
+   * تفريغ جداول المعاينة وتفاصيل الدفعة المحددة
    */
   function clearPreview() {
     previewItems.value = []
     foreignCostPreviewItems.value = []
+    currentBatch.value = null
     validationErrors.value = null
     error.value = null
   }
@@ -197,6 +242,9 @@ export const usePricingStore = defineStore('pricing', () => {
     previewItems,
     foreignCostPreviewItems,
     radarItems,
+    batches,
+    batchesPagination,
+    currentBatch,
     historyItems,
     historyPagination,
     loading,
@@ -204,10 +252,12 @@ export const usePricingStore = defineStore('pricing', () => {
     validationErrors,
     fetchPreview,
     applyReprice,
+    fetchBatches,
+    fetchBatchDetails,
+    rollbackBatch,
     fetchForeignCostPreview,
     applyForeignCost,
     fetchRadar,
-    rollbackBatch,
     fetchHistory,
     clearPreview,
   }

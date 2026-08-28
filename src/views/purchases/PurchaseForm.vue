@@ -122,6 +122,57 @@
               </p>
             </div>
           </template>
+
+          <template #cell-foreign_unit_cost="{ row }">
+            <div class="w-full flex justify-center items-center">
+              <input
+                type="text"
+                inputmode="decimal"
+                :value="formatNumber(row.foreign_unit_cost)"
+                @input="handleForeignUnitCostInput(row, $event.target.value)"
+                class="w-full p-1 bg-[#16171b] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded transition-all text-xs text-center font-mono text-white font-bold outline-none focus:ring-1 focus:ring-[#e05e2b]/30"
+                placeholder="0"
+              />
+            </div>
+          </template>
+
+          <template #cell-unit_cost="{ row }">
+            <div class="w-full flex justify-center items-center">
+              <input
+                type="text"
+                inputmode="decimal"
+                :value="formatNumber(row.unit_cost)"
+                @input="handleUnitCostInput(row, $event.target.value)"
+                class="w-full p-1 bg-[#16171b] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded transition-all text-xs text-center font-mono text-white font-bold outline-none focus:ring-1 focus:ring-[#e05e2b]/30"
+                placeholder="0"
+              />
+            </div>
+          </template>
+
+          <template #cell-selling_price="{ row }">
+            <div class="w-full flex justify-center items-center">
+              <input
+                type="text"
+                inputmode="decimal"
+                :value="formatNumber(row.selling_price)"
+                @input="handleSellingPriceInput(row, $event.target.value)"
+                class="w-full p-1 bg-[#16171b] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded transition-all text-xs text-center font-mono text-white font-bold outline-none focus:ring-1 focus:ring-[#e05e2b]/30"
+                placeholder="0"
+              />
+            </div>
+          </template>
+
+          <template #cell-grand_total="{ row }">
+            <div class="w-full flex justify-center items-center">
+              <input
+                type="text"
+                readonly
+                :value="formatNumber(row.grand_total)"
+                class="w-full p-1 bg-[#16171b] border border-[#3e414c] rounded text-xs text-center font-mono text-white font-bold opacity-90 cursor-default"
+                placeholder="0"
+              />
+            </div>
+          </template>
         </InvoiceDetailTable>
       </div>
     </AppCard>
@@ -191,6 +242,43 @@ const globalProfitMargin = ref(null)
 // قفل برمجي لمنع الحلقة المفرغة أثناء الحسابات التلقائية
 let isRecalculating = false
 
+// دوال تنسيق الأرقام والعملة والتجريد المتوافقة مع شاشة المبيعات
+const formatNumber = (value) => {
+  if (value === null || value === undefined || value === '') return ''
+  const num = Number(value)
+  if (isNaN(num)) return ''
+  const options = {
+    style: 'decimal',
+    maximumFractionDigits: 2,
+    minimumFractionDigits: num % 1 === 0 ? 0 : 2,
+  }
+  return new Intl.NumberFormat('en-US', options).format(num)
+}
+
+const unformatNumber = (text) => {
+  if (!text) return 0
+  const cleaned = String(text).replace(/[^0-9.]/g, '')
+  const num = parseFloat(cleaned)
+  return isNaN(num) ? 0 : num
+}
+
+// معالجات الإدخال المالي للأسطر
+const handleForeignUnitCostInput = (row, value) => {
+  if (!value || String(value).trim() === '') {
+    row.foreign_unit_cost = null
+  } else {
+    row.foreign_unit_cost = unformatNumber(value)
+  }
+}
+
+const handleUnitCostInput = (row, value) => {
+  row.unit_cost = unformatNumber(value)
+}
+
+const handleSellingPriceInput = (row, value) => {
+  row.selling_price = unformatNumber(value)
+}
+
 // كائن البيانات مع الحسابات المالية والعملات
 const form = ref({
   invoice_type: 'purchase',
@@ -210,12 +298,12 @@ const form = ref({
 
 const items = ref([])
 
-// مصفوفة التكوين الحسابي لجدول الأصناف مع حقول التكلفة الأجنبية، نسبة الربح، وسعر البيع
+// مصفوفة التكوين الحسابي لجدول الأصناف مع التوزيع المحدث لنسب العرض
 const detailSchema = [
   {
     key: 'item_id_display',
     label: 'رقم الصنف',
-    widthClass: 'w-1/12',
+    widthClass: 'w-[7%]',
     readonly: true,
     type: 'text',
     extractFromItem: (item) => (item.id ? `PRD-${item.id}` : ''),
@@ -223,7 +311,7 @@ const detailSchema = [
   {
     key: 'item_name',
     label: 'اسم الصنف التجاري المعتمد',
-    widthClass: 'w-1/5',
+    widthClass: 'w-[18%]',
     readonly: true,
     type: 'text',
     extractFromItem: (item) => item.name || '',
@@ -241,7 +329,7 @@ const detailSchema = [
     key: 'item_unit_id',
     label: 'وحدة التعبئة',
     slot: 'cell-item_unit_id',
-    widthClass: 'w-1/12',
+    widthClass: 'w-[7%]',
     type: 'text',
     extractFromItem: (item) => item.units?.[0]?.id || '',
   },
@@ -254,7 +342,7 @@ const detailSchema = [
     label: 'المخزون الحالي',
     type: 'calculated',
     readonly: true,
-    widthClass: 'w-1/12',
+    widthClass: 'w-[6%]',
     formula: (row) => {
       if (row.base_stock === null || row.base_stock === undefined) return 0
       const matchedUnit = row.available_units?.find(
@@ -269,30 +357,38 @@ const detailSchema = [
     label: 'الكمية',
     type: 'number',
     defaultValue: 1,
-    widthClass: 'w-1/12',
+    widthClass: 'w-[6%]',
   },
   {
     key: 'foreign_unit_cost',
     label: 'التكلفة بالعملة الأجنبية',
     type: 'number',
     defaultValue: null,
-    widthClass: 'w-1/12',
-    extractFromItem: () => null,
+    widthClass: 'w-[8%]',
+    slot: 'cell-foreign_unit_cost',
+    extractFromItem: (item) => {
+      const foreignCost = item.units?.[0]?.foreign_cost
+      return foreignCost !== null && foreignCost !== undefined ? parseFloat(foreignCost) : null
+    },
   },
   {
     key: 'unit_cost',
     label: 'تكلفة الوحدة (محلي)',
     type: 'number',
     defaultValue: 0,
-    widthClass: 'w-1/12',
-    extractFromItem: (item) => item.units?.[0]?.cost || 0,
+    widthClass: 'w-[11%]',
+    slot: 'cell-unit_cost',
+    extractFromItem: (item) => {
+      const cost = item.units?.[0]?.cost || 0
+      return parseFloat(cost) || 0
+    },
   },
   {
     key: 'profit_margin',
     label: 'نسبة الربح %',
     type: 'number',
     defaultValue: 0,
-    widthClass: 'w-1/12',
+    widthClass: 'w-[6%]',
     extractFromItem: (item) => {
       if (
         globalProfitMargin.value !== null &&
@@ -309,7 +405,8 @@ const detailSchema = [
     label: 'سعر البيع',
     type: 'number',
     defaultValue: 0,
-    widthClass: 'w-1/12',
+    widthClass: 'w-[11%]',
+    slot: 'cell-selling_price',
     extractFromItem: (item) => {
       const unitCost = item.units?.[0]?.cost || 0
       const margin =
@@ -332,7 +429,7 @@ const detailSchema = [
     label: 'تاريخ الصلاحية',
     type: 'date',
     defaultValue: '',
-    widthClass: 'w-1/12',
+    widthClass: 'w-[8%]',
     extractFromItem: (item) => (item.expiry_date ? String(item.expiry_date).substring(0, 10) : ''),
   },
   {
@@ -341,6 +438,8 @@ const detailSchema = [
     type: 'calculated',
     readonly: true,
     summary: true,
+    widthClass: 'w-[12%]',
+    slot: 'cell-grand_total',
     formula: (row) => {
       const q = parseFloat(row.quantity) || 0
       const c = parseFloat(row.unit_cost) || 0
@@ -410,7 +509,11 @@ watch(
     if (rate > 0 && form.value.currency_id) {
       isRecalculating = true
       items.value.forEach((row) => {
-        if (row.foreign_unit_cost && parseFloat(row.foreign_unit_cost) > 0) {
+        if (
+          row.foreign_unit_cost !== null &&
+          row.foreign_unit_cost !== '' &&
+          parseFloat(row.foreign_unit_cost) > 0
+        ) {
           row.unit_cost = parseFloat((parseFloat(row.foreign_unit_cost) * rate).toFixed(4))
           const margin = parseFloat(row.profit_margin) || 0
           if (margin > 0) {
@@ -448,6 +551,7 @@ watch(
       const priceChanged = val.price !== old.price
 
       const exchangeRate = parseFloat(form.value.exchange_rate) || 1
+      const hasForeignCurrency = !!form.value.currency_id && exchangeRate > 0
 
       // 0. إذا تم إدخال أو تعديل التكلفة بالعملة الأجنبية -> تحديث التكلفة المحلية
       if (foreignChanged) {
@@ -470,12 +574,31 @@ watch(
         return
       }
 
+      // 1. إذا تغيرت التكلفة المحلية يدوياً -> تحديث التكلفة الأجنبية وسعر البيع
+      if (costChanged) {
+        isRecalculating = true
+        if (hasForeignCurrency) {
+          const localCost = parseFloat(row.unit_cost) || 0
+          row.foreign_unit_cost =
+            localCost > 0 ? parseFloat((localCost / exchangeRate).toFixed(4)) : null
+        }
+        const cost = parseFloat(row.unit_cost) || 0
+        const margin = parseFloat(row.profit_margin) || 0
+        if (cost > 0 && margin > 0) {
+          row.selling_price = parseFloat((cost * (1 + margin / 100)).toFixed(4))
+        }
+        setTimeout(() => {
+          isRecalculating = false
+        }, 50)
+        return
+      }
+
       const cost = parseFloat(row.unit_cost) || 0
       const margin = parseFloat(row.profit_margin) || 0
       const price = parseFloat(row.selling_price) || 0
 
-      // 1. إذا قام المستخدم بتعديل سعر البيع يدوياً -> نحسب نسبة الربح
-      if (priceChanged && !marginChanged && !costChanged) {
+      // 2. إذا قام المستخدم بتعديل سعر البيع يدوياً -> نحسب نسبة الربح
+      if (priceChanged && !marginChanged) {
         if (cost > 0) {
           isRecalculating = true
           const calculatedMargin = ((price - cost) / cost) * 100
@@ -485,20 +608,9 @@ watch(
           }, 50)
         }
       }
-      // 2. إذا قام المستخدم بتعديل نسبة الربح -> نحدث سعر البيع
-      else if (marginChanged && !priceChanged && !costChanged) {
+      // 3. إذا قام المستخدم بتعديل نسبة الربح -> نحدث سعر البيع
+      else if (marginChanged && !priceChanged) {
         if (cost > 0) {
-          isRecalculating = true
-          const calculatedPrice = cost * (1 + margin / 100)
-          row.selling_price = parseFloat(calculatedPrice.toFixed(4))
-          setTimeout(() => {
-            isRecalculating = false
-          }, 50)
-        }
-      }
-      // 3. إذا تغيرت التكلفة -> نحدث سعر البيع بناءً على نسبة الربح الحالية
-      else if (costChanged) {
-        if (cost > 0 && margin > 0) {
           isRecalculating = true
           const calculatedPrice = cost * (1 + margin / 100)
           row.selling_price = parseFloat(calculatedPrice.toFixed(4))
@@ -623,7 +735,18 @@ const syncUnitCostPrice = (row) => {
   const matchedUnit = row.available_units?.find((u) => String(u.id) === String(row.item_unit_id))
   if (matchedUnit) {
     row.unit_cost = parseFloat(matchedUnit.cost) || 0
+    row.foreign_unit_cost =
+      matchedUnit.foreign_cost !== null && matchedUnit.foreign_cost !== undefined
+        ? parseFloat(matchedUnit.foreign_cost)
+        : null
     row.selling_price = parseFloat(matchedUnit.price) || 0
+
+    const exchangeRate = parseFloat(form.value.exchange_rate) || 1
+    if (form.value.currency_id && exchangeRate > 0) {
+      if (row.foreign_unit_cost && (!row.unit_cost || row.unit_cost === 0)) {
+        row.unit_cost = parseFloat((row.foreign_unit_cost * exchangeRate).toFixed(4))
+      }
+    }
 
     if (
       globalProfitMargin.value !== null &&

@@ -23,12 +23,12 @@
         leave-to-class="opacity-0 scale-95"
       >
         <div
-          class="bg-surface-section rounded-xl shadow-2xl p-6 w-full max-w-lg border border-surface-border transform"
+          class="bg-surface-section rounded-2xl shadow-2xl p-6 w-full max-w-lg border border-surface-border transform"
           role="dialog"
           aria-modal="true"
         >
           <!-- رأس النافذة المنبثقة -->
-          <div class="flex justify-between items-center border-b border-surface-border pb-3 mb-5">
+          <div class="flex justify-between items-center border-b border-surface-border pb-3 mb-4">
             <div class="flex items-center gap-2">
               <div
                 class="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950/50 text-rose-600 flex items-center justify-center"
@@ -43,9 +43,9 @@
                 </svg>
               </div>
               <div>
-                <h3 class="text-base font-bold text-text-primary">التراجع عن دفعة التسعير</h3>
+                <h3 class="text-base font-bold text-text-primary">التراجع عن مجموعة التسعير</h3>
                 <p class="text-xs text-text-muted">
-                  استعادة جميع الأسعار السابقة المرتبطة بهذه الدفعة
+                  إلغاء واعتماد الأسعار والتكاليف السابقة لكافة أصناف هذه المجموعة
                 </p>
               </div>
             </div>
@@ -67,40 +67,50 @@
             </button>
           </div>
 
+          <!-- بطاقة ملخص بيانات المجموعة المراد إلغاؤها -->
+          <div
+            v-if="batchData"
+            class="p-3.5 bg-surface-ground border border-surface-border rounded-xl space-y-2 mb-4 text-xs"
+          >
+            <div class="flex justify-between items-center">
+              <span class="text-text-muted">كود المجموعة:</span>
+              <span class="font-mono font-bold text-primary">{{
+                batchData.batch_code || '-'
+              }}</span>
+            </div>
+            <div class="flex justify-between items-center" v-if="batchData.currency_code">
+              <span class="text-text-muted">سعر الصرف المعتمد:</span>
+              <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                {{ formatNumber(batchData.exchange_rate) }} ({{ batchData.currency_code }})
+              </span>
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-text-muted">حجم الأصناف والوحدات:</span>
+              <span class="font-mono font-semibold text-text-primary"
+                >{{ batchData.items_count }} وحدة</span
+              >
+            </div>
+            <div class="flex justify-between items-center">
+              <span class="text-text-muted">تاريخ التنفيذ:</span>
+              <span class="font-mono text-text-muted">{{ batchData.created_at || '-' }}</span>
+            </div>
+          </div>
+
           <!-- نموذج التراجع -->
           <form @submit.prevent="handleSubmit" class="space-y-4">
             <!-- تنبيه تحذيري -->
             <div
-              class="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 rounded-lg text-rose-700 dark:text-rose-400 text-xs leading-relaxed"
+              class="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 rounded-xl text-rose-700 dark:text-rose-400 text-xs leading-relaxed"
             >
-              <span class="font-bold">تنبيه هام:</span> هذا الإجراء سيقوم بإلغاء الأسعار المطبقة
-              وإعادة الأسعار القديمة لجميع أصناف هذه الدفعة تلقائياً.
-            </div>
-
-            <div>
-              <AppInput
-                id="rollback-batch-id"
-                label="رقم دفعة التسعير *"
-                v-model="form.batch_id"
-                placeholder="BATCH-..."
-                required
-                disabled
-              />
-              <div v-if="validationErrors?.batch_id">
-                <p
-                  v-for="(error, index) in validationErrors.batch_id"
-                  :key="index"
-                  class="text-rose-500 text-xs mt-1 font-bold"
-                >
-                  {{ error }}
-                </p>
-              </div>
+              <span class="font-bold">تنبيه أمان:</span> سيقوم هذا الإجراء باسترجاع الأسعار
+              والتكاليف السابقة تلقائياً لجميع الأصناف التابعة لهذه المجموعة وإغلاقها كدفعة تم
+              التراجع عنها.
             </div>
 
             <div>
               <label
                 for="rollback-notes"
-                class="block text-sm font-medium text-gray-700 dark:text-text-secondary mb-1"
+                class="block text-xs font-semibold text-text-secondary mb-1"
               >
                 سبب التراجع / الملاحظات
               </label>
@@ -108,8 +118,8 @@
                 id="rollback-notes"
                 rows="3"
                 v-model="form.notes"
-                placeholder="اكتب سبب إلغاء هذه الدفعة (مثال: خطأ في إدخال سعر الصرف)..."
-                class="block w-full rounded-md shadow-sm py-2 px-3 transition-all duration-200 text-sm focus:outline-none bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:bg-surface-ground dark:border-surface-border dark:text-text-primary dark:placeholder:text-text-muted"
+                placeholder="اكتب سبب إلغاء هذه المجموعة (مثال: تصحيح خطأ بسعر صرف العملة)..."
+                class="block w-full rounded-xl shadow-xs py-2 px-3 transition-all duration-200 text-xs focus:outline-none bg-surface-ground border border-surface-border text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
               ></textarea>
               <div v-if="validationErrors?.notes">
                 <p
@@ -131,7 +141,7 @@
               </AppButton>
               <AppButton
                 type="submit"
-                :disabled="isSaving || !form.batch_id"
+                :disabled="isSaving || (!form.main_id && !form.batch_code)"
                 class="bg-rose-600 hover:bg-rose-700 text-white font-bold"
               >
                 <span v-if="isSaving">جاري استرجاع الأسعار...</span>
@@ -147,12 +157,11 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
-  batchId: { type: String, default: '' },
+  batchData: { type: Object, default: null },
   isSaving: { type: Boolean, default: false },
   validationErrors: { type: Object, default: null },
 })
@@ -160,27 +169,46 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'rollback'])
 
 const form = ref({
-  batch_id: '',
+  main_id: null,
+  batch_code: '',
   notes: '',
 })
 
 watch(
-  () => props.batchId,
+  () => props.batchData,
   (newVal) => {
-    form.value.batch_id = newVal || ''
+    if (newVal && typeof newVal === 'object') {
+      form.value.main_id = newVal.id || null
+      form.value.batch_code = newVal.batch_code || ''
+    } else if (typeof newVal === 'string') {
+      form.value.batch_code = newVal
+      form.value.main_id = null
+    } else {
+      form.value.main_id = null
+      form.value.batch_code = ''
+    }
     form.value.notes = ''
   },
   { immediate: true },
 )
+
+const formatNumber = (val) => {
+  if (val === null || val === undefined || isNaN(val)) return '0.00'
+  return Number(val).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })
+}
 
 const close = () => {
   emit('update:modelValue', false)
 }
 
 const handleSubmit = () => {
-  if (!form.value.batch_id) return
+  if (!form.value.main_id && !form.value.batch_code) return
   emit('rollback', {
-    batch_id: form.value.batch_id,
+    main_id: form.value.main_id,
+    batch_code: form.value.batch_code,
     notes: form.value.notes ? form.value.notes.trim() : null,
   })
 }

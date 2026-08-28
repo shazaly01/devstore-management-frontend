@@ -84,7 +84,7 @@
           </span>
         </button>
 
-        <!-- تبويب (2): تأصيل وتهيئة التكلفة الأجنبية [جديد] -->
+        <!-- تبويب (2): تأصيل وتهيئة التكلفة الأجنبية -->
         <button
           type="button"
           @click="activeTab = 'foreign_cost'"
@@ -140,7 +140,7 @@
           </span>
         </button>
 
-        <!-- تبويب (4): سجل تغييرات الأسعار -->
+        <!-- تبويب (4): أرشيف مجموعات التسعير والتراجع -->
         <button
           type="button"
           @click="switchTab('history')"
@@ -156,17 +156,17 @@
               stroke-linecap="round"
               stroke-linejoin="round"
               stroke-width="2"
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
             />
           </svg>
-          <span>الأرشيف والتراجع</span>
+          <span>أرشيف المجموعات والتراجع</span>
         </button>
       </nav>
     </div>
 
     <!-- 3. المحتوى المتغير للتبويبات -->
 
-    <!-- تبويب (1): محرك إعادة التسعير الجماعي[cite: 18] -->
+    <!-- تبويب (1): محرك إعادة التسعير الجماعي -->
     <div v-show="activeTab === 'bulk'" class="space-y-6">
       <BulkRepriceFilter
         :categories="categories"
@@ -184,6 +184,7 @@
         :is-saving="isApplying"
         :selected-currency-id="appliedCriteria.currency_id"
         :selected-exchange-rate="appliedCriteria.exchange_rate"
+        :selected-category-id="appliedCriteria.category_id"
         @apply="handleApplyPricing"
         @cancel="handleResetPreview"
       />
@@ -212,7 +213,7 @@
       </div>
     </div>
 
-    <!-- تبويب (2): تأصيل وتهيئة التكلفة بالعملة الأجنبية [جديد] -->
+    <!-- تبويب (2): تأصيل وتهيئة التكلفة بالعملة الأجنبية -->
     <div v-show="activeTab === 'foreign_cost'" class="space-y-6">
       <ForeignCostFilter
         :categories="categories"
@@ -258,7 +259,7 @@
       </div>
     </div>
 
-    <!-- تبويب (3): رادار تآكل الهوامش[cite: 18] -->
+    <!-- تبويب (3): رادار تآكل الهوامش -->
     <div v-show="activeTab === 'radar'">
       <MarginRadarTable
         :items="radarItems"
@@ -269,21 +270,23 @@
       />
     </div>
 
-    <!-- تبويب (4): سجل تغييرات الأسعار التاريخي[cite: 18] -->
+    <!-- تبويب (4): أرشيف المجموعات وسجل التراجع -->
     <div v-show="activeTab === 'history'">
       <PriceHistoryTable
-        :items="historyItems"
-        :pagination="historyPagination"
+        :batches="batches"
+        :pagination="batchesPagination"
+        :categories="categories"
+        :currencies="currencies"
         :is-loading="pricingStore.loading"
-        @filter="handleHistoryFilter"
-        @page-change="loadHistoryData"
+        @filter="handleBatchesFilter"
+        @page-change="loadBatchesData"
         @rollback-batch="openRollbackModal"
       />
     </div>
 
-    <!-- 4. النوافذ المنبثقة للعمليات السريعة[cite: 18] -->
+    <!-- 4. النوافذ المنبثقة للعمليات السريعة -->
 
-    <!-- نافذة تسجيل سعر الصرف السريع[cite: 18] -->
+    <!-- نافذة تسجيل سعر الصرف السريع -->
     <ExchangeRateModal
       v-model="isExchangeRateModalOpen"
       :currencies="currencies"
@@ -292,10 +295,10 @@
       @save="handleSaveExchangeRate"
     />
 
-    <!-- نافذة التراجع عن دفعة التسعير[cite: 18] -->
+    <!-- نافذة التراجع عن دفعة التسعير -->
     <RollbackModal
       v-model="isRollbackModalOpen"
-      :batch-id="selectedRollbackBatchId"
+      :batch-data="selectedRollbackBatch"
       :is-saving="isRollingBack"
       :validation-errors="pricingStore.validationErrors"
       @rollback="handleConfirmRollback"
@@ -329,20 +332,22 @@ const pricingStore = usePricingStore()
 const exchangeRateStore = useExchangeRateStore()
 const categoryStore = useCategoryStore()
 
-const { previewItems, foreignCostPreviewItems, radarItems, historyItems, historyPagination } =
+const { previewItems, foreignCostPreviewItems, radarItems, batches, batchesPagination } =
   storeToRefs(pricingStore)
+
 const { currencies } = storeToRefs(exchangeRateStore)
 const { categories } = storeToRefs(categoryStore)
 
 const activeTab = ref('bulk')
 const isExchangeRateModalOpen = ref(false)
 const isRollbackModalOpen = ref(false)
-const selectedRollbackBatchId = ref('')
+const selectedRollbackBatch = ref(null)
 const isApplying = ref(false)
 const isApplyingForeignCost = ref(false)
 const isRollingBack = ref(false)
 
 const appliedCriteria = ref({
+  category_id: null,
   currency_id: null,
   exchange_rate: null,
 })
@@ -352,7 +357,7 @@ const appliedForeignCriteria = ref({
   exchange_rate: null,
 })
 
-const activeHistoryFilters = ref({})
+const activeBatchesFilters = ref({})
 
 const activeForeignCurrencies = computed(() => {
   return (currencies.value || []).filter((c) => !c.is_default && c.is_active)
@@ -362,8 +367,8 @@ const switchTab = (tab) => {
   activeTab.value = tab
   if (tab === 'radar' && radarItems.value.length === 0) {
     loadRadarData()
-  } else if (tab === 'history' && historyItems.value.length === 0) {
-    loadHistoryData(1)
+  } else if (tab === 'history' && batches.value.length === 0) {
+    loadBatchesData(1)
   }
 }
 
@@ -373,20 +378,21 @@ const loadRadarData = (filters = {}) => {
   })
 }
 
-const loadHistoryData = (page = 1) => {
-  pricingStore.fetchHistory(page, activeHistoryFilters.value).catch(() => {
-    toast.error('حدث خطأ أثناء تحميل سجل تاريخ الأسعار.')
+const loadBatchesData = (page = 1) => {
+  pricingStore.fetchBatches(page, activeBatchesFilters.value).catch(() => {
+    toast.error('حدث خطأ أثناء تحميل أرشيف مجموعات التسعير.')
   })
 }
 
-const handleHistoryFilter = (filters) => {
-  activeHistoryFilters.value = filters
-  loadHistoryData(1)
+const handleBatchesFilter = (filters) => {
+  activeBatchesFilters.value = filters
+  loadBatchesData(1)
 }
 
 // معالجات التسعير الجماعي
 const handlePreview = async (payload) => {
   appliedCriteria.value = {
+    category_id: payload.category_id || null,
     currency_id: payload.currency_id || null,
     exchange_rate: payload.exchange_rate || null,
   }
@@ -408,6 +414,7 @@ const handlePreview = async (payload) => {
 const handleResetPreview = () => {
   pricingStore.clearPreview()
   appliedCriteria.value = {
+    category_id: null,
     currency_id: null,
     exchange_rate: null,
   }
@@ -416,14 +423,19 @@ const handleResetPreview = () => {
 const handleApplyPricing = async (payload) => {
   isApplying.value = true
   try {
-    const response = await pricingStore.applyReprice(payload)
-    toast.success(response.message || 'تم اعتماد وتطبيق الأسعار الجديدة بنجاح!')
-    if (activeTab.value === 'radar') {
-      loadRadarData()
+    const repricePayload = {
+      ...payload,
+      category_id: appliedCriteria.value.category_id || payload.category_id || null,
+    }
+    const response = await pricingStore.applyReprice(repricePayload)
+    toast.success(response.message || 'تم اعتماد وتطبيق مجموعة الأسعار الجديدة بنجاح!')
+    handleResetPreview()
+    if (activeTab.value === 'history') {
+      loadBatchesData(1)
     }
   } catch (err) {
     if (err.response?.status !== 422) {
-      toast.error(pricingStore.error || 'حدث خطأ أثناء حفظ وتطبيق الأسعار الجديدة.')
+      toast.error(pricingStore.error || 'حدث خطأ أثناء حفظ وتطبيق مجموعة الأسعار.')
     }
   } finally {
     isApplying.value = false
@@ -474,8 +486,8 @@ const handleApplyForeignCost = async (payload) => {
   }
 }
 
-const openRollbackModal = (batchId) => {
-  selectedRollbackBatchId.value = batchId
+const openRollbackModal = (batch) => {
+  selectedRollbackBatch.value = batch
   isRollbackModalOpen.value = true
 }
 
@@ -483,13 +495,15 @@ const handleConfirmRollback = async (payload) => {
   isRollingBack.value = true
   try {
     const response = await pricingStore.rollbackBatch(payload)
-    toast.success(response.message || 'تم التراجع عن الدفعة واستعادة الأسعار السابقة بنجاح.')
+    toast.success(
+      response.message || 'تم التراجع عن مجموعة التسعير واستعادة الأسعار السابقة بنجاح.',
+    )
     isRollbackModalOpen.value = false
-    selectedRollbackBatchId.value = ''
-    loadHistoryData(historyPagination.value?.current_page || 1)
+    selectedRollbackBatch.value = null
+    loadBatchesData(batchesPagination.value?.current_page || 1)
   } catch (err) {
     if (err.response?.status !== 422) {
-      toast.error(pricingStore.error || 'فشلت عملية التراجع عن دفعة التسعير.')
+      toast.error(pricingStore.error || 'فشلت عملية التراجع عن مجموعة التسعير.')
     }
   } finally {
     isRollingBack.value = false

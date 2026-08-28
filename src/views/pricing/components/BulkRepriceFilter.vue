@@ -94,15 +94,15 @@
           </div>
         </div>
 
-        <!-- ج. في حال اختيار النسبة المئوية -->
+        <!-- ج. في حال اختيار النسبة المئوية: نسبة تضخم التكلفة -->
         <div v-if="form.criterion_type === 'percentage'">
           <AppInput
             id="reprice-percentage"
             type="number"
             step="0.01"
-            label="نسبة التعديل (%) *"
+            label="نسبة تضخم / تعديل التكلفة (%) *"
             v-model="form.percentage"
-            placeholder="مثال: 15 للزيادة أو -5 للخصم"
+            placeholder="مثال: 15 لزيادة التكلفة أو -5 للخصم"
             required
             @input="clearBackendError('percentage')"
           />
@@ -117,7 +117,30 @@
           </div>
         </div>
 
-        <!-- د. في حال اختيار هامش الربح المستهدف -->
+        <!-- د. هامش الربح المخصص (اختياري لسعر الصرف وتضخم التكلفة) -->
+        <div v-if="form.criterion_type === 'exchange_rate' || form.criterion_type === 'percentage'">
+          <AppInput
+            id="reprice-profit-margin"
+            type="number"
+            step="0.1"
+            min="0"
+            label="هامش ربح مخصص (%) (اختياري)"
+            v-model="form.profit_margin"
+            placeholder="افتراضي: هامش كل صنف"
+            @input="clearBackendError('profit_margin')"
+          />
+          <div v-if="validationErrors?.profit_margin">
+            <p
+              v-for="(error, index) in validationErrors.profit_margin"
+              :key="index"
+              class="text-rose-500 text-xs mt-1 font-bold"
+            >
+              {{ error }}
+            </p>
+          </div>
+        </div>
+
+        <!-- هـ. في حال اختيار هامش الربح المستهدف المباشر -->
         <div v-if="form.criterion_type === 'target_margin'">
           <AppInput
             id="reprice-target-margin"
@@ -220,7 +243,7 @@ const emit = defineEmits(['preview', 'reset'])
 // خيارات معيار التسعير
 const criterionOptions = [
   { id: 'exchange_rate', name: 'تحديث بناءً على سعر الصرف' },
-  { id: 'percentage', name: 'تعديل بنسبة مئوية (+/-)' },
+  { id: 'percentage', name: 'تعديل تكلفة بنسبة تضخم (+/-)' },
   { id: 'target_margin', name: 'تطبيق هامش ربح مستهدف (%)' },
 ]
 
@@ -240,6 +263,7 @@ const defaultForm = () => ({
   currency_id: null,
   exchange_rate: '',
   percentage: '',
+  profit_margin: '',
   target_margin: '',
   rounding_rule: 'none',
 })
@@ -301,8 +325,14 @@ const handlePreviewSubmit = () => {
   if (form.value.criterion_type === 'exchange_rate') {
     payload.currency_id = form.value.currency_id ? Number(form.value.currency_id) : null
     payload.exchange_rate = form.value.exchange_rate ? Number(form.value.exchange_rate) : null
+    if (form.value.profit_margin !== '') {
+      payload.profit_margin = Number(form.value.profit_margin)
+    }
   } else if (form.value.criterion_type === 'percentage') {
     payload.percentage = form.value.percentage !== '' ? Number(form.value.percentage) : null
+    if (form.value.profit_margin !== '') {
+      payload.profit_margin = Number(form.value.profit_margin)
+    }
   } else if (form.value.criterion_type === 'target_margin') {
     payload.target_margin =
       form.value.target_margin !== '' ? Number(form.value.target_margin) : null
