@@ -20,13 +20,14 @@
     <PurchaseHeader v-model="form" :validation-errors="purchaseStore.validationErrors" />
 
     <AppCard>
-      <div class="p-3 space-y-3">
+      <div ref="tableWrapperRef" class="p-3 space-y-3">
         <!-- شريط البحث مدمج مع حقل نسبة الربح العامة في نفس السطر -->
         <div class="flex flex-col md:flex-row items-center gap-3">
           <div
             class="flex-1 w-full text-xs bg-[#e05e2b] p-1 rounded-lg shadow-[0_0_15px_rgba(224,94,43,0.25)] border border-[#e05e2b]"
           >
             <SmartSearchGrid
+              ref="searchGridRef"
               :data="searchableItems"
               :columns="[
                 { key: 'id_display', label: 'رقم الصنف', class: 'text-right' },
@@ -95,6 +96,14 @@
           @remove-row="removeRow"
           @add-row-request="triggerAddNewEmptyLine"
         >
+          <template #cell-item_name="{ row }">
+            <div class="w-full px-1 overflow-hidden" :title="row.item_name">
+              <span class="block truncate text-xs font-bold text-gray-300 cursor-default">
+                {{ row.item_name || '-' }}
+              </span>
+            </div>
+          </template>
+
           <template #cell-item_unit_id="{ row, index }">
             <div class="flex flex-col w-full">
               <select
@@ -123,39 +132,70 @@
             </div>
           </template>
 
-          <template #cell-foreign_unit_cost="{ row }">
+          <template #cell-quantity="{ row, index, col }">
+            <div class="w-full flex justify-center items-center">
+              <input
+                type="text"
+                v-model="row.quantity"
+                :data-row="index"
+                :data-col="col.key"
+                @keydown.enter.prevent="onQuantityEnter"
+                @keydown.arrow-left.prevent="onQuantityArrowLeft(index)"
+                class="w-full p-1 bg-transparent border-none text-white font-bold text-xs focus:outline-none text-center font-mono transition-all focus:bg-[#16171b]/40 focus:rounded"
+                placeholder="0"
+              />
+            </div>
+          </template>
+
+          <template #cell-foreign_unit_cost="{ row, index }">
             <div class="w-full flex justify-center items-center">
               <input
                 type="text"
                 inputmode="decimal"
+                :data-row="index"
+                data-col="foreign_unit_cost"
                 :value="formatNumber(row.foreign_unit_cost)"
                 @input="handleForeignUnitCostInput(row, $event.target.value)"
+                @keydown.enter.prevent="onFieldEnter"
+                @keydown.arrow-left.prevent="focusField(index, 'unit_cost')"
+                @keydown.arrow-right.prevent="focusQuantity(index)"
                 class="w-full p-1 bg-[#16171b] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded transition-all text-xs text-center font-mono text-white font-bold outline-none focus:ring-1 focus:ring-[#e05e2b]/30"
                 placeholder="0"
               />
             </div>
           </template>
 
-          <template #cell-unit_cost="{ row }">
+          <template #cell-unit_cost="{ row, index }">
             <div class="w-full flex justify-center items-center">
               <input
                 type="text"
                 inputmode="decimal"
+                :data-row="index"
+                data-col="unit_cost"
                 :value="formatNumber(row.unit_cost)"
                 @input="handleUnitCostInput(row, $event.target.value)"
+                @keydown.enter.prevent="onFieldEnter"
+                @keydown.arrow-left.prevent="focusField(index, 'selling_price')"
+                @keydown.arrow-right.prevent="
+                  focusField(index, form.currency_id ? 'foreign_unit_cost' : 'quantity')
+                "
                 class="w-full p-1 bg-[#16171b] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded transition-all text-xs text-center font-mono text-white font-bold outline-none focus:ring-1 focus:ring-[#e05e2b]/30"
                 placeholder="0"
               />
             </div>
           </template>
 
-          <template #cell-selling_price="{ row }">
+          <template #cell-selling_price="{ row, index }">
             <div class="w-full flex justify-center items-center">
               <input
                 type="text"
                 inputmode="decimal"
+                :data-row="index"
+                data-col="selling_price"
                 :value="formatNumber(row.selling_price)"
                 @input="handleSellingPriceInput(row, $event.target.value)"
+                @keydown.enter.prevent="onFieldEnter"
+                @keydown.arrow-right.prevent="focusField(index, 'unit_cost')"
                 class="w-full p-1 bg-[#16171b] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded transition-all text-xs text-center font-mono text-white font-bold outline-none focus:ring-1 focus:ring-[#e05e2b]/30"
                 placeholder="0"
               />
@@ -209,7 +249,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { usePurchaseStore } from '@/stores/purchaseStore'
 import { useItemStore } from '@/stores/itemStore'
@@ -232,6 +272,9 @@ const toast = useToast()
 const purchaseStore = usePurchaseStore()
 const itemStore = useItemStore()
 const authStore = useAuthStore()
+
+const searchGridRef = ref(null)
+const tableWrapperRef = ref(null)
 
 const isEdit = computed(() => !!route.params.id)
 const isHydrating = ref(false)
@@ -358,6 +401,7 @@ const detailSchema = [
     type: 'number',
     defaultValue: 1,
     widthClass: 'w-[6%]',
+    slot: 'cell-quantity',
   },
   {
     key: 'foreign_unit_cost',
@@ -698,6 +742,52 @@ watch(
   },
 )
 
+// توجيه التركيز لحقل الكمية مع التظليل
+const focusQuantity = (rowIndex) => {
+  nextTick(() => {
+    const selector = `input[data-row="${rowIndex}"][data-col="quantity"]`
+    const inputEl =
+      tableWrapperRef.value?.querySelector(selector) || document.querySelector(selector)
+    if (inputEl) {
+      inputEl.focus()
+      if (typeof inputEl.select === 'function') {
+        inputEl.select()
+      }
+    }
+  })
+}
+
+// توجيه التركيز لأي حقل آخر مع التظليل
+const focusField = (rowIndex, colKey) => {
+  nextTick(() => {
+    const selector = `input[data-row="${rowIndex}"][data-col="${colKey}"]`
+    const inputEl =
+      tableWrapperRef.value?.querySelector(selector) || document.querySelector(selector)
+    if (inputEl) {
+      inputEl.focus()
+      if (typeof inputEl.select === 'function') {
+        inputEl.select()
+      }
+    }
+  })
+}
+
+// العودة الفورية لحقل البحث عند ضغط Enter في الكمية
+const onQuantityEnter = () => {
+  searchGridRef.value?.focus()
+}
+
+// التنقل بالسهم الأيسر من الكمية إلى التكلفة المناسبة
+const onQuantityArrowLeft = (rowIndex) => {
+  const targetCol = form.value.currency_id ? 'foreign_unit_cost' : 'unit_cost'
+  focusField(rowIndex, targetCol)
+}
+
+// العودة الفورية للبحث من أي حقل مالي عند ضغط Enter
+const onFieldEnter = () => {
+  searchGridRef.value?.focus()
+}
+
 const handleGlobalItemSelect = (selectedItem) => {
   if (!selectedItem) return
   handleItemSelected(selectedItem)
@@ -717,6 +807,23 @@ const handleGlobalItemSelect = (selectedItem) => {
       }
     }
   }
+
+  nextTick(() => {
+    const defaultUnitId = selectedItem.units?.[0]?.id || ''
+    let targetIndex = items.value.findIndex((row) => {
+      if (row.item_id !== selectedItem.id) return false
+      if (defaultUnitId) return String(row.item_unit_id) === String(defaultUnitId)
+      return true
+    })
+
+    if (targetIndex === -1) {
+      targetIndex = items.value.length - 1
+    }
+
+    if (targetIndex >= 0) {
+      focusQuantity(targetIndex)
+    }
+  })
 }
 
 const triggerAddNewEmptyLine = () => {

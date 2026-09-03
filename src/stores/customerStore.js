@@ -1,4 +1,3 @@
-//src\stores\customerStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import customerService from '@/services/customerService'
@@ -58,13 +57,23 @@ export const useCustomerStore = defineStore('customer', () => {
     }
   }
 
-  // 3. إنشاء عميل جديد مع معالجة أخطاء التحقق القادمة من الباك إند
+  // 3. إنشاء عميل جديد مع إدراجه فوراً في الذاكرة المحلية وضبط حقل العرض للقائمة المنسدلة
   async function createCustomer(payload) {
     loading.value = true
     error.value = null
     validationErrors.value = null
     try {
       const response = await customerService.create(payload)
+      const createdCustomer = response.data?.data || response.data
+
+      if (createdCustomer && createdCustomer.id) {
+        if (!createdCustomer.display_label) {
+          createdCustomer.display_label =
+            createdCustomer.name + (createdCustomer.phone ? ` - ${createdCustomer.phone}` : '')
+        }
+        customers.value.unshift(createdCustomer)
+      }
+
       return response.data
     } catch (err) {
       if (err.response?.status === 422) {
@@ -78,13 +87,26 @@ export const useCustomerStore = defineStore('customer', () => {
     }
   }
 
-  // 4. تحديث العميل ومعالجة أخطاء الـ Unique أو القيود المدخلة
+  // 4. تحديث العميل وتحديث السجل المقابل داخل الذاكرة المحلية
   async function updateCustomer(id, payload) {
     loading.value = true
     error.value = null
     validationErrors.value = null
     try {
       const response = await customerService.update(id, payload)
+      const updatedCustomer = response.data?.data || response.data
+
+      if (updatedCustomer && updatedCustomer.id) {
+        if (!updatedCustomer.display_label) {
+          updatedCustomer.display_label =
+            updatedCustomer.name + (updatedCustomer.phone ? ` - ${updatedCustomer.phone}` : '')
+        }
+        const index = customers.value.findIndex((c) => c.id === updatedCustomer.id)
+        if (index !== -1) {
+          customers.value[index] = updatedCustomer
+        }
+      }
+
       return response.data
     } catch (err) {
       if (err.response?.status === 422) {
@@ -98,12 +120,13 @@ export const useCustomerStore = defineStore('customer', () => {
     }
   }
 
-  // 5. حذف العميل
+  // 5. حذف العميل واستبعاده من مصفوفة الذاكرة المحلية
   async function deleteCustomer(id) {
     loading.value = true
     error.value = null
     try {
       const response = await customerService.delete(id)
+      customers.value = customers.value.filter((c) => c.id !== id)
       return response.data
     } catch (err) {
       error.value = err.response?.data?.message || 'فشل في حذف العميل من قاعدة البيانات.'
@@ -114,7 +137,40 @@ export const useCustomerStore = defineStore('customer', () => {
     }
   }
 
-  // تصدير كافة الحالات والدوال للاستخدام الخارجي في الشاشات
+  // 6. التحقق والبحث عن العميل برقم الهاتف (محلياً أولاً ثم من الخادم)
+  async function findByPhone(phone) {
+    if (!phone || !phone.trim()) return null
+    const cleanPhone = phone.trim()
+
+    // فحص محلي أولاً لتوفير طلبات الشبكة
+    const localMatch = customers.value.find((c) => c.phone && c.phone.trim() === cleanPhone)
+    if (localMatch) return localMatch
+
+    // فحص سحابي من الخادم في حال لم يتم تحميل العميل مسبقاً
+    try {
+      const response = await customerService.get(1, { search: cleanPhone })
+      const results = response.data?.data || []
+      const serverMatch =
+        results.find((c) => c.phone && c.phone.trim() === cleanPhone) ||
+        (results.length === 1 ? results[0] : null)
+
+      if (serverMatch) {
+        if (!serverMatch.display_label) {
+          serverMatch.display_label =
+            serverMatch.name + (serverMatch.phone ? ` - ${serverMatch.phone}` : '')
+        }
+        if (!customers.value.some((c) => c.id === serverMatch.id)) {
+          customers.value.unshift(serverMatch)
+        }
+        return serverMatch
+      }
+      return null
+    } catch (err) {
+      console.error('فشل في فحص وتتبع رقم هاتف العميل من الخادم:', err)
+      return null
+    }
+  }
+
   return {
     customers,
     pagination,
@@ -127,5 +183,6 @@ export const useCustomerStore = defineStore('customer', () => {
     createCustomer,
     updateCustomer,
     deleteCustomer,
+    findByPhone,
   }
 })

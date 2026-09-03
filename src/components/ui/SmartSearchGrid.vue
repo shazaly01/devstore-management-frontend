@@ -251,7 +251,9 @@ const selectItem = (item) => {
   searchQuery.value = ''
   isOpen.value = false
   highlightedIndex.value = 0
+}
 
+const focus = () => {
   nextTick(() => {
     inputRef.value?.focus()
   })
@@ -269,5 +271,9 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('mousedown', handleClickOutside)
+})
+
+defineExpose({
+  focus,
 })
 </script>

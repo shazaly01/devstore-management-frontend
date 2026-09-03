@@ -174,8 +174,8 @@
       </div>
     </div>
 
-    <!-- الصف الثاني: 3 أعمدة (طريقة الدفع + العميل + اسم العميل النصي) -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+    <!-- الصف الثاني: 4 أعمدة (طريقة الدفع + فحص هاتف العميل + قائمة اختيار العميل + اسم العميل النصي) -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <!-- payment_type -->
       <div class="relative w-full">
         <div
@@ -211,6 +211,62 @@
         >
           {{ getFieldError('payment_type') }}
         </p>
+      </div>
+
+      <!-- customer_phone_search (فحص هاتف العميل واختياره أو فتح المودال آلياً) -->
+      <div class="relative w-full">
+        <div
+          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]"
+        >
+          <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+              />
+            </svg>
+          </span>
+
+          <input
+            type="text"
+            v-model="customerPhone"
+            @keydown.enter.prevent="checkCustomerPhone"
+            :disabled="!!formData.parent_id"
+            placeholder="رقم الهاتف (Enter للفحص)..."
+            class="block w-full h-full pr-10 pl-16 bg-transparent text-white focus:outline-none text-xs font-medium placeholder-gray-500 disabled:opacity-60 disabled:cursor-not-allowed"
+          />
+
+          <button
+            type="button"
+            @click="checkCustomerPhone"
+            :disabled="isCheckingPhone || !customerPhone.trim() || !!formData.parent_id"
+            class="absolute left-1.5 px-2.5 py-1 bg-[#e05e2b] hover:bg-[#c94e20] text-white text-[11px] font-bold rounded flex items-center gap-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            title="فحص وجود العميل برقم الهاتف"
+          >
+            <svg
+              v-if="isCheckingPhone"
+              class="animate-spin w-3 h-3 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                class="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                stroke-width="4"
+              ></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+            </svg>
+            <span v-else>فحص</span>
+          </button>
+        </div>
+        <span class="text-[10px] text-gray-400 mt-1 pr-1 block">
+          اضغط Enter أو زر فحص لاختيار العميل أو تسجيله
+        </span>
       </div>
 
       <!-- customer_id -->
@@ -329,6 +385,15 @@
         {{ getFieldError('parent_id') }}
       </p>
     </div>
+
+    <!-- نافذة إضافة عميل جديد السريعة عند عدم تطابق رقم الهاتف -->
+    <CustomerModal
+      v-if="isCustomerModalOpen"
+      v-model="isCustomerModalOpen"
+      :customer="newCustomerInitialData"
+      :is-saving="isSavingCustomer"
+      @save="handleSaveNewCustomer"
+    />
   </div>
 </template>
 
@@ -336,10 +401,12 @@
 import { onMounted, ref, watch, computed } from 'vue'
 import { useCustomerStore } from '@/stores/customerStore'
 import { useSaleStore } from '@/stores/saleStore'
+import { useToast } from 'vue-toastification'
 import StoresDropdown from '@/components/forms/StoresDropdown.vue'
 import TreasuriesDropdown from '@/components/forms/TreasuriesDropdown.vue'
 import BanksDropdown from '@/components/forms/BanksDropdown.vue'
 import CustomersDropdown from '@/components/forms/CustomersDropdown.vue'
+import CustomerModal from '@/views/customers/CustomerModal.vue'
 
 const formData = defineModel({ type: Object, required: true })
 
@@ -349,16 +416,95 @@ const props = defineProps({
 
 const customerStore = useCustomerStore()
 const saleStore = useSaleStore()
+const toast = useToast()
 
 const originalSales = ref([])
+
+// متغيرات التحقق برقم الهاتف ومودال العميل الجديد
+const customerPhone = ref('')
+const isCheckingPhone = ref(false)
+const isCustomerModalOpen = ref(false)
+const newCustomerInitialData = ref(null)
+const isSavingCustomer = ref(false)
+
+// فحص وجود العميل برقم الهاتف
+const checkCustomerPhone = async () => {
+  const phone = customerPhone.value?.trim()
+  if (!phone) {
+    toast.warning('يرجى إدخال رقم الهاتف أولاً لإجراء الفحص.')
+    return
+  }
+
+  isCheckingPhone.value = true
+  try {
+    const matchedCustomer = await customerStore.findByPhone(phone)
+    if (matchedCustomer) {
+      formData.value.customer_id = matchedCustomer.id
+      toast.success(`تم العثور على العميل "${matchedCustomer.name}" واختياره للفاتورة.`)
+    } else {
+      toast.info('العميل غير مسجل، تم فتح نافذة تسجيل عميل جديد.')
+      newCustomerInitialData.value = {
+        name: '',
+        phone: phone,
+        email: '',
+        credit_limit: '',
+        opening_balance: '',
+        price_list_id: null,
+      }
+      isCustomerModalOpen.value = true
+    }
+  } catch (error) {
+    console.error('خطأ أثناء فحص رقم هاتف العميل:', error)
+    toast.error('تعذر استكمال فحص رقم الهاتف، حاول مرة أخرى.')
+  } finally {
+    isCheckingPhone.value = false
+  }
+}
+
+// حفظ العميل الجديد وتحديده فوراً في الفاتورة
+const handleSaveNewCustomer = async (customerData) => {
+  isSavingCustomer.value = true
+  try {
+    const response = await customerStore.createCustomer(customerData)
+    const createdCustomer = response?.data || response
+
+    if (createdCustomer && createdCustomer.id) {
+      formData.value.customer_id = createdCustomer.id
+      customerPhone.value = createdCustomer.phone || customerPhone.value
+      toast.success(`تم تسجيل العميل "${createdCustomer.name}" بنجاح وتعيينه للفاتورة.`)
+    }
+
+    isCustomerModalOpen.value = false
+  } catch (error) {
+    const errorMsg =
+      customerStore.error || error.response?.data?.message || 'فشل في تسجيل بيانات العميل الجديد.'
+    toast.error(errorMsg)
+  } finally {
+    isSavingCustomer.value = false
+  }
+}
+
+// مزامنة حقل الهاتف إذا تم اختيار العميل مباشرة من القائمة المنسدلة
+watch(
+  () => formData.value.customer_id,
+  (newId) => {
+    if (newId && customerStore.customers) {
+      const currentCust = customerStore.customers.find((c) => c.id === newId)
+      if (currentCust && currentCust.phone && !customerPhone.value) {
+        customerPhone.value = currentCust.phone
+      }
+    }
+  },
+)
 
 // تتبع واستخراج اسم قائمة أسعار العميل الحالي المختار ديناميكياً
 const selectedCustomerPriceListName = computed(() => {
   if (!formData.value.customer_id || !customerStore.customers) return null
   const currentCust = customerStore.customers.find((c) => c.id === formData.value.customer_id)
-  return currentCust?.price_list?.name || currentCust?.price_list_id
-    ? `فئة #${currentCust.price_list_id}`
-    : null
+  return (
+    currentCust?.price_list?.name ||
+    (currentCust?.price_list_id ? `فئة #${currentCust.price_list_id}` : null)
+  )
 })
 
 const loadOriginalSales = async () => {

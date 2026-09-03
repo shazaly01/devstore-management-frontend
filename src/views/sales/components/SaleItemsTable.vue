@@ -1,6 +1,6 @@
 <!--src\views\sales\components\SaleItemsTable.vue--->
 <script setup>
-import { computed, watch } from 'vue'
+import { ref, computed, watch, nextTick } from 'vue'
 import { useItemStore } from '@/stores/itemStore'
 import { useCustomerStore } from '@/stores/customerStore'
 
@@ -22,6 +22,9 @@ const props = defineProps({
 
 const itemStore = useItemStore()
 const customerStore = useCustomerStore()
+
+const searchGridRef = ref(null)
+const tableWrapperRef = ref(null)
 
 const searchableItems = computed(() => {
   if (!itemStore.items) return []
@@ -112,6 +115,24 @@ const handleUnitPriceInput = (row, value) => {
   row.is_price_overridden = true
 }
 
+// استخراج السعر الأدنى المسموح به للوحدة المختارة بالسطر
+const getMinAllowedPrice = (row) => {
+  if (!row.available_units || !row.item_unit_id) return 0
+  const matchedUnit = row.available_units.find((u) => u.id === row.item_unit_id)
+  return matchedUnit && matchedUnit.min_allowed_price !== undefined
+    ? Number(matchedUnit.min_allowed_price) || 0
+    : 0
+}
+
+// فحص ما إذا كان السعر المدخل أقل من السقف الأدنى للبيع
+const isPriceBelowMin = (row) => {
+  if (props.form?.invoice_type === 'return') return false
+  const minPrice = getMinAllowedPrice(row)
+  if (minPrice <= 0) return false
+  const currentPrice = Number(row.unit_price) || 0
+  return currentPrice < minPrice
+}
+
 // تحديث دالة حساب السعر لتعتمد على الفئة السعرية القياسية
 const syncUnitSalePrice = (row) => {
   if (row.is_price_overridden) {
@@ -140,14 +161,76 @@ const syncUnitSalePrice = (row) => {
     }
   }
 }
+
+// توجيه التركيز لحقل الكمية لسطر محدد وتظليله
+const focusQuantity = (rowIndex) => {
+  nextTick(() => {
+    const selector = `input[data-row="${rowIndex}"][data-col="quantity"]`
+    const inputEl =
+      tableWrapperRef.value?.querySelector(selector) || document.querySelector(selector)
+    if (inputEl) {
+      inputEl.focus()
+      if (typeof inputEl.select === 'function') {
+        inputEl.select()
+      }
+    }
+  })
+}
+
+// توجيه التركيز لحقل سعر الوحدة لسطر محدد وتظليله
+const focusUnitPrice = (rowIndex) => {
+  nextTick(() => {
+    const selector = `input[data-row="${rowIndex}"][data-col="unit_price"]`
+    const inputEl =
+      tableWrapperRef.value?.querySelector(selector) || document.querySelector(selector)
+    if (inputEl) {
+      inputEl.focus()
+      if (typeof inputEl.select === 'function') {
+        inputEl.select()
+      }
+    }
+  })
+}
+
+// معالجة اختيار الصنف وتوجيه التركيز تلقائياً لحقل الكمية مع تحديد النص
+const onItemSelected = (selectedItem) => {
+  props.handleGlobalItemSelect(selectedItem)
+
+  nextTick(() => {
+    const defaultUnitId = selectedItem.units?.[0]?.id || ''
+    let targetIndex = props.items.findIndex((row) => {
+      if (row.item_id !== selectedItem.id) return false
+      if (defaultUnitId) return row.item_unit_id === defaultUnitId
+      return true
+    })
+
+    if (targetIndex === -1) {
+      targetIndex = props.items.length - 1
+    }
+
+    if (targetIndex >= 0) {
+      focusQuantity(targetIndex)
+    }
+  })
+}
+
+// العودة الفورية لحقل البحث عند ضغط Enter في حقل الكمية أو حقل السعر
+const onQuantityEnter = () => {
+  searchGridRef.value?.focus()
+}
+
+const onUnitPriceEnter = () => {
+  searchGridRef.value?.focus()
+}
 </script>
 
 <template>
-  <div class="p-0 bg-transparent space-y-4">
+  <div ref="tableWrapperRef" class="p-0 bg-transparent space-y-4">
     <div
       class="w-full text-xs bg-[#e05e2b] p-1 rounded-lg shadow-[0_0_15px_rgba(224,94,43,0.25)] border border-[#e05e2b]"
     >
       <SmartSearchGrid
+        ref="searchGridRef"
         :data="searchableItems"
         :columns="[
           { key: 'id_display', label: 'رقم الصنف', class: 'text-right' },
@@ -157,7 +240,7 @@ const syncUnitSalePrice = (row) => {
         ]"
         :search-keys="['id', 'name', 'code', 'all_barcodes']"
         placeholder="اكتب اسم المنتج أو رقم الصنف للمزامنة اللحظية الفورية للمبيعات..."
-        @select="handleGlobalItemSelect"
+        @select="onItemSelected"
       />
     </div>
 
@@ -209,22 +292,39 @@ const syncUnitSalePrice = (row) => {
             v-model="row.quantity"
             :data-row="index"
             :data-col="col.key"
+            @keydown.enter.prevent="onQuantityEnter"
+            @keydown.arrow-left.prevent="focusUnitPrice(index)"
             class="w-full p-1 bg-transparent border-none text-white font-bold text-xs focus:outline-none text-center font-mono transition-all focus:bg-[#16171b]/40 focus:rounded"
             placeholder="0"
           />
         </div>
       </template>
 
-      <template #cell-unit_price="{ row }">
-        <div class="w-full flex justify-center items-center">
+      <template #cell-unit_price="{ row, index }">
+        <div class="w-full flex flex-col justify-center items-center">
           <input
             type="text"
             inputmode="decimal"
+            :data-row="index"
+            data-col="unit_price"
             :value="formatNumber(row.unit_price)"
             @input="handleUnitPriceInput(row, $event.target.value)"
-            class="w-full p-1 bg-[#16171b] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded transition-all text-xs text-center font-mono text-white font-bold outline-none focus:ring-1 focus:ring-[#e05e2b]/30"
+            @keydown.enter.prevent="onUnitPriceEnter"
+            @keydown.arrow-right.prevent="focusQuantity(index)"
+            :class="[
+              'w-full p-1 rounded transition-all text-xs text-center font-mono font-bold outline-none',
+              isPriceBelowMin(row)
+                ? 'bg-rose-950/30 border border-rose-500 text-rose-300 focus:border-rose-500 focus:ring-1 focus:ring-rose-500/40 shadow-[0_0_8px_rgba(244,63,94,0.2)]'
+                : 'bg-[#16171b] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] text-white focus:ring-1 focus:ring-[#e05e2b]/30',
+            ]"
             placeholder="0"
           />
+          <span
+            v-if="isPriceBelowMin(row)"
+            class="text-[9px] text-rose-400 font-bold mt-0.5 whitespace-nowrap animate-pulse"
+          >
+            الأدنى: {{ formatNumber(getMinAllowedPrice(row)) }}
+          </span>
         </div>
       </template>
 

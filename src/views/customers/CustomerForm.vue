@@ -1,3 +1,4 @@
+<!---src\views\customers\CustomerForm.vue--->
 <template>
   <form @submit.prevent="handleSubmit">
     <div class="space-y-5">

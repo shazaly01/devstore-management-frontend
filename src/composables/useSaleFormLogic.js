@@ -336,6 +336,31 @@ export function useSaleFormLogic() {
   })
 
   const handleSubmit = async () => {
+    // 1. الفحص الصارم لسقف السعر الأدنى ومنع الإرسال فوراً عند وجود مخالفة (لفواتير البيع فقط)
+    if (form.value.invoice_type === 'sale') {
+      for (let i = 0; i < items.value.length; i++) {
+        const row = items.value[i]
+        if (!row.item_id || !row.item_unit_id) continue
+
+        const matchedUnit = row.available_units?.find((u) => u.id === row.item_unit_id)
+        const minPrice =
+          matchedUnit && matchedUnit.min_allowed_price !== undefined
+            ? Number(matchedUnit.min_allowed_price) || 0
+            : 0
+
+        const currentUnitPrice = parseFloat(row.unit_price) || 0
+
+        if (minPrice > 0 && currentUnitPrice < minPrice) {
+          const itemName = row.item_name || `الصنف في السطر (${i + 1})`
+          const unitName = matchedUnit?.unit_name || 'الوحدة المختارة'
+          toast.error(
+            `لا يمكن حفظ الفاتورة: سعر الصنف [${itemName}] لوحدة [${unitName}] (${formatNumber(currentUnitPrice)}) أقل من السعر الأدنى المسموح به (${formatNumber(minPrice)}).`,
+          )
+          return
+        }
+      }
+    }
+
     const dynamicItemsPayload = items.value
       .filter((row) => row.item_id && row.item_unit_id)
       .map((row) => {
