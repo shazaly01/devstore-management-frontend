@@ -5,7 +5,7 @@
   >
     <div class="flex h-16 items-center justify-between px-5 flex-shrink-0">
       <RouterLink :to="{ name: 'Dashboard' }" class="flex items-center gap-2">
-        <img :src="logoUrl" alt="Logo" class="logo-main mx-auto mb-4" />
+        <img :src="logoUrl" alt="Logo" class="h-10 w-auto object-contain" />
         <h1 class="text-xl font-bold text-text-primary">{{ projectName }}</h1>
       </RouterLink>
       <button
@@ -102,10 +102,7 @@ import {
   ChevronDownIcon,
   CurrencyDollarIcon,
 } from '@heroicons/vue/24/outline'
-const backendUrl = import.meta.env.VITE_API_URL
-  ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
-  : ''
-const logoUrl = `${backendUrl}/storage/MainLogo2.png`
+const logoUrl = '/PandaRep.png'
 // استيراد مصفوفة الإعدادات المجرّدة
 import { navigationConfig } from '@/config/navigation'
 
@@ -115,7 +112,7 @@ const authStore = useAuthStore()
 const route = useRoute()
 
 const projectName = ref(import.meta.env.VITE_APP_NAME || 'لوحة تحكم')
-const projectLogo = ref(import.meta.env.VITE_APP_LOGO || '/MainLogo2.png')
+const projectLogo = ref(import.meta.env.VITE_APP_LOGO || '/PandaRep.png')
 
 const allNavLinks = shallowRef(navigationConfig)
 

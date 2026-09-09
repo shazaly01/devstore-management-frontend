@@ -3,28 +3,28 @@
   <div
     class="bg-surface-section border border-surface-border/60 rounded-xl p-5 shadow-sm relative overflow-hidden"
   >
-    <!-- عنوان الجدول والمؤشر البصري المتوهج لخامات الورشة -->
+    <!-- عنوان الجدول والمؤشر البصري -->
     <div class="flex items-center justify-between mb-4 pb-3 border-b border-surface-border/40">
       <div class="flex items-center gap-2.5">
         <span
           class="w-2 h-5 bg-emerald-500 rounded-full shadow-[0_0_12px_rgba(52,211,153,0.4)]"
         ></span>
-        <h3 class="text-base font-bold text-text-primary">تقرير استهلاك خامات ومواد الطباعة</h3>
+        <h3 class="text-base font-bold text-text-primary">تقرير استهلاك الأصناف</h3>
       </div>
       <span
         class="text-xs font-semibold px-2.5 py-1 bg-emerald-500/10 text-emerald-400 rounded-md border border-emerald-500/20"
       >
-        {{ items.length }} خامة مستخدمة
+        {{ items.length }} صنف
       </span>
     </div>
 
-    <!-- جدول العرض الانسيابي لكافة الخامات المستهلكة -->
+    <!-- جدول عرض الأصناف المستهلكة -->
     <div class="overflow-x-auto">
       <table class="w-full text-right border-collapse">
         <thead>
           <tr class="border-b border-surface-border/40 text-xs font-bold text-text-muted">
-            <th class="pb-3 pr-2 font-black">اسم المادة الخام / الصنف</th>
-            <th class="pb-3 pl-2 text-left font-black">معدل الاستهلاك الكلي (م²)</th>
+            <th class="pb-3 pr-2 font-black">اسم الصنف</th>
+            <th class="pb-3 pl-2 text-left font-black">إجمالي الاستهلاك</th>
           </tr>
         </thead>
         <tbody class="divide-y divide-surface-border/30">
@@ -33,22 +33,20 @@
             :key="item.item_id"
             class="text-sm hover:bg-surface-ground/30 transition-colors group"
           >
-            <!-- اسم الخامة اللوجستية -->
             <td
               class="py-3.5 pr-2 font-medium text-text-primary group-hover:text-primary transition-colors"
             >
               {{ item.item_name }}
             </td>
-            <!-- صافي الأمتار المربعة المستهلكة من الفواتير الفعلية -->
             <td class="py-3.5 pl-2 text-left font-mono font-bold text-emerald-400">
-              {{ formatMeters(item.consumed_meters) }} م²
+              {{ formatQuantity(item.consumed_meters) }}
             </td>
           </tr>
 
-          <!-- واجهة الحاوية الفارغة في حال عدم وجود حركات -->
+          <!-- في حال عدم وجود حركات -->
           <tr v-if="items.length === 0">
             <td colspan="2" class="text-center py-10 text-sm text-text-muted">
-              لا توجد خامات مستهلكة مسجلة في النظام خلال النطاق الزمني المحدد.
+              لا توجد حركات استهلاك مسجلة للأصناف خلال النطاق الزمني المحدد.
             </td>
           </tr>
         </tbody>
@@ -60,7 +58,6 @@
 <script setup>
 import { defineProps } from 'vue'
 
-// استقبال مصفوفة الخامات كاملة من الشاشة الأم بدون قيود سقف عددي
 defineProps({
   items: {
     type: Array,
@@ -69,13 +66,10 @@ defineProps({
   },
 })
 
-/**
- * تنسيق أرقام مساحات الأمتار المربعة بشكل معزز محاسبياً
- */
-const formatMeters = (value) => {
+const formatQuantity = (value) => {
   return new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(value)
+  }).format(value || 0)
 }
 </script>

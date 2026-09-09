@@ -3,7 +3,7 @@
   <div
     class="p-4 md:p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto text-text-primary relative overflow-hidden min-h-screen selection:bg-primary/30"
   >
-    <!-- هالات توهج خلفية فخمة ومصقولة لتعزيز جمالية الواجهة الداكنة -->
+    <!-- هالات توهج خلفية لتعزيز جمالية الواجهة الداكنة -->
     <div
       class="absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none"
     ></div>
@@ -25,8 +25,7 @@
           لوحة الإشراف والمؤشرات الإدارية
         </h1>
         <p class="text-sm text-text-muted mt-1">
-          متابعة حية ودقيقة للأداء اللوجستي، خامات الطباعة، التدفقات الماليّة، وذمم المصممين
-          المستحقة.
+          متابعة حية ودقيقة للأداء اللوجستي، حركة الأصناف، والتدفقات الماليّة.
         </p>
       </div>
 
@@ -34,7 +33,7 @@
       <DashboardFilters :loading="loading" @filter="handleFilterChange" />
     </div>
 
-    <!-- حالة التحميل الفخمة (Premium Dark Skeleton Loader Grid) لحماية تجربة المستخدم -->
+    <!-- حالة التحميل (Skeleton Loader Grid) -->
     <div v-if="loading" class="space-y-6 animate-pulse relative z-10">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div
@@ -58,32 +57,29 @@
       <!-- أولاً: كروت المؤشرات اللوجستية والمالية الكبرى (KPIs) -->
       <LogisticKpiCards :stats="stats" />
 
-      <!-- ثانياً: التوزيع الهيكلي الذكي وغير النمطي للجداول والتقارير التفصيلية -->
+      <!-- ثانياً: التوزيع الهيكلي للجداول والتقارير التفصيلية -->
       <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-        <!-- الجناح الأيمن (العريض): المصروفات التشغيلية ومديونيات العملاء اللحظية -->
+        <!-- الجناح الأيمن: المصروفات التشغيلية ومديونيات العملاء اللحظية -->
         <div class="xl:col-span-7 space-y-6 flex flex-col">
           <!-- جدول كشف المصروفات المفصل للشهر الحالي أو النطاق المختار -->
           <ExpensesSummaryTable :expenses="stats.expenses_summary" />
 
-          <!-- جدول مديونيات العملاء الفعليين المحدث كاشيرياً بلحظته -->
+          <!-- جدول مديونيات العملاء المحدث لحظياً -->
           <CustomerDebtsTable :customers="stats.customers_summary" />
         </div>
 
-        <!-- الجناح الأيسر: ذمم المصممين، مراقبة النواقص، وتقرير استهلاك الخامات الشامل -->
+        <!-- الجناح الأيسر: تنبيهات الأصناف واستهلاك المواد -->
         <div class="xl:col-span-5 space-y-6 flex flex-col">
-          <!-- جدول كشف عمولات ومستحقات المصممين الصافية -->
-          <DesignerLedgerTable :designers="stats.designers_summary" />
-
-          <!-- جدول رادار تنبيهات الخامات والأصناف التي بلغت حد الطلب بأمان -->
+          <!-- جدول تنبيهات الأصناف التي بلغت حد الطلب -->
           <ReorderAlertsTable :items="stats.reorder_level_items" />
 
-          <!-- جدول تقرير معدلات استهلاك خامات ومواد الطباعة الكلي المحدث -->
+          <!-- جدول تقرير معدلات استهلاك الأصناف الكلي المحدث -->
           <MaterialConsumptionTable :items="stats.top_items_by_meters" />
         </div>
       </div>
     </div>
 
-    <!-- واجهة حجب وحماية فخمة ومصقولة تظهر للمستخدم العادي بدلاً من الأرقام الحساسة -->
+    <!-- واجهة حجب وحماية تظهر للمستخدم العادي بدلاً من الأرقام الحساسة -->
     <div
       v-else
       class="text-center py-24 relative z-10 border border-surface-border/40 rounded-2xl bg-surface-section/30 backdrop-blur-md"
@@ -104,26 +100,25 @@ import { ref, onMounted } from 'vue'
 import dashboardService from '@/services/dashboardService'
 import { useAuthStore } from '@/stores/authStore'
 
-// استيراد مكونات الشاشة الفرعية المفككة لضمان النظافة المعمارية وسهولة الصيانة
+// استيراد مكونات الشاشة الفرعية
 import DashboardFilters from './components/DashboardFilters.vue'
 import LogisticKpiCards from './components/LogisticKpiCards.vue'
 import ReorderAlertsTable from './components/ReorderAlertsTable.vue'
 import ExpensesSummaryTable from './components/ExpensesSummaryTable.vue'
 import CustomerDebtsTable from './components/CustomerDebtsTable.vue'
-import DesignerLedgerTable from './components/DesignerLedgerTable.vue'
 import MaterialConsumptionTable from './components/MaterialConsumptionTable.vue'
 
-// تهيئة متجر المصادقة لإدارة الصلاحيات محلياً
+// تهيئة متجر المصادقة لإدارة الصلاحيات
 const authStore = useAuthStore()
 
-// إدارة الحالة والتحميل للتقرير المالي واللوجستي اللحظي
+// إدارة الحالة والتحميل للتقرير المالي واللوجستي
 const loading = ref(true)
 const currentFilters = ref({
   from_date: '',
   to_date: '',
 })
 
-// الهيكل البياني الافتراضي المتوافق والمطابق تماماً لمخرجات الـ Backend المحصنة
+// الهيكل البياني الافتراضي المتوافق مع مخرجات الـ API
 const stats = ref({
   date_range: { from: '', to: '' },
   net_square_meters: 0,
@@ -137,11 +132,10 @@ const stats = ref({
   },
   expenses_summary: { list: [], grand_total: 0 },
   customers_summary: { list: [], grand_total: 0 },
-  designers_summary: { list: [], grand_total: 0 },
 })
 
 /**
- * المحرك المركزي الذكي لجلب مؤشرات لوحة التحكم الموحدة من الـ API
+ * المحرك المركزي لجلب مؤشرات لوحة التحكم من الـ API
  */
 const fetchDashboardData = async (filters = {}) => {
   loading.value = true
@@ -151,21 +145,21 @@ const fetchDashboardData = async (filters = {}) => {
       stats.value = response.data.data
     }
   } catch (error) {
-    console.error('خطأ حرجي أثناء جلب مؤشرات الإشراف المركزي للوحة التحكم:', error)
+    console.error('خطأ أثناء جلب مؤشرات لوحة التحكم:', error)
   } finally {
     loading.value = false
   }
 }
 
 /**
- * استقبال الأحداث الزمنية فور تعديل الفلتر من المكون الفرعي وإعادة البناء لحظياً
+ * استقبال الأحداث الزمنية وتحديث المؤشرات لحظياً
  */
 const handleFilterChange = (newFilters) => {
   currentFilters.value = { ...newFilters }
   fetchDashboardData(currentFilters.value)
 }
 
-// التحفيز اللحظي والأوتوماتيكي عند فتح الشاشة مباشرة بناءً على جودة الصلاحية
+// جلب البيانات عند تحميل الصفحة إذا توفرت الصلاحية
 onMounted(() => {
   if (authStore.can('dashboard.manager')) {
     fetchDashboardData()

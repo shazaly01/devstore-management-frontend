@@ -115,10 +115,7 @@ const onMouseMove = (event) => {
 }
 const onMouseLeave = () => {}
 
-const backendUrl = import.meta.env.VITE_API_URL
-  ? import.meta.env.VITE_API_URL.replace(/\/api\/?$/, '')
-  : ''
-const logoUrl = `${backendUrl}/storage/MainLogo2.png`
+const logoUrl = '/PandaRep.png'
 // --- [مُعدَّل] منطق تسجيل الدخول ليتوافق مع authStore الجديد ---
 const authStore = useAuthStore()
 const router = useRouter()

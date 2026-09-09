@@ -1,9 +1,10 @@
+<!-- src/views/dashboard/components/ReorderAlertsTable.vue -->
 <template>
   <AppCard class="flex flex-col h-full">
     <!-- رأس الكرت: العنوان وشارات التنبيه الضوئية للمخازن -->
     <div class="flex items-center justify-between mb-5">
       <div class="flex items-center gap-3">
-        <!-- أيقونة تنبيهية تعبر عن النواقص وضرورة إعادة الطلب والتوريد الخارجي -->
+        <!-- أيقونة تنبيهية تعبر عن نواقص الأصناف وضرورة إعادة الطلب -->
         <div
           class="p-2.5 bg-orange-500/10 text-orange-400 rounded-xl border border-orange-500/20 shadow-lg shadow-orange-500/5 animate-pulse"
         >
@@ -23,12 +24,12 @@
           </svg>
         </div>
         <div>
-          <h3 class="text-lg font-black text-text-primary tracking-tight">رادار نواقص الخامات</h3>
+          <h3 class="text-lg font-black text-text-primary tracking-tight">نواقص الأصناف</h3>
           <p class="text-xs text-text-muted mt-0.5">الأصناف التي بلغت أو تجاوزت حد الطلب الآمن</p>
         </div>
       </div>
 
-      <!-- شارة رقمية ذكية توضح حجم العجز الحالي بالمخازن -->
+      <!-- شارة رقمية توضح عدد الأصناف التي بلغت حد الطلب -->
       <div
         class="text-[11px] font-bold text-orange-400 bg-orange-500/10 px-3 py-1.5 rounded-lg border border-orange-500/20"
       >
@@ -36,14 +37,14 @@
       </div>
     </div>
 
-    <!-- حاوية الجدول اللوجستي: متجاوبة مع الجوال عبر التمرير الأفقي المخفي وعزل البيانات -->
+    <!-- حاوية الجدول: متجاوبة مع الجوال عبر التمرير الأفقي -->
     <div
       class="flex-1 overflow-x-auto rounded-xl border border-surface-border/60 bg-surface-section/30 mb-2 scrollbar-thin scrollbar-thumb-surface-border scrollbar-track-transparent"
     >
       <table class="w-full text-right whitespace-nowrap">
         <thead class="bg-surface-section/50 text-xs text-text-muted sticky top-0 z-10">
           <tr>
-            <th class="px-4 py-3.5 font-bold border-b border-surface-border/50">الخامة / الصنف</th>
+            <th class="px-4 py-3.5 font-bold border-b border-surface-border/50">اسم الصنف</th>
             <th class="px-4 py-3.5 font-bold border-b border-surface-border/50">المخزن المعني</th>
             <th class="px-4 py-3.5 font-bold border-b border-surface-border/50 text-center">
               الرصيد الحالي
@@ -54,7 +55,7 @@
           </tr>
         </thead>
         <tbody class="divide-y divide-surface-border/40 text-sm">
-          <!-- حالة الأمان الكامل (Empty State): تظهر فقط عندما تكون كافة الخامات في النطاق الآمن -->
+          <!-- حالة الأمان الكامل: تظهر عندما تكون كافة الأصناف أعلى من حد الطلب -->
           <tr v-if="!items || items.length === 0">
             <td colspan="4" class="px-4 py-12 text-center text-text-muted">
               <div class="flex flex-col items-center gap-3">
@@ -74,19 +75,19 @@
                   >المخزون آمن ومستقر تماماً</span
                 >
                 <span class="text-xs text-text-muted max-w-xs leading-relaxed"
-                  >كافة مستويات الخامات والأصناف التشغيلية في المطبعة أعلى من حدود الخطر.</span
+                  >كافة أرصدة الأصناف بالمخازن أعلى من حدود الطلب والحدود الحرجة.</span
                 >
               </div>
             </td>
           </tr>
 
-          <!-- تكرار الأصناف التي تعاني من نقص بياني بالمخازن مرسمة تنازلياً حسب الخطورة -->
+          <!-- تكرار الأصناف التي بلغت حد الطلب -->
           <tr
             v-for="stock in items"
             :key="stock.item_id"
             class="hover:bg-surface-section/40 transition-colors duration-200 group text-text-secondary"
           >
-            <!-- اسم الخامة المتأثرة -->
+            <!-- اسم الصنف -->
             <td class="px-4 py-3.5 text-text-primary font-bold flex items-center gap-2">
               <span
                 class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.6)]"
@@ -94,17 +95,17 @@
               {{ stock.item_name }}
             </td>
 
-            <!-- المخزن الموجود به العجز -->
+            <!-- المخزن -->
             <td class="px-4 py-3.5 text-xs font-semibold text-text-muted">
               {{ stock.store_name }}
             </td>
 
-            <!-- الرصيد الحالي الفعلي متباين بلون تحذيري نيون هادئ -->
+            <!-- الرصيد الحالي الفعلي -->
             <td class="px-4 py-3.5 text-center font-bold text-orange-400 font-mono">
               {{ formatNumber(stock.current_quantity) }}
             </td>
 
-            <!-- حد الطلب المضبوط محاسبيّاً ولوجستيّاً -->
+            <!-- حد الطلب -->
             <td class="px-4 py-3.5 text-center font-bold text-text-muted font-mono opacity-80">
               {{ formatNumber(stock.reorder_level) }}
             </td>
@@ -119,7 +120,6 @@
 import { defineProps } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
 
-// استقبال مصفوفة الأصناف الحرجة المفلترة هندسياً في الـ Backend
 defineProps({
   items: {
     type: Array,
@@ -128,9 +128,6 @@ defineProps({
   },
 })
 
-/**
- * تنسيق وعرض كميات الأصناف والموازين الرياضية بالشكل القياسي للمطبعة
- */
 const formatNumber = (value) => {
   if (value === undefined || value === null) return '0.00'
   return new Intl.NumberFormat('en-US', {

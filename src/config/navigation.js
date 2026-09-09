@@ -98,15 +98,16 @@ export const navigationConfig = [
         permission: 'store.view',
       },
       {
+        name: ',العملة وسياسات التسعير',
+        routeName: 'PricingView',
+        permission: 'pricing.view',
+      },
+      {
         name: 'دليل الأصناف والخدمات',
         routeName: 'ItemsList',
         permission: 'item.view',
       },
-      {
-        name: 'محرك وسياسات التسعير',
-        routeName: 'PricingView',
-        permission: 'pricing.view',
-      },
+
       {
         name: 'إدارة العملاء',
         routeName: 'CustomersList',
