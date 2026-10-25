@@ -1,6 +1,7 @@
+<!--src/views/units/UnitForm.vue-->
 <template>
-  <form @submit.prevent="handleSubmit">
-    <div class="space-y-5">
+  <form @submit.prevent="handleSubmit" dir="rtl">
+    <div class="space-y-5 text-right">
       <div>
         <AppInput
           id="unit-name"
@@ -9,7 +10,7 @@
           placeholder="مثال: حبة، كرتون، كيلو، متر"
           required
         />
-        <p v-if="errors.name" class="text-rose-500 text-xs mt-1 font-bold">
+        <p v-if="errors.name" class="text-danger text-xs mt-1 font-bold">
           اسم الوحدة مطلوب (مثال: حبة، كرتون).
         </p>
       </div>
@@ -37,7 +38,6 @@
 <script setup>
 import { ref, watch, reactive } from 'vue'
 
-// استيراد مكونات واجهة المستخدم المعتمدة في النظام
 import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 
@@ -54,12 +54,10 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'cancel'])
 
-// إدارة أخطاء التحقق محلياً بالتوافق مع الباك إند
 const errors = reactive({
   name: false,
 })
 
-// دالة توليد كائن نموذج فارغ وجديد
 const createFreshForm = () => ({
   id: null,
   name: '',
@@ -68,7 +66,6 @@ const createFreshForm = () => ({
 
 const form = ref(createFreshForm())
 
-// مراقبة البيانات الابتدائية لتهيئة الحقول عند التعديل أو تصفيرها عند الإضافة
 watch(
   () => props.initialData,
   (newData) => {
@@ -85,7 +82,6 @@ watch(
   { immediate: true, deep: true },
 )
 
-// دالة التحقق اليدوي البسيط قبل إرسال البيانات للمكون الأب
 const handleSubmit = () => {
   errors.name = false
 

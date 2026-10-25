@@ -1,98 +1,132 @@
+<!-- src/views/auth/LoginView.vue -->
 <template>
-  <div class="relative min-h-screen w-full overflow-hidden bg-surface-ground">
-    <!-- 1. خلفية الأورورا المتحركة -->
-    <div class="aurora-container">
+  <div
+    class="relative min-h-screen w-full overflow-hidden bg-surface-ground flex items-center justify-center p-4 font-sans select-none"
+    dir="rtl"
+  >
+    <!-- 1. خلفية الأورورا المتحركة (متوافقة 100% مع الهوية البرتقالية ومتغيرات النظام) -->
+    <div class="aurora-container pointer-events-none">
       <div class="aurora-shape shape1"></div>
       <div class="aurora-shape shape2"></div>
       <div class="aurora-shape shape3"></div>
     </div>
 
+    <!-- طبقة العلامة المائية للشعار -->
     <div class="watermark-overlay"></div>
-    <!-- 2. المحتوى الرئيسي مع بطاقة تسجيل الدخول -->
-    <div class="relative z-10 flex min-h-screen items-center justify-center p-4">
-      <div
-        ref="card"
-        @mousemove="onMouseMove"
-        @mouseleave="onMouseLeave"
-        class="glass-card w-full max-w-md"
-      >
-        <!-- تأثير اللمعان التفاعلي -->
-        <div class="card-glare"></div>
 
-        <!-- المحتوى الفعلي للبطاقة -->
-        <div class="relative z-10">
-          <div class="text-center mb-8">
-            <!-- [مُعدَّل] استخدم شعار مشروعك وعنوانه -->
-            <img :src="logoUrl" alt="Project Logo" class="logo-main mx-auto mb-4" />
-            <h1 class="text-4xl font-bold text-white tracking-wider">باندا للحسابات</h1>
-            <p class="mt-2 text-slate-300 opacity-80 text-lg"></p>
-          </div>
+    <!-- 2. بطاقة تسجيل الدخول الزجاجية الفاخرة -->
+    <div
+      ref="card"
+      @mousemove="onMouseMove"
+      class="glass-card w-full max-w-md relative z-10 border border-surface-border shadow-2xl rounded-2xl p-8 backdrop-blur-xl bg-surface-section/80 transition-all duration-300"
+    >
+      <!-- تأثير اللمعان التفاعلي بنبض برتقالي دافئ -->
+      <div class="card-glare"></div>
 
-          <!-- [مُعدَّل] رسالة الخطأ مدمجة هنا -->
-          <div
-            v-if="errorMessage"
-            class="mb-4 p-3 text-center bg-danger/20 text-red-300 rounded-md text-sm font-semibold"
-          >
-            {{ errorMessage }}
-          </div>
+      <!-- المحتوى الفعلي للبطاقة -->
+      <div class="relative z-10">
+        <!-- الترويسة والشعار -->
+        <div class="text-center mb-8">
+          <img :src="logoUrl" alt="Project Logo" class="logo-main mx-auto mb-4" />
+          <h1 class="text-3xl font-black text-text-primary tracking-tight">باندا للحسابات</h1>
+          <p class="text-xs text-text-muted mt-1.5 font-medium">
+            منظومة إدارة المبيعات والمخازن والرقابة المحاسبية
+          </p>
+        </div>
 
-          <!-- [مُعدَّل] النموذج يستخدم 'username' ويتوافق مع authStore الجديد -->
-          <form @submit.prevent="handleLogin" class="space-y-6">
-            <div class="relative">
+        <!-- رسالة الخطأ الموحدة دلالياً -->
+        <div
+          v-if="errorMessage"
+          class="mb-5 p-3 text-center bg-danger/10 text-danger border border-danger/30 rounded-xl text-xs font-bold shadow-sm animate-fade-in"
+        >
+          {{ errorMessage }}
+        </div>
+
+        <!-- نموذج تسجيل الدخول -->
+        <form @submit.prevent="handleLogin" class="space-y-4">
+          <!-- حقل اسم المستخدم -->
+          <div class="flex flex-col space-y-1 text-right">
+            <label class="text-[11px] font-bold text-text-secondary pr-1">اسم المستخدم</label>
+            <div
+              class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-xl flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
+            >
+              <span class="absolute right-3.5 text-text-muted pointer-events-none z-10">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+                  />
+                </svg>
+              </span>
               <input
                 type="text"
                 v-model="credentials.username"
-                placeholder="اسم المستخدم"
+                placeholder="أدخل اسم المستخدم..."
                 required
-                class="form-input"
+                class="block w-full h-full pr-11 pl-4 bg-transparent text-text-primary placeholder:text-text-muted focus:outline-none text-xs font-bold"
               />
-              <!-- أيقونة المستخدم -->
-              <svg
-                class="input-icon"
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1.5"
-                  d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-                />
-              </svg>
             </div>
-            <div class="relative">
+          </div>
+
+          <!-- حقل كلمة المرور -->
+          <div class="flex flex-col space-y-1 text-right">
+            <label class="text-[11px] font-bold text-text-secondary pr-1">كلمة المرور</label>
+            <div
+              class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-xl flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
+            >
+              <span class="absolute right-3.5 text-text-muted pointer-events-none z-10">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="1.5"
+                    d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
+                  />
+                </svg>
+              </span>
               <input
                 type="password"
                 v-model="credentials.password"
-                placeholder="كلمة المرور"
+                placeholder="••••••••"
                 required
-                class="form-input"
+                class="block w-full h-full pr-11 pl-4 bg-transparent text-text-primary placeholder:text-text-muted focus:outline-none text-xs font-bold font-mono tracking-widest"
               />
-              <!-- أيقونة القفل -->
+            </div>
+          </div>
+
+          <!-- زر تسجيل الدخول بهوية النظام الموحدة -->
+          <div class="pt-2">
+            <button
+              type="submit"
+              :disabled="isLoading"
+              class="w-full h-11 bg-primary hover:bg-primary-dark text-white text-sm font-bold rounded-xl transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-primary/25 hover:shadow-primary/40 active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            >
               <svg
-                class="input-icon"
-                xmlns="http://www.w3.org/2000/svg"
+                v-if="isLoading"
+                class="animate-spin h-5 w-5 text-white"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke="currentColor"
               >
+                <circle
+                  class="opacity-25"
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  stroke-width="4"
+                ></circle>
                 <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="1.5"
-                  d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z"
-                />
+                  class="opacity-75"
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                ></path>
               </svg>
-            </div>
-
-            <button type="submit" :disabled="isLoading" class="submit-button">
-              <span v-if="isLoading">جاري التحقق...</span>
               <span v-else>تسجيل الدخول</span>
             </button>
-          </form>
-        </div>
+          </div>
+        </form>
       </div>
     </div>
   </div>
@@ -103,8 +137,8 @@ import { ref, reactive } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import { useRouter } from 'vue-router'
 
-// --- منطق تأثير اللمعان التفاعلي (بدون تغيير ) ---
 const card = ref(null)
+
 const onMouseMove = (event) => {
   if (!card.value) return
   const rect = card.value.getBoundingClientRect()
@@ -113,10 +147,8 @@ const onMouseMove = (event) => {
   card.value.style.setProperty('--mouse-x', `${x}px`)
   card.value.style.setProperty('--mouse-y', `${y}px`)
 }
-const onMouseLeave = () => {}
 
 const logoUrl = '/PandaRep.png'
-// --- [مُعدَّل] منطق تسجيل الدخول ليتوافق مع authStore الجديد ---
 const authStore = useAuthStore()
 const router = useRouter()
 const credentials = reactive({ username: '', password: '' })
@@ -127,11 +159,7 @@ const handleLogin = async () => {
   isLoading.value = true
   errorMessage.value = ''
   try {
-    // استدعاء دالة login وانتظارها
     await authStore.login(credentials)
-
-    // [الحل] إذا لم يحدث خطأ، قم بالتوجيه من هنا
-    // المسار الصحيح هو /app/dashboard كما هو معرف في router/index.js
     router.push(authStore.returnUrl || '/app/dashboard')
   } catch (error) {
     if (error.response && error.response.status === 401) {
@@ -145,9 +173,8 @@ const handleLogin = async () => {
 }
 </script>
 
-<style>
-/* --- أنماط التصميم (الأورورا، البطاقة الزجاجية، الحقول، الزر) --- */
-/* تم نسخها كما هي من مثالك مع تعديلات طفيفة لتتوافق مع ألوان المشروع */
+<style scoped>
+/* حصر الأنماط محلياً لمنع تسربها لباقي النظام */
 
 .aurora-container {
   position: absolute;
@@ -156,57 +183,55 @@ const handleLogin = async () => {
   width: 100%;
   height: 100%;
   overflow: hidden;
-  filter: blur(100px) saturate(1.5);
-  transform: scale(1.5);
+  filter: blur(120px) saturate(1.4);
+  transform: scale(1.3);
 }
+
 .aurora-shape {
   position: absolute;
   border-radius: 50%;
+  mix-blend-mode: multiply;
+}
+
+:global(.dark) .aurora-shape {
   mix-blend-mode: screen;
 }
+
+/* استخدام درجات البرتقالي والكهرماني المركزية في هالات الأورورا */
 .shape1 {
   width: 600px;
   height: 600px;
-  background-color: rgba(30, 58, 138, 0.3); /* أزرق كحلي نقي */
+  background-color: rgba(var(--color-primary), 0.18);
   top: -150px;
   left: -200px;
-  animation: move 25s infinite alternate;
+  animation: move 25s infinite alternate ease-in-out;
 }
+
 .shape2 {
   width: 550px;
   height: 550px;
-  background-color: rgba(245, 158, 11, 0.2); /* secondary color */
+  background-color: rgba(var(--color-warning), 0.15);
   bottom: -100px;
   right: -150px;
-  animation: move 30s infinite alternate-reverse;
+  animation: move 30s infinite alternate-reverse ease-in-out;
 }
+
 .shape3 {
   width: 500px;
   height: 500px;
-  background-color: rgba(37, 99, 235, 0.2); /* أزرق ملكي */
+  background-color: rgba(var(--color-primary-dark), 0.12);
   bottom: 50px;
   left: 20%;
-  animation: move 22s infinite alternate;
+  animation: move 22s infinite alternate ease-in-out;
 }
+
 @keyframes move {
   from {
     transform: translate(0, 0) rotate(0deg);
   }
   to {
-    transform: translate(150px, 80px) rotate(180deg);
+    transform: translate(120px, 70px) rotate(180deg);
   }
-}
-
-.glass-card {
-  position: relative;
-  background: rgba(31, 41, 55, 0.6); /* surface-section with opacity */
-  border-radius: 20px;
-  padding: 40px;
-  border: 1px solid rgba(55, 65, 81, 0.5); /* surface-border */
-  backdrop-filter: blur(15px);
-  -webkit-backdrop-filter: blur(15px);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-  overflow: hidden;
 }
 
 .card-glare {
@@ -214,69 +239,17 @@ const handleLogin = async () => {
   left: var(--mouse-x, -100%);
   top: var(--mouse-y, -100%);
   transform: translate(-50%, -50%);
-  width: 400px;
-  height: 400px;
+  width: 450px;
+  height: 450px;
   background: radial-gradient(
     circle,
-    rgba(37, 99, 235, 0.15) 0%,
-    /* تغيير الأخضر للأزرق */ rgba(37, 99, 235, 0) 60%
+    rgba(var(--color-primary), 0.15) 0%,
+    rgba(var(--color-primary), 0) 65%
   );
   pointer-events: none;
   transition:
     left 0.1s ease,
     top 0.1s ease;
-}
-
-.form-input {
-  width: 100%;
-  background: rgba(17, 24, 39, 0.8); /* surface-ground */
-  border: 1px solid #374151; /* surface-border */
-  border-radius: 8px;
-  padding: 12px 16px 12px 45px;
-  color: #f9fafb; /* text-primary */
-  transition: all 0.2s ease-in-out;
-}
-.form-input::placeholder {
-  color: #9ca3af; /* text-muted */
-}
-.form-input:focus {
-  outline: none;
-  border-color: #2563eb; /* أزرق */
-  box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.3);
-}
-
-.input-icon {
-  position: absolute;
-  top: 50%;
-  left: 16px;
-  transform: translateY(-50%);
-  width: 20px;
-  height: 20px;
-  color: #9ca3af; /* text-muted */
-}
-
-.submit-button {
-  width: 100%;
-  padding: 14px;
-  border-radius: 8px;
-  font-size: 16px;
-  font-weight: bold;
-  color: white;
-  background: linear-gradient(90deg, #1e3a8a, #3b82f6); /* تدرج كحلي إلى أزرق */
-  border: none;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 20px rgba(30, 58, 138, 0.3);
-}
-
-.submit-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(37, 99, 235, 0.4);
-}
-.submit-button:disabled {
-  background: #374151;
-  cursor: not-allowed;
-  opacity: 0.7;
 }
 
 .watermark-overlay {
@@ -287,33 +260,32 @@ const handleLogin = async () => {
   height: 100%;
   z-index: 1;
   pointer-events: none;
-
-  /* 1. الشفافية: غير هذا الرقم لتفتيح أو تغميق الشعار */
-  opacity: 0.05;
-
+  opacity: 0.04;
   background-image: url('/PandaRep.png');
   background-repeat: repeat;
-
-  /* 2. الحجم والعدد:
-     - رقم أصغر (مثل 80px) = شعارات كثيرة وصغيرة ومتقاربة.
-     - رقم أكبر (مثل 200px) = شعارات قليلة وكبيرة ومتباعدة.
-  */
-  background-size: 300px;
-
-  /* 3. اختيارياً: يمكنك إضافة تباعد داخلي وهمي عبر التحجيم */
+  background-size: 260px;
   transform: rotate(-15deg) scale(1.1);
 }
 
 .logo-main {
-  /* العرض 160 بكسل والطول سيتحدد تلقائياً ليحافظ على أبعاد الصورة 1.7:1 */
-  width: 160px;
+  width: 140px;
   height: auto;
-
-  /* التأكد من عدم وجود أي قص أو تدوير */
-  border-radius: 0;
   object-fit: contain;
+  filter: drop-shadow(0px 4px 10px rgba(0, 0, 0, 0.15));
+}
 
-  /* اختيارياً: إضافة ظل خفيف ليعطي عمق للشعار فوق الخلفية الزجاجية */
-  filter: drop-shadow(0px 4px 8px rgba(0, 0, 0, 0.2));
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
 }
 </style>

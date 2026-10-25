@@ -8,6 +8,12 @@ export default {
     return apiClient.get(`${prefix}/inventory/current-stock`, { params: filters })
   },
 
+  searchStockCardItems(search) {
+    return apiClient.get(`${prefix}/inventory/stock-card/items`, {
+      params: { search },
+    })
+  },
+
   getStockCard(filters = {}) {
     return apiClient.get(`${prefix}/inventory/stock-card`, { params: filters })
   },

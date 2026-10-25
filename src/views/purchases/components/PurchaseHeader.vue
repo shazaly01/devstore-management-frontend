@@ -1,16 +1,16 @@
-<!--src\views\purchases\components\PurchaseHeader.vue--->
+<!--src/views/purchases/components/PurchaseHeader.vue-->
 <template>
   <div
-    class="p-5 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl space-y-4 text-right font-sans"
+    class="p-5 bg-surface-section rounded-xl border border-surface-border shadow-sm space-y-4 text-right font-sans transition-colors duration-200"
     dir="rtl"
   >
     <!-- الصف الأول: نوع الفاتورة، المستودع، وحساب الدفع (خزنة/بنك) -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="relative w-full" key="purchase-invoice-type-container">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#e05e2b] rounded-lg flex items-center shadow-[0_0_10px_rgba(224,94,43,0.15)]"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center shadow-sm transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
-          <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
+          <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -23,28 +23,28 @@
 
           <select
             v-model="formData.invoice_type"
-            style="color-scheme: dark"
-            class="block w-full h-full pr-10 pl-10 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer"
+            class="block w-full h-full pr-10 pl-10 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer"
           >
-            <option value="purchase" class="bg-[#16171b]">فاتورة مشتريات نشطة</option>
-            <option value="return" class="bg-[#16171b]">مرتجع مشتريات</option>
+            <option value="purchase" class="bg-surface-section text-text-primary">
+              فاتورة مشتريات نشطة
+            </option>
+            <option value="return" class="bg-surface-section text-text-primary">
+              مرتجع مشتريات
+            </option>
           </select>
 
-          <span class="absolute left-4 text-gray-500 pointer-events-none text-[10px]">▼</span>
+          <span class="absolute left-4 text-text-muted pointer-events-none text-[10px]">▼</span>
         </div>
-        <p
-          v-if="getFieldError('invoice_type')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('invoice_type')" class="text-danger text-[10px] font-bold mt-1 pr-1">
           {{ getFieldError('invoice_type') }}
         </p>
       </div>
 
       <div class="relative w-full" key="purchase-store-container">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b]"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
         >
-          <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
+          <span class="absolute right-3 text-text-muted pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -64,7 +64,7 @@
             />
           </div>
         </div>
-        <p v-if="getFieldError('store_id')" class="text-rose-500 text-[10px] font-bold mt-1 pr-1">
+        <p v-if="getFieldError('store_id')" class="text-danger text-[10px] font-bold mt-1 pr-1">
           {{ getFieldError('store_id') }}
         </p>
       </div>
@@ -73,9 +73,9 @@
         <div
           v-if="formData.payment_type === 'cash'"
           key="cash-treasury-active"
-          class="relative w-full h-11 bg-[#16171b] border border-[#e05e2b] rounded-lg flex items-center animate-fade-in shadow-[0_0_10px_rgba(224,94,43,0.15)] transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-surface-ground border border-primary/50 focus-within:border-primary rounded-lg flex items-center animate-fade-in shadow-sm transition-all focus-within:ring-2 focus-within:ring-primary/20"
         >
-          <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
+          <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -99,9 +99,9 @@
         <div
           v-if="formData.payment_type === 'card'"
           key="card-bank-active"
-          class="relative w-full h-11 bg-[#16171b] border border-[#e05e2b] rounded-lg flex items-center animate-fade-in shadow-[0_0_10px_rgba(224,94,43,0.15)] transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-surface-ground border border-primary/50 focus-within:border-primary rounded-lg flex items-center animate-fade-in shadow-sm transition-all focus-within:ring-2 focus-within:ring-primary/20"
         >
-          <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
+          <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -121,6 +121,14 @@
             />
           </div>
         </div>
+
+        <div
+          v-if="formData.payment_type === 'credit'"
+          key="credit-placeholder"
+          class="relative w-full h-11 bg-surface-ground border border-dashed border-surface-border rounded-lg flex items-center justify-center text-text-muted text-xs font-medium select-none"
+        >
+          <span>دين آجل - لا يوجد خزنة أو بنك</span>
+        </div>
       </div>
     </div>
 
@@ -128,9 +136,9 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="relative w-full" key="purchase-payment-type-container">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
         >
-          <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
+          <span class="absolute right-3 text-text-muted pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -143,29 +151,29 @@
 
           <select
             v-model="formData.payment_type"
-            style="color-scheme: dark"
-            class="block w-full h-full pr-10 pl-10 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer"
+            class="block w-full h-full pr-10 pl-10 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer"
           >
-            <option value="cash" class="bg-[#16171b]">نقدي (Cash)</option>
-            <option value="card" class="bg-[#16171b]">شبكة / دفع إلكتروني (Card)</option>
-            <option value="credit" class="bg-[#16171b]">آجل / ذمم (Credit)</option>
+            <option value="cash" class="bg-surface-section text-text-primary">نقدي (Cash)</option>
+            <option value="card" class="bg-surface-section text-text-primary">
+              شبكة / دفع إلكتروني (Card)
+            </option>
+            <option value="credit" class="bg-surface-section text-text-primary">
+              آجل / ذمم (Credit)
+            </option>
           </select>
 
-          <span class="absolute left-4 text-gray-500 pointer-events-none text-[10px]">▼</span>
+          <span class="absolute left-4 text-text-muted pointer-events-none text-[10px]">▼</span>
         </div>
-        <p
-          v-if="getFieldError('payment_type')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('payment_type')" class="text-danger text-[10px] font-bold mt-1 pr-1">
           {{ getFieldError('payment_type') }}
         </p>
       </div>
 
       <div class="relative w-full" key="purchase-supplier-container">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#e05e2b] rounded-lg flex items-center transition-all duration-200 focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b] shadow-[0_0_10px_rgba(224,94,43,0.15)]"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
         >
-          <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
+          <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -186,28 +194,25 @@
             />
           </div>
         </div>
-        <p
-          v-if="getFieldError('supplier_id')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('supplier_id')" class="text-danger text-[10px] font-bold mt-1 pr-1">
           {{ getFieldError('supplier_id') }}
         </p>
       </div>
 
       <div class="relative w-full" key="purchase-invoice-date-container">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
         >
           <input
             type="date"
             v-model="formData.invoice_date"
-            class="block w-full h-full pr-4 pl-20 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
+            class="block w-full h-full pr-4 pl-20 bg-transparent text-text-primary focus:outline-none text-xs font-mono font-bold text-right cursor-pointer"
           />
 
           <span
-            class="absolute left-3 text-gray-400 pointer-events-none flex items-center gap-1.5 text-xs z-10"
+            class="absolute left-3 text-text-muted pointer-events-none flex items-center gap-1.5 text-xs z-10"
           >
-            <span class="text-gray-400 font-medium text-[11px]">تاريخ</span>
+            <span class="font-medium text-[11px]">تاريخ</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -218,22 +223,19 @@
             </svg>
           </span>
         </div>
-        <p
-          v-if="getFieldError('invoice_date')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('invoice_date')" class="text-danger text-[10px] font-bold mt-1 pr-1">
           {{ getFieldError('invoice_date') }}
         </p>
       </div>
     </div>
 
     <!-- الصف الثالث: العملة وسعر الصرف المعتمد للفاتورة -->
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-[#3e414c]/60">
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-surface-border">
       <div class="relative w-full" key="purchase-currency-container">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b]"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
         >
-          <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
+          <span class="absolute right-3 text-text-muted pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -247,35 +249,33 @@
           <select
             v-model="formData.currency_id"
             @change="handleCurrencyChange"
-            style="color-scheme: dark"
-            class="block w-full h-full pr-10 pl-10 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer"
+            class="block w-full h-full pr-10 pl-10 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer"
           >
-            <option :value="null" class="bg-[#16171b]">العملة المحلية الافتراضية</option>
+            <option :value="null" class="bg-surface-section text-text-muted">
+              العملة المحلية الافتراضية
+            </option>
             <option
               v-for="curr in currencyStore.currencies"
               :key="curr.id"
               :value="curr.id"
-              class="bg-[#16171b]"
+              class="bg-surface-section text-text-primary"
             >
               {{ curr.name }} ({{ curr.code }})
             </option>
           </select>
 
-          <span class="absolute left-4 text-gray-500 pointer-events-none text-[10px]">▼</span>
+          <span class="absolute left-4 text-text-muted pointer-events-none text-[10px]">▼</span>
         </div>
-        <p
-          v-if="getFieldError('currency_id')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('currency_id')" class="text-danger text-[10px] font-bold mt-1 pr-1">
           {{ getFieldError('currency_id') }}
         </p>
       </div>
 
       <div class="relative w-full" key="purchase-exchange-rate-container">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b]"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
         >
-          <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
+          <span class="absolute right-3 text-text-muted pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -293,18 +293,18 @@
             :disabled="!formData.currency_id"
             v-model.number="formData.exchange_rate"
             placeholder="سعر الصرف..."
-            class="block w-full h-full pr-10 pl-24 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right disabled:opacity-40 disabled:cursor-not-allowed"
+            class="block w-full h-full pr-10 pl-24 bg-transparent text-text-primary focus:outline-none text-xs font-mono font-bold text-right disabled:opacity-40 disabled:cursor-not-allowed"
           />
 
           <span
-            class="absolute left-3 text-gray-400 pointer-events-none flex items-center gap-1 text-[11px] font-bold"
+            class="absolute left-3 text-text-muted pointer-events-none flex items-center gap-1 text-[11px] font-bold"
           >
             سعر الصرف
           </span>
         </div>
         <p
           v-if="getFieldError('exchange_rate')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
+          class="text-danger text-[10px] font-bold mt-1 pr-1"
         >
           {{ getFieldError('exchange_rate') }}
         </p>
@@ -318,10 +318,10 @@
       class="relative w-full animate-fade-in mt-1"
     >
       <div
-        class="relative w-full h-11 bg-[#16171b] border border-dashed border-[#e05e2b]/40 rounded-lg flex items-center"
+        class="relative w-full h-11 bg-primary/10 border border-dashed border-primary/40 rounded-lg flex items-center"
       >
-        <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
-          <svg class="w-5 h-5 text-[#e05e2b]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <span class="absolute right-3 text-primary pointer-events-none z-10">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -334,25 +334,24 @@
         <select
           v-model="formData.parent_id"
           :disabled="!formData.supplier_id"
-          style="color-scheme: dark"
-          class="block w-full h-full pr-10 pl-10 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          class="block w-full h-full pr-10 pl-10 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
         >
-          <option :value="null" class="bg-[#16171b]">
+          <option :value="null" class="bg-surface-section text-text-muted">
             {{ formData.supplier_id ? 'اختر مستند الشراء الأم...' : 'حدد المورد أولاً...' }}
           </option>
           <option
             v-for="invoice in originalInvoices"
             :key="invoice.id"
             :value="invoice.id"
-            class="bg-[#16171b]"
+            class="bg-surface-section text-text-primary"
           >
             #{{ invoice.id }} - {{ invoice.invoice_date }}
           </option>
         </select>
 
-        <span class="absolute left-4 text-gray-500 pointer-events-none text-[10px]">▼</span>
+        <span class="absolute left-4 text-text-muted pointer-events-none text-[10px]">▼</span>
       </div>
-      <p v-if="getFieldError('parent_id')" class="text-rose-500 text-[10px] font-bold mt-1 pr-1">
+      <p v-if="getFieldError('parent_id')" class="text-danger text-[10px] font-bold mt-1 pr-1">
         {{ getFieldError('parent_id') }}
       </p>
     </div>
@@ -442,8 +441,11 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-input[type='date']::-webkit-calendar-picker-indicator {
+:global(.dark input[type='date']::-webkit-calendar-picker-indicator) {
   filter: invert(1);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
   cursor: pointer;
   opacity: 0.6;
 }

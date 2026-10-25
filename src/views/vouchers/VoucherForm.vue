@@ -1,20 +1,17 @@
+<!--src/views/vouchers/VoucherForm.vue-->
 <template>
-  <form
-    @submit.prevent="handleSubmit"
-    class="p-6 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl space-y-5 text-right font-sans"
-    dir="rtl"
-  >
+  <form @submit.prevent="handleSubmit" class="space-y-5 text-right font-sans" dir="rtl">
     <!-- الصف الأول: طريقة الدفع + تاريخ الاستحقاق -->
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
       <!-- طريقة الدفع والنقدية -->
       <div class="relative w-full">
-        <label class="block text-xs font-bold text-gray-300 mb-1.5 pr-1">
-          طريقة الدفع والنقدية <span class="text-rose-500">*</span>
+        <label class="block text-xs font-bold text-text-secondary mb-1.5 pr-1">
+          طريقة الدفع والنقدية <span class="text-danger">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#e05e2b] rounded-lg flex items-center shadow-[0_0_10px_rgba(224,94,43,0.15)]"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
         >
-          <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
+          <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -28,19 +25,20 @@
           <select
             v-model="form.payment_method"
             @change="handlePaymentMethodChange"
-            style="color-scheme: dark"
-            class="block w-full h-full pr-10 pl-10 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer"
+            class="block w-full h-full pr-10 pl-10 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer"
             required
           >
-            <option value="cash" class="bg-[#16171b]">نقدي (خزينة)</option>
-            <option value="bank" class="bg-[#16171b]">بنكي (حساب مصرفي)</option>
+            <option value="cash" class="bg-surface-section text-text-primary">نقدي (خزينة)</option>
+            <option value="bank" class="bg-surface-section text-text-primary">
+              بنكي (حساب مصرفي)
+            </option>
           </select>
 
-          <span class="absolute left-4 text-gray-500 pointer-events-none text-[10px]">▼</span>
+          <span class="absolute left-4 text-text-muted pointer-events-none text-[10px]">▼</span>
         </div>
         <p
           v-if="validationErrors?.payment_method"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
+          class="text-danger text-[10px] font-bold mt-1 pr-1"
         >
           {{ validationErrors.payment_method[0] }}
         </p>
@@ -48,23 +46,23 @@
 
       <!-- تاريخ السند ووقت الاستحقاق -->
       <div class="relative w-full">
-        <label class="block text-xs font-bold text-gray-300 mb-1.5 pr-1">
-          تاريخ السند ووقت الاستحقاق <span class="text-rose-500">*</span>
+        <label class="block text-xs font-bold text-text-secondary mb-1.5 pr-1">
+          تاريخ السند ووقت الاستحقاق <span class="text-danger">*</span>
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:shadow-[0_0_10px_rgba(224,94,43,0.15)]"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
         >
           <input
             type="date"
             v-model="form.voucher_date"
-            class="block w-full h-full pr-4 pl-20 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
+            class="block w-full h-full pr-4 pl-20 bg-transparent text-text-primary focus:outline-none text-xs font-mono font-bold text-right cursor-pointer"
             required
           />
 
           <span
-            class="absolute left-3 text-gray-400 pointer-events-none flex items-center gap-1.5 text-xs z-10"
+            class="absolute left-3 text-text-muted pointer-events-none flex items-center gap-1.5 text-xs z-10"
           >
-            <span class="text-gray-400 font-medium text-[11px]">تاريخ القيد</span>
+            <span class="font-medium text-[11px]">تاريخ القيد</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -77,24 +75,24 @@
         </div>
         <p
           v-if="validationErrors?.voucher_date"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
+          class="text-danger text-[10px] font-bold mt-1 pr-1"
         >
           {{ validationErrors.voucher_date[0] }}
         </p>
       </div>
     </div>
 
-    <hr class="border-gray-100 dark:border-surface-border/50 my-2" />
+    <div class="border-t border-surface-border/60 my-2"></div>
 
     <!-- الطرف الأول لقناة النقدية: (صرف من / إيراد لـ) -->
     <div class="relative w-full">
-      <label class="block text-xs font-bold text-gray-300 mb-1.5 pr-1">
+      <label class="block text-xs font-bold text-text-secondary mb-1.5 pr-1">
         {{ fundAccountLabel }}
       </label>
       <div
-        class="relative w-full h-11 bg-[#16171b] border border-[#e05e2b] rounded-lg flex items-center shadow-[0_0_10px_rgba(224,94,43,0.15)]"
+        class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
       >
-        <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
+        <span class="absolute right-3 text-primary pointer-events-none z-10">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
               stroke-linecap="round"
@@ -110,20 +108,20 @@
             id="fund-treasury-id"
             v-model="form.fund_account_id"
             variant="sales"
-            class="w-full bg-transparent text-white text-xs font-bold focus:outline-none"
+            class="w-full bg-transparent text-text-primary text-xs font-bold focus:outline-none"
           />
           <BanksDropdown
             v-else-if="form.payment_method === 'bank'"
             id="fund-bank-id"
             v-model="form.fund_account_id"
             variant="sales"
-            class="w-full bg-transparent text-white text-xs font-bold focus:outline-none"
+            class="w-full bg-transparent text-text-primary text-xs font-bold focus:outline-none"
           />
         </div>
       </div>
       <p
         v-if="validationErrors?.fund_account_id"
-        class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
+        class="text-danger text-[10px] font-bold mt-1 pr-1"
       >
         {{ validationErrors.fund_account_id[0] }}
       </p>
@@ -139,9 +137,9 @@
       :validationErrors="validationErrors"
     />
 
-    <hr class="border-gray-100 dark:border-surface-border/50 my-2" />
+    <div class="border-t border-surface-border/60 my-2"></div>
 
-    <!-- صف القيمة المالية المطور: استخدام مكون المنشأة الرسمي مع تحجيمه بـ max-w-xs ليصبح قصيراً ومنظماً -->
+    <!-- القيمة المالية -->
     <div class="w-full max-w-xs">
       <AppCurrencyInput
         id="voucher-amount"
@@ -151,49 +149,43 @@
         placeholder="0.00"
         required
       />
-      <p v-if="validationErrors?.amount" class="text-rose-500 text-[10px] font-bold mt-1 pr-1">
+      <p v-if="validationErrors?.amount" class="text-danger text-[10px] font-bold mt-1 pr-1">
         {{ validationErrors.amount[0] }}
       </p>
     </div>
 
     <!-- البيان والشرح التفصيلي -->
     <div class="relative w-full">
-      <label class="block text-xs font-bold text-gray-300 mb-1.5 pr-1">
+      <label class="block text-xs font-bold text-text-secondary mb-1.5 pr-1">
         البيان والشرح التفصيلي للمستند
       </label>
       <div
-        class="relative w-full bg-[#16171b] border border-[#3e414c] rounded-lg p-2 transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:shadow-[0_0_10px_rgba(224,94,43,0.15)]"
+        class="relative w-full bg-surface-ground border border-surface-border rounded-lg p-2.5 transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
       >
         <textarea
           id="voucher-notes"
           v-model="form.notes"
           placeholder="اكتب هنا تفاصيل سبب الصرف أو القبض بشكل دقيق لدعم التقرير المالي المحاسبي..."
           rows="2"
-          class="block w-full bg-transparent text-white focus:outline-none text-xs font-medium placeholder-gray-500 resize-none text-right"
+          class="block w-full bg-transparent text-text-primary focus:outline-none text-xs font-medium placeholder:text-text-muted resize-none text-right"
         ></textarea>
       </div>
-      <p v-if="validationErrors?.notes" class="text-rose-500 text-[10px] font-bold mt-1 pr-1">
+      <p v-if="validationErrors?.notes" class="text-danger text-[10px] font-bold mt-1 pr-1">
         {{ validationErrors.notes[0] }}
       </p>
     </div>
 
-    <!-- أزرار التحكم والمفاتيح التشغيلية -->
-    <div class="flex justify-end space-x-2 space-x-reverse border-t border-[#3e414c] pt-4 mt-2">
-      <button
-        type="button"
-        @click="handleCancel"
-        class="px-5 h-9 bg-[#3e414c] hover:bg-[#4e5261] text-white rounded-lg text-xs font-bold transition-all"
-      >
+    <!-- أزرار التحكم -->
+    <div
+      class="flex justify-end space-x-3 space-x-reverse border-t border-surface-border pt-4 mt-2"
+    >
+      <AppButton type="button" variant="secondary" @click="handleCancel" :disabled="isSaving">
         إلغاء المعاملة
-      </button>
-      <button
-        type="submit"
-        :disabled="isSaving"
-        class="px-5 h-9 bg-[#e05e2b] hover:bg-[#f06e3b] text-white rounded-lg text-xs font-bold shadow-lg shadow-[#e05e2b]/15 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-      >
+      </AppButton>
+      <AppButton type="submit" :disabled="isSaving">
         <span v-if="isSaving">جاري ترحيل السند...</span>
         <span v-else>حفظ واعتماد المستند المالي</span>
-      </button>
+      </AppButton>
     </div>
   </form>
 </template>
@@ -209,6 +201,7 @@ import TreasuriesDropdown from '@/components/forms/TreasuriesDropdown.vue'
 import BanksDropdown from '@/components/forms/BanksDropdown.vue'
 import VoucherSubLedgerDropdown from '@/components/forms/VoucherSubLedgerDropdown.vue'
 import AppCurrencyInput from '@/components/ui/AppCurrencyInput.vue'
+import AppButton from '@/components/ui/AppButton.vue'
 
 const props = defineProps({
   initialData: {
@@ -385,8 +378,11 @@ const handleCancel = () => {
 </script>
 
 <style scoped>
-input[type='date']::-webkit-calendar-picker-indicator {
+:global(.dark input[type='date']::-webkit-calendar-picker-indicator) {
   filter: invert(1);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
   cursor: pointer;
   opacity: 0.6;
 }

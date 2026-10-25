@@ -1,4 +1,4 @@
-<!--src\views\sales\components\SaleItemsTable.vue--->
+<!--src/views/sales/components/SaleItemsTable.vue-->
 <script setup>
 import { ref, computed, watch, nextTick } from 'vue'
 import { useItemStore } from '@/stores/itemStore'
@@ -29,7 +29,6 @@ const tableWrapperRef = ref(null)
 const searchableItems = computed(() => {
   if (!itemStore.items) return []
   return itemStore.items.map((item) => {
-    // تجميع واستخرج كافة الباركودات المرتبطة بالصنف المباشرة وتلك التابعة لوحداته
     const directBarcodes = Array.isArray(item.barcodes)
       ? item.barcodes.map((b) => (typeof b === 'object' ? b.barcode : b))
       : []
@@ -60,7 +59,6 @@ const searchableItems = computed(() => {
   })
 })
 
-// مراقبة مستودع الفاتورة لجلب وتحديث المخزون بشكل لحظي لأسطر الجدول مع التفعيل الفوري عند التحميل الأول
 watch(
   () => props.form.store_id,
   async (newStoreId) => {
@@ -95,7 +93,6 @@ watch(
   { immediate: true },
 )
 
-// مراقبة تغيير العميل لإعادة حساب أسعار الأسطر الحالية وفقاً لفئته السعرية فوراً
 watch(
   () => props.form.customer_id,
   () => {
@@ -109,13 +106,11 @@ watch(
   },
 )
 
-// تحديث دالة إدخال السعر اليدوي لتفعيل علم التجاوز
 const handleUnitPriceInput = (row, value) => {
   row.unit_price = props.unformatNumber(value)
   row.is_price_overridden = true
 }
 
-// استخراج السعر الأدنى المسموح به للوحدة المختارة بالسطر
 const getMinAllowedPrice = (row) => {
   if (!row.available_units || !row.item_unit_id) return 0
   const matchedUnit = row.available_units.find((u) => u.id === row.item_unit_id)
@@ -124,7 +119,6 @@ const getMinAllowedPrice = (row) => {
     : 0
 }
 
-// فحص ما إذا كان السعر المدخل أقل من السقف الأدنى للبيع
 const isPriceBelowMin = (row) => {
   if (props.form?.invoice_type === 'return') return false
   const minPrice = getMinAllowedPrice(row)
@@ -133,7 +127,6 @@ const isPriceBelowMin = (row) => {
   return currentPrice < minPrice
 }
 
-// تحديث دالة حساب السعر لتعتمد على الفئة السعرية القياسية
 const syncUnitSalePrice = (row) => {
   if (row.is_price_overridden) {
     return
@@ -162,7 +155,6 @@ const syncUnitSalePrice = (row) => {
   }
 }
 
-// توجيه التركيز لحقل الكمية لسطر محدد وتظليله
 const focusQuantity = (rowIndex) => {
   nextTick(() => {
     const selector = `input[data-row="${rowIndex}"][data-col="quantity"]`
@@ -177,7 +169,6 @@ const focusQuantity = (rowIndex) => {
   })
 }
 
-// توجيه التركيز لحقل سعر الوحدة لسطر محدد وتظليله
 const focusUnitPrice = (rowIndex) => {
   nextTick(() => {
     const selector = `input[data-row="${rowIndex}"][data-col="unit_price"]`
@@ -192,7 +183,6 @@ const focusUnitPrice = (rowIndex) => {
   })
 }
 
-// معالجة اختيار الصنف وتوجيه التركيز تلقائياً لحقل الكمية مع تحديد النص
 const onItemSelected = (selectedItem) => {
   props.handleGlobalItemSelect(selectedItem)
 
@@ -214,7 +204,6 @@ const onItemSelected = (selectedItem) => {
   })
 }
 
-// العودة الفورية لحقل البحث عند ضغط Enter في حقل الكمية أو حقل السعر
 const onQuantityEnter = () => {
   searchGridRef.value?.focus()
 }
@@ -226,8 +215,9 @@ const onUnitPriceEnter = () => {
 
 <template>
   <div ref="tableWrapperRef" class="p-0 bg-transparent space-y-4">
+    <!-- حاوية البحث الذكي -->
     <div
-      class="w-full text-xs bg-[#e05e2b] p-1 rounded-lg shadow-[0_0_15px_rgba(224,94,43,0.25)] border border-[#e05e2b]"
+      class="w-full text-xs bg-primary p-1 rounded-xl shadow-md shadow-primary/20 border border-primary transition-all duration-200"
     >
       <SmartSearchGrid
         ref="searchGridRef"
@@ -244,13 +234,15 @@ const onUnitPriceEnter = () => {
       />
     </div>
 
+    <!-- رسائل التحقق -->
     <p
       v-if="getValidationError('items')"
-      class="p-2 bg-rose-950/40 text-rose-400 rounded-lg text-xs font-bold border border-rose-900/50"
+      class="p-2.5 bg-danger/10 text-danger border border-danger/30 rounded-lg text-xs font-bold shadow-sm"
     >
       {{ getValidationError('items') }}
     </p>
 
+    <!-- جدول التفاصيل -->
     <InvoiceDetailTable
       :items="items"
       :schema="visibleTableSchema"
@@ -263,22 +255,21 @@ const onUnitPriceEnter = () => {
             v-model="row.item_unit_id"
             @change="syncUnitSalePrice(row)"
             :disabled="!row.available_units || row.available_units.length === 0"
-            style="color-scheme: dark"
-            class="w-full p-1 bg-transparent text-white border border-transparent hover:border-gray-500 focus:border-[#e05e2b] rounded-md text-xs font-bold outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed text-right appearance-none"
+            class="w-full p-1 bg-transparent text-text-primary border border-transparent hover:border-surface-border focus:border-primary focus:bg-surface-ground rounded-md text-xs font-bold outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed text-right appearance-none"
           >
-            <option value="" class="bg-[#16171b] text-gray-400">اختر الوحدة...</option>
+            <option value="" class="bg-surface-section text-text-muted">اختر الوحدة...</option>
             <option
               v-for="u in row.available_units"
               :key="u.id"
               :value="u.id"
-              class="bg-[#16171b] text-white"
+              class="bg-surface-section text-text-primary"
             >
               {{ u.unit_name || 'وحدة مجهولة' }}
             </option>
           </select>
           <p
             v-if="getValidationError(`items.${index}.item_unit_id`)"
-            class="text-rose-500 text-[9px] font-bold mt-0.5"
+            class="text-danger text-[9px] font-bold mt-0.5"
           >
             الوحدة مطلوبة أو مكررة للسطر
           </p>
@@ -294,7 +285,7 @@ const onUnitPriceEnter = () => {
             :data-col="col.key"
             @keydown.enter.prevent="onQuantityEnter"
             @keydown.arrow-left.prevent="focusUnitPrice(index)"
-            class="w-full p-1 bg-transparent border-none text-white font-bold text-xs focus:outline-none text-center font-mono transition-all focus:bg-[#16171b]/40 focus:rounded"
+            class="w-full p-1 bg-transparent border-none text-text-primary font-bold text-xs focus:outline-none text-center font-mono transition-all focus:bg-surface-ground focus:rounded"
             placeholder="0"
           />
         </div>
@@ -314,14 +305,14 @@ const onUnitPriceEnter = () => {
             :class="[
               'w-full p-1 rounded transition-all text-xs text-center font-mono font-bold outline-none',
               isPriceBelowMin(row)
-                ? 'bg-rose-950/30 border border-rose-500 text-rose-300 focus:border-rose-500 focus:ring-1 focus:ring-rose-500/40 shadow-[0_0_8px_rgba(244,63,94,0.2)]'
-                : 'bg-[#16171b] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] text-white focus:ring-1 focus:ring-[#e05e2b]/30',
+                ? 'bg-danger/10 text-danger border border-danger/40 focus:border-danger focus:ring-1 focus:ring-danger/40 shadow-sm'
+                : 'bg-surface-ground border border-surface-border hover:border-primary/50 focus:border-primary focus:bg-surface-section text-text-primary focus:ring-1 focus:ring-primary/25',
             ]"
             placeholder="0"
           />
           <span
             v-if="isPriceBelowMin(row)"
-            class="text-[9px] text-rose-400 font-bold mt-0.5 whitespace-nowrap animate-pulse"
+            class="text-[9px] text-danger font-bold mt-0.5 whitespace-nowrap animate-pulse"
           >
             الأدنى: {{ formatNumber(getMinAllowedPrice(row)) }}
           </span>
@@ -334,7 +325,7 @@ const onUnitPriceEnter = () => {
             type="text"
             readonly
             :value="formatNumber(row.grand_total)"
-            class="w-full p-1 bg-[#16171b] border border-[#3e414c] rounded text-xs text-center font-mono text-white font-bold opacity-90 cursor-default"
+            class="w-full p-1 bg-surface-ground border border-surface-border rounded text-xs text-center font-mono text-primary font-black cursor-default"
             placeholder="0"
           />
         </div>

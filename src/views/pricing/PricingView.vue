@@ -1,6 +1,6 @@
 <!-- src/views/pricing/PricingView.vue -->
 <template>
-  <div class="space-y-6">
+  <div class="space-y-6 text-right" dir="rtl">
     <!-- 1. شريط العنوان وأسعار الصرف السريعة -->
     <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
       <div>
@@ -17,7 +17,7 @@
           :key="curr.id"
           class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-surface-border bg-surface-section shadow-xs"
         >
-          <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+          <div class="w-2 h-2 rounded-full bg-success"></div>
           <span class="text-xs font-semibold text-text-secondary"
             >{{ curr.name }} ({{ curr.code }}):</span
           >
@@ -35,12 +35,7 @@
           @click="isExchangeRateModalOpen = true"
           class="text-xs flex items-center gap-1.5"
         >
-          <svg
-            class="w-4 h-4 text-emerald-500"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
+          <svg class="w-4 h-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
               stroke-linecap="round"
               stroke-linejoin="round"
@@ -61,7 +56,7 @@
           type="button"
           @click="activeTab = 'bulk'"
           :class="[
-            'pb-3 px-1 text-sm font-bold border-b-2 transition-all flex items-center gap-2',
+            'pb-3 px-1 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer',
             activeTab === 'bulk'
               ? 'border-primary text-primary'
               : 'border-transparent text-text-muted hover:text-text-primary hover:border-surface-border',
@@ -89,7 +84,7 @@
           type="button"
           @click="activeTab = 'foreign_cost'"
           :class="[
-            'pb-3 px-1 text-sm font-bold border-b-2 transition-all flex items-center gap-2',
+            'pb-3 px-1 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer',
             activeTab === 'foreign_cost'
               ? 'border-primary text-primary'
               : 'border-transparent text-text-muted hover:text-text-primary hover:border-surface-border',
@@ -103,7 +98,7 @@
               d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
             />
           </svg>
-          <span> تثبيت تكلفة العملة للأصناف </span>
+          <span>تثبيت تكلفة العملة للأصناف</span>
           <span
             v-if="foreignCostPreviewItems.length > 0"
             class="px-2 py-0.5 text-xs rounded-full bg-primary/20 text-primary font-mono"
@@ -117,7 +112,7 @@
           type="button"
           @click="switchTab('radar')"
           :class="[
-            'pb-3 px-1 text-sm font-bold border-b-2 transition-all flex items-center gap-2',
+            'pb-3 px-1 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer',
             activeTab === 'radar'
               ? 'border-primary text-primary'
               : 'border-transparent text-text-muted hover:text-text-primary hover:border-surface-border',
@@ -134,7 +129,7 @@
           <span>كاشف الأصناف الخاسرة</span>
           <span
             v-if="radarItems.length > 0"
-            class="px-2 py-0.5 text-xs rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 font-mono font-bold"
+            class="px-2 py-0.5 text-xs rounded-full bg-danger/10 text-danger border border-danger/30 font-mono font-bold"
           >
             {{ radarItems.length }}
           </span>
@@ -145,7 +140,7 @@
           type="button"
           @click="switchTab('history')"
           :class="[
-            'pb-3 px-1 text-sm font-bold border-b-2 transition-all flex items-center gap-2',
+            'pb-3 px-1 text-sm font-bold border-b-2 transition-all flex items-center gap-2 cursor-pointer',
             activeTab === 'history'
               ? 'border-primary text-primary'
               : 'border-transparent text-text-muted hover:text-text-primary hover:border-surface-border',

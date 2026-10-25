@@ -1,3 +1,4 @@
+<!--src/views/customers/CustomersTable.vue-->
 <template>
   <AppCard>
     <AppTable
@@ -8,14 +9,14 @@
       @row-click="$emit('row-clicked', $event)"
     >
       <template #cell-customer_info="{ item }">
-        <div class="flex flex-col gap-1 py-1">
+        <div class="flex flex-col gap-1 py-1 text-right" dir="rtl">
           <span class="font-bold text-text-primary text-base leading-tight">
             {{ item.name }}
           </span>
 
           <div v-if="item.phone" class="flex items-center gap-1 text-xs text-text-muted mt-0.5">
             <svg
-              class="w-3.5 h-3.5 text-text-muted flex-shrink-0"
+              class="w-3.5 h-3.5 text-text-muted shrink-0"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -32,7 +33,7 @@
 
           <div v-if="item.email" class="flex items-center gap-1 text-[11px] text-text-muted">
             <svg
-              class="w-3.5 h-3.5 text-text-muted flex-shrink-0"
+              class="w-3.5 h-3.5 text-text-muted shrink-0"
               fill="none"
               viewBox="0 0 24 24"
               stroke="currentColor"
@@ -50,7 +51,7 @@
       </template>
 
       <template #cell-accounting_info="{ item }">
-        <div class="flex flex-col justify-center">
+        <div class="flex flex-col justify-center text-right" dir="rtl">
           <span class="font-medium text-sm text-text-primary">
             {{ item.account?.name || '-' }}
           </span>
@@ -60,27 +61,22 @@
         </div>
       </template>
 
-      <!-- [الإضافة الحالية]: سلوت مخصص لعرض شارة فئة قائمة الأسعار المرتبطة بالعميل -->
       <template #cell-price_list_info="{ item }">
         <div class="flex items-center">
-          <span
-            v-if="item.price_list?.name"
-            class="px-2 py-0.5 text-[11px] font-bold rounded-full border bg-blue-50 text-blue-700 border-blue-100 flex items-center gap-1"
-          >
-            <span class="w-1 h-1 rounded-full bg-blue-500"></span>
+          <AppBadge v-if="item.price_list?.name" variant="info" size="xs" pill dot>
             {{ item.price_list.name }}
-          </span>
+          </AppBadge>
           <span v-else class="text-xs text-text-muted font-medium"> عادي (افتراضي) </span>
         </div>
       </template>
 
       <template #cell-financials="{ item }">
-        <div class="flex flex-col gap-1.5 text-sm min-w-[140px]">
+        <div class="flex flex-col gap-1.5 text-sm min-w-[140px] text-right" dir="rtl">
           <div
-            class="flex justify-between items-center gap-2 border-b border-surface-border/50 pb-1"
+            class="flex justify-between items-center gap-2 border-b border-surface-border/60 pb-1"
           >
             <span class="text-[11px] text-text-muted">الحد الائتماني:</span>
-            <span class="font-medium text-text-primary">
+            <span class="font-medium font-mono text-text-primary text-xs">
               {{ item.credit_limit ? formatCurrency(item.credit_limit) : 'غير محدد' }}
             </span>
           </div>
@@ -88,8 +84,8 @@
             <span class="text-[11px] text-text-muted">الرصيد الفعلي:</span>
             <span
               :class="[
-                'font-bold',
-                item.current_balance >= 0 ? 'text-emerald-600' : 'text-rose-600',
+                'font-bold font-mono text-xs',
+                item.current_balance >= 0 ? 'text-success' : 'text-danger',
               ]"
             >
               {{ formatCurrency(item.current_balance || 0) }}
@@ -100,31 +96,18 @@
 
       <template #cell-status="{ item }">
         <div class="flex items-center">
-          <span
-            :class="[
-              'px-2 py-0.5 text-[11px] font-bold rounded-full border flex items-center gap-1',
-              item.is_active
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                : 'bg-gray-50 text-gray-600 border-gray-200',
-            ]"
-          >
-            <span
-              :class="[
-                'w-1.5 h-1.5 rounded-full',
-                item.is_active ? 'bg-emerald-500' : 'bg-gray-400',
-              ]"
-            ></span>
+          <AppBadge :variant="item.is_active ? 'success' : 'neutral'" size="xs" pill dot>
             {{ item.is_active ? 'نشط' : 'غير نشط' }}
-          </span>
+          </AppBadge>
         </div>
       </template>
 
       <template #cell-actions="{ item }">
-        <div class="flex items-center justify-end space-x-1 space-x-reverse">
+        <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <button
             v-if="authStore.can('customer.update')"
-            @click.stop="$emit('edit-customer', item)"
-            class="p-1.5 text-sky-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
+            @click="$emit('edit-customer', item)"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل العميل"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -139,8 +122,8 @@
 
           <button
             v-if="authStore.can('customer.delete')"
-            @click.stop="$emit('delete-customer', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+            @click="$emit('delete-customer', item)"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="حذف العميل"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -166,6 +149,7 @@ import { useAuthStore } from '@/stores/authStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 import { formatCurrency } from '@/utils/formatters'
 
 defineProps({
@@ -178,13 +162,12 @@ defineEmits(['page-change', 'edit-customer', 'delete-customer', 'row-clicked'])
 
 const authStore = useAuthStore()
 
-// بناء وضبط رؤوس الأعمدة المتجاوبة بما يتطابق تماماً مع بيانات ريسورس العميل القادمة
 const tableHeaders = computed(() => {
   const headers = [
     { key: 'id', label: '#' },
     { key: 'customer_info', label: 'تفاصيل بيانات العميل', class: 'min-w-[220px]' },
     { key: 'accounting_info', label: 'الحساب المالي المرتبط بالشجرة' },
-    { key: 'price_list_info', label: 'فئة السعر المعتمدة' }, // [الإضافة الحالية]: حقل العرض الجديد لفئة أسعار العميل
+    { key: 'price_list_info', label: 'فئة السعر المعتمدة' },
     { key: 'financials', label: 'الموقف المالي والائتماني', class: 'min-w-[160px]' },
     { key: 'status', label: 'الحالة الإدارية' },
   ]

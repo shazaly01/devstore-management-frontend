@@ -1,6 +1,6 @@
-<!---src\views\users\UserForm.vue--->
+<!--src/views/users/UserForm.vue-->
 <template>
-  <form @submit.prevent="handleSubmit">
+  <form @submit.prevent="handleSubmit" class="space-y-4 text-right font-sans" dir="rtl">
     <div class="space-y-4">
       <AppInput
         id="user-full-name"
@@ -35,7 +35,7 @@
       </div>
 
       <div class="border-t border-surface-border pt-4 mt-4">
-        <h4 class="font-semibold text-text-secondary mb-3">
+        <h4 class="font-bold text-xs text-text-secondary mb-3">
           إعدادات الربط الافتراضي ونظام العمل (اختياري)
         </h4>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -51,19 +51,19 @@
         </div>
 
         <!-- خيار تفعيل الرقابة المخزنية والتحقق من الكميات -->
-        <div class="mt-4 pt-3 border-t border-surface-border/50">
+        <div class="mt-4 pt-3 border-t border-surface-border/60">
           <label class="flex items-center space-x-3 space-x-reverse cursor-pointer select-none">
             <input
               type="checkbox"
               id="user-stock-control"
               v-model="form.stock_control"
-              class="w-4 h-4 rounded border-surface-border text-primary focus:ring-primary focus:ring-offset-0 cursor-pointer"
+              class="w-4 h-4 rounded border-surface-border bg-surface-ground text-primary focus:ring-primary/20 cursor-pointer"
             />
-            <div class="flex flex-col">
-              <span class="text-sm font-medium text-text-primary">
+            <div class="flex flex-col pr-2">
+              <span class="text-sm font-bold text-text-primary">
                 تفعيل الرقابة على المخزون (التحكم بالمخزون)
               </span>
-              <span class="text-xs text-text-secondary">
+              <span class="text-xs text-text-muted mt-0.5">
                 عند التفعيل، لن يتمكن المستخدم من إتمام عمليات البيع إذا كان رصيد الصنف غير كافٍ أو
                 مصفراً في المخزن.
               </span>
@@ -73,7 +73,7 @@
       </div>
 
       <div class="border-t border-surface-border pt-4 mt-4">
-        <h4 class="font-semibold text-text-secondary mb-2">
+        <h4 class="font-bold text-xs text-text-secondary mb-2">
           {{ form.id ? 'تغيير كلمة المرور (اختياري)' : 'كلمة المرور' }}
         </h4>
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -97,15 +97,12 @@
       </div>
     </div>
 
-    <div class="mt-8 flex justify-end space-x-3 space-x-reverse">
-      <button
-        type="button"
-        @click="$emit('cancel')"
-        :disabled="isSaving"
-        class="px-5 py-2 rounded-lg bg-surface-border text-text-secondary hover:bg-surface-hover hover:text-text-primary font-medium transition-colors duration-150 disabled:opacity-50 cursor-pointer"
-      >
+    <div
+      class="mt-8 flex justify-end space-x-3 space-x-reverse pt-3 border-t border-surface-border"
+    >
+      <AppButton type="button" variant="secondary" @click="$emit('cancel')" :disabled="isSaving">
         تراجع
-      </button>
+      </AppButton>
 
       <AppButton type="submit" :disabled="isSaving">
         <span v-if="isSaving">جاري الحفظ...</span>
@@ -197,7 +194,6 @@ watch(
 const handleSubmit = () => {
   const payload = { ...form.value }
 
-  // إذا كانت كلمة المرور فارغة عند التعديل، يتم حذف الحقول تماماً ليحتفظ الـ Backend بالقديمة
   if (payload.id && !payload.password) {
     delete payload.password
     delete payload.password_confirmation

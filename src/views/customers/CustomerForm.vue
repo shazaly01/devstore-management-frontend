@@ -1,7 +1,7 @@
-<!---src\views\customers\CustomerForm.vue--->
+<!--src/views/customers/CustomerForm.vue-->
 <template>
-  <form @submit.prevent="handleSubmit">
-    <div class="space-y-5">
+  <form @submit.prevent="handleSubmit" dir="rtl">
+    <div class="space-y-5 text-right">
       <!-- اسم العميل -->
       <div>
         <AppInput
@@ -11,7 +11,7 @@
           placeholder="ادخل اسم العميل بالكامل"
           required
         />
-        <p v-if="errors.name" class="text-rose-500 text-xs mt-1 font-bold">
+        <p v-if="errors.name" class="text-danger text-xs mt-1 font-bold">
           اسم العميل مطلوب وإلزامي.
         </p>
       </div>
@@ -43,7 +43,7 @@
             v-model="form.credit_limit"
             placeholder="0.00 (اختياري)"
           />
-          <p v-if="errors.credit_limit" class="text-rose-500 text-xs mt-1 font-bold">
+          <p v-if="errors.credit_limit" class="text-danger text-xs mt-1 font-bold">
             لا يمكن أن يكون الحد الائتماني أقل من صفر.
           </p>
         </div>
@@ -55,39 +55,38 @@
             v-model="form.opening_balance"
             placeholder="0.00 (اختياري)"
           />
-          <p v-if="errors.opening_balance" class="text-rose-500 text-xs mt-1 font-bold">
+          <p v-if="errors.opening_balance" class="text-danger text-xs mt-1 font-bold">
             لا يمكن أن يكون الرصيد الافتتاحي للعميل بالسالب.
           </p>
         </div>
       </div>
 
-      <!-- [الإضافة الحالية]: اختيار قائمة فئة الأسعار المرتبطة بالعميل -->
+      <!-- اختيار قائمة فئة الأسعار المرتبطة بالعميل -->
       <div>
         <label for="customer-price-list" class="block text-sm font-medium text-text-secondary mb-1">
           قائمة الأسعار المعتمدة للعميل
         </label>
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-primary"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
         >
           <select
             id="customer-price-list"
             v-model="form.price_list_id"
-            style="color-scheme: dark"
-            class="block w-full h-full pr-4 pl-10 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer text-right"
+            class="block w-full h-full pr-4 pl-10 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer text-right"
           >
-            <option :value="null" class="bg-[#16171b] text-gray-400">
+            <option :value="null" class="bg-surface-section text-text-muted">
               بدون فئة سعر مخصصة (افتراضي)
             </option>
             <option
               v-for="list in priceLists"
               :key="list.id"
               :value="list.id"
-              class="bg-[#16171b] text-white"
+              class="bg-surface-section text-text-primary"
             >
               {{ list.name }}
             </option>
           </select>
-          <span class="absolute left-4 text-gray-500 pointer-events-none text-[10px]">▼</span>
+          <span class="absolute left-4 text-text-muted pointer-events-none text-[10px]">▼</span>
         </div>
       </div>
     </div>
@@ -107,7 +106,6 @@
 import { ref, watch, reactive, onMounted } from 'vue'
 import priceListService from '@/services/priceListService'
 
-// استيراد المكونات القياسية من مكتبة الـ UI الخاصة بنظامك
 import AppInput from '@/components/ui/AppInput.vue'
 import AppCurrencyInput from '@/components/ui/AppCurrencyInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
@@ -125,17 +123,14 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'cancel'])
 
-// كائن إدارة الأخطاء يدوياً بالتوافق مع قواعد التحقق
 const errors = reactive({
   name: false,
   credit_limit: false,
   opening_balance: false,
 })
 
-// مصفوفة تخزين قوائم الأسعار المجلوبة من السيرفيس
 const priceLists = ref([])
 
-// دالة تهيئة كائن نموذج نظيف وجديد للعميل
 const createFreshForm = () => ({
   id: null,
   name: '',
@@ -143,23 +138,20 @@ const createFreshForm = () => ({
   email: '',
   credit_limit: '',
   opening_balance: '',
-  price_list_id: null, // [الإضافة الحالية]: تهيئة معرف فئة السعر كـ null
+  price_list_id: null,
 })
 
 const form = ref(createFreshForm())
 
-// جلب قوائم الأسعار عند تحميل المكون لربطها فوراً بالقائمة المنسدلة
 onMounted(async () => {
   try {
     const response = await priceListService.get()
-    // التقاط البيانات مع مراعاة بنية الـ API المعتمدة لديك (response.data.data)
     priceLists.value = response.data?.data || response.data || []
   } catch (error) {
     console.error('فشل النظام في جلب فئات وقوائم الأسعار المعتمدة:', error)
   }
 })
 
-// مراقبة البروبس الممررة لتعبئة الحقول عند تعديل بيانات العميل أو تصفيرها عند الإضافة
 watch(
   () => props.initialData,
   (newData) => {
@@ -177,7 +169,7 @@ watch(
           newData.opening_balance !== null && newData.opening_balance !== undefined
             ? newData.opening_balance
             : '',
-        price_list_id: newData.price_list_id || null, // [الإضافة الحالية]: شحن معرف فئة سعر العميل المسترجع عند التعديل
+        price_list_id: newData.price_list_id || null,
       }
     } else {
       form.value = createFreshForm()
@@ -186,7 +178,6 @@ watch(
   { immediate: true, deep: true },
 )
 
-// دالة التحقق اليدوي البسيط قبل الإرسال الفعلي إلى الستور والأب
 const handleSubmit = () => {
   errors.name = false
   errors.credit_limit = false
@@ -207,12 +198,11 @@ const handleSubmit = () => {
     return
   }
 
-  // إعداد البيانات وتجهيزها بشكل نهائي للباك إند
   const payload = {
     ...form.value,
     credit_limit: form.value.credit_limit !== '' ? Number(form.value.credit_limit) : null,
     opening_balance: form.value.opening_balance !== '' ? Number(form.value.opening_balance) : null,
-    price_list_id: form.value.price_list_id || null, // [الإضافة الحالية]: حقن معرف فئة الأسعار المختار في حمولة الإرسال
+    price_list_id: form.value.price_list_id || null,
   }
 
   emit('submit', payload)

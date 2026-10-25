@@ -1,12 +1,12 @@
 <!-- src/views/dashboard/components/ReorderAlertsTable.vue -->
 <template>
-  <AppCard class="flex flex-col h-full">
+  <AppCard class="flex flex-col h-full font-sans" dir="rtl">
     <!-- رأس الكرت: العنوان وشارات التنبيه الضوئية للمخازن -->
     <div class="flex items-center justify-between mb-5">
       <div class="flex items-center gap-3">
         <!-- أيقونة تنبيهية تعبر عن نواقص الأصناف وضرورة إعادة الطلب -->
         <div
-          class="p-2.5 bg-orange-500/10 text-orange-400 rounded-xl border border-orange-500/20 shadow-lg shadow-orange-500/5 animate-pulse"
+          class="p-2.5 bg-warning/10 text-warning rounded-xl border border-warning/20 shadow-sm animate-pulse"
         >
           <svg
             class="w-5 h-5"
@@ -31,7 +31,7 @@
 
       <!-- شارة رقمية توضح عدد الأصناف التي بلغت حد الطلب -->
       <div
-        class="text-[11px] font-bold text-orange-400 bg-orange-500/10 px-3 py-1.5 rounded-lg border border-orange-500/20"
+        class="text-[11px] font-bold text-warning bg-warning/10 px-3 py-1.5 rounded-lg border border-warning/20"
       >
         {{ items?.length || 0 }} أصناف حرجة
       </div>
@@ -39,28 +39,28 @@
 
     <!-- حاوية الجدول: متجاوبة مع الجوال عبر التمرير الأفقي -->
     <div
-      class="flex-1 overflow-x-auto rounded-xl border border-surface-border/60 bg-surface-section/30 mb-2 scrollbar-thin scrollbar-thumb-surface-border scrollbar-track-transparent"
+      class="flex-1 overflow-x-auto rounded-xl border border-surface-border bg-surface-ground mb-2"
     >
       <table class="w-full text-right whitespace-nowrap">
-        <thead class="bg-surface-section/50 text-xs text-text-muted sticky top-0 z-10">
+        <thead class="bg-surface-section text-xs text-text-secondary sticky top-0 z-10">
           <tr>
-            <th class="px-4 py-3.5 font-bold border-b border-surface-border/50">اسم الصنف</th>
-            <th class="px-4 py-3.5 font-bold border-b border-surface-border/50">المخزن المعني</th>
-            <th class="px-4 py-3.5 font-bold border-b border-surface-border/50 text-center">
+            <th class="px-4 py-3.5 font-bold border-b border-surface-border">اسم الصنف</th>
+            <th class="px-4 py-3.5 font-bold border-b border-surface-border">المخزن المعني</th>
+            <th class="px-4 py-3.5 font-bold border-b border-surface-border text-center">
               الرصيد الحالي
             </th>
-            <th class="px-4 py-3.5 font-bold border-b border-surface-border/50 text-center">
+            <th class="px-4 py-3.5 font-bold border-b border-surface-border text-center">
               حد الطلب
             </th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-surface-border/40 text-sm">
+        <tbody class="divide-y divide-surface-border text-sm bg-surface-section">
           <!-- حالة الأمان الكامل: تظهر عندما تكون كافة الأصناف أعلى من حد الطلب -->
           <tr v-if="!items || items.length === 0">
             <td colspan="4" class="px-4 py-12 text-center text-text-muted">
               <div class="flex flex-col items-center gap-3">
                 <div
-                  class="p-3 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/10 shadow-lg shadow-emerald-500/5"
+                  class="p-3 rounded-full bg-success/10 text-success border border-success/20 shadow-sm"
                 >
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -71,9 +71,7 @@
                     ></path>
                   </svg>
                 </div>
-                <span class="text-sm font-semibold text-emerald-400/90"
-                  >المخزون آمن ومستقر تماماً</span
-                >
+                <span class="text-sm font-semibold text-success">المخزون آمن ومستقر تماماً</span>
                 <span class="text-xs text-text-muted max-w-xs leading-relaxed"
                   >كافة أرصدة الأصناف بالمخازن أعلى من حدود الطلب والحدود الحرجة.</span
                 >
@@ -85,13 +83,11 @@
           <tr
             v-for="stock in items"
             :key="stock.item_id"
-            class="hover:bg-surface-section/40 transition-colors duration-200 group text-text-secondary"
+            class="hover:bg-surface-ground transition-colors duration-150 group text-text-secondary"
           >
             <!-- اسم الصنف -->
             <td class="px-4 py-3.5 text-text-primary font-bold flex items-center gap-2">
-              <span
-                class="w-1.5 h-1.5 rounded-full bg-orange-500 shadow-[0_0_6px_rgba(249,115,22,0.6)]"
-              ></span>
+              <span class="w-1.5 h-1.5 rounded-full bg-warning"></span>
               {{ stock.item_name }}
             </td>
 
@@ -101,7 +97,7 @@
             </td>
 
             <!-- الرصيد الحالي الفعلي -->
-            <td class="px-4 py-3.5 text-center font-bold text-orange-400 font-mono">
+            <td class="px-4 py-3.5 text-center font-bold text-warning font-mono">
               {{ formatNumber(stock.current_quantity) }}
             </td>
 
@@ -117,7 +113,6 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
 
 defineProps({

@@ -137,22 +137,22 @@ export const useCustomerStore = defineStore('customer', () => {
     }
   }
 
-  // 6. التحقق والبحث عن العميل برقم الهاتف (محلياً أولاً ثم من الخادم)
+  // 6. البحث عن تطابق دقيق لرقم الهاتف محلياً أولاً ثم من الخادم
   async function findByPhone(phone) {
     if (!phone || !phone.trim()) return null
     const cleanPhone = phone.trim()
 
-    // فحص محلي أولاً لتوفير طلبات الشبكة
+    // فحص محلي أولاً؛ لا يُعاد عميل إلا عند تطابق رقم هاتفه تماماً
     const localMatch = customers.value.find((c) => c.phone && c.phone.trim() === cleanPhone)
     if (localMatch) return localMatch
 
-    // فحص سحابي من الخادم في حال لم يتم تحميل العميل مسبقاً
+    // فحص الخادم عند عدم وجود العميل في الذاكرة المحلية
     try {
       const response = await customerService.get(1, { search: cleanPhone })
       const results = response.data?.data || []
-      const serverMatch =
-        results.find((c) => c.phone && c.phone.trim() === cleanPhone) ||
-        (results.length === 1 ? results[0] : null)
+
+      // لا نعتبر النتيجة الوحيدة تطابقاً ما لم يطابق رقم هاتفها الرقم المدخل
+      const serverMatch = results.find((c) => c.phone && c.phone.trim() === cleanPhone)
 
       if (serverMatch) {
         if (!serverMatch.display_label) {
@@ -164,6 +164,7 @@ export const useCustomerStore = defineStore('customer', () => {
         }
         return serverMatch
       }
+
       return null
     } catch (err) {
       console.error('فشل في فحص وتتبع رقم هاتف العميل من الخادم:', err)

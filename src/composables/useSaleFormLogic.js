@@ -31,6 +31,9 @@ export function useSaleFormLogic() {
     store_id: '',
     treasury_id: '',
     bank_id: '',
+    cash_amount: 0,
+    bank_amount: 0,
+    payment_mode: 'bank',
     customer_id: '',
     invoice_date: new Date().toISOString().substr(0, 10),
     payment_type: 'card',
@@ -42,10 +45,12 @@ export function useSaleFormLogic() {
 
   const items = ref([])
 
-  // مراقبة طريقة الدفع وإعادة شحن القيم للمستند الجديد أو المستند المعدل
+  // طريقة الدفع القديمة تبقى مؤثرة في المرتجعات فقط.
   watch(
     () => form.value.payment_type,
     (newType) => {
+      if (form.value.invoice_type !== 'return') return
+
       if (newType === 'cash') {
         form.value.bank_id = ''
         form.value.treasury_id =
@@ -61,6 +66,76 @@ export function useSaleFormLogic() {
       } else if (newType === 'credit') {
         form.value.treasury_id = ''
         form.value.bank_id = ''
+      }
+    },
+  )
+
+  // ضبط الحسابات الفرعية بما يتوافق مع أزرار الدفع الكامل.
+  watch(
+    () => form.value.payment_mode,
+    (mode) => {
+      if (form.value.invoice_type !== 'sale') return
+
+      if (mode === 'cash') {
+        form.value.bank_id = ''
+        if (!form.value.treasury_id) {
+          form.value.treasury_id = authStore.user?.treasury_id || ''
+        }
+      } else if (mode === 'bank') {
+        form.value.treasury_id = ''
+        if (!form.value.bank_id) {
+          form.value.bank_id = authStore.user?.bank_id || ''
+        }
+      } else if (mode === 'credit') {
+        form.value.treasury_id = ''
+        form.value.bank_id = ''
+      }
+    },
+  )
+
+  // اختيار الخزينة أو البنك تلقائياً عند إدخال مبلغ في القناة المقابلة.
+  watch(
+    () => form.value.cash_amount,
+    (amount) => {
+      if (form.value.invoice_type !== 'sale') return
+
+      if (Number(amount) > 0) {
+        if (!form.value.treasury_id) {
+          form.value.treasury_id = authStore.user?.treasury_id || ''
+        }
+      } else {
+        form.value.treasury_id = ''
+      }
+    },
+  )
+
+  watch(
+    () => form.value.bank_amount,
+    (amount) => {
+      if (form.value.invoice_type !== 'sale') return
+
+      if (Number(amount) > 0) {
+        if (!form.value.bank_id) {
+          form.value.bank_id = authStore.user?.bank_id || ''
+        }
+      } else {
+        form.value.bank_id = ''
+      }
+    },
+  )
+
+  // في وضع التقسيم يُحفظ payment_type القديم كقناة رئيسية للتوافق فقط.
+  watch(
+    () => [form.value.cash_amount, form.value.bank_amount, form.value.payment_mode],
+    ([cashAmount, bankAmount, mode]) => {
+      if (form.value.invoice_type !== 'sale' || mode !== 'split') return
+
+      if (Number(bankAmount) > 0) {
+        form.value.payment_type = 'card'
+      } else if (Number(cashAmount) > 0) {
+        form.value.payment_type = 'cash'
+      } else {
+        form.value.payment_type = 'credit'
       }
     },
   )
@@ -204,6 +279,62 @@ export function useSaleFormLogic() {
     return parseFloat(Math.max(0, sub - disc + tax).toFixed(4))
   })
 
+  const roundCurrency = (value) => {
+    const amount = Number(value)
+    return Number.isFinite(amount) ? Math.round(amount * 100) / 100 : 0
+  }
+
+  const resolveExistingPayment = (sale) => {
+    const total = roundCurrency(sale.grand_total)
+    const hasStoredAmounts =
+      (sale.cash_amount !== null && sale.cash_amount !== undefined) ||
+      (sale.bank_amount !== null && sale.bank_amount !== undefined)
+
+    let cashAmount
+    let bankAmount
+
+    if (hasStoredAmounts) {
+      cashAmount = roundCurrency(sale.cash_amount)
+      bankAmount = roundCurrency(sale.bank_amount)
+    } else {
+      cashAmount = sale.payment_type === 'cash' ? total : 0
+      bankAmount = sale.payment_type === 'card' ? total : 0
+    }
+
+    let paymentMode
+    if (total === 0 && cashAmount === 0 && bankAmount === 0) {
+      paymentMode =
+        sale.payment_type === 'cash' ? 'cash' : sale.payment_type === 'card' ? 'bank' : 'credit'
+    } else if (cashAmount === total && bankAmount === 0 && cashAmount > 0) {
+      paymentMode = 'cash'
+    } else if (bankAmount === total && cashAmount === 0 && bankAmount > 0) {
+      paymentMode = 'bank'
+    } else if (cashAmount === 0 && bankAmount === 0) {
+      paymentMode = 'credit'
+    } else {
+      paymentMode = 'split'
+    }
+
+    return { cashAmount, bankAmount, paymentMode }
+  }
+
+  // في الدفع الكامل يبقى كامل الإجمالي على القناة المختارة عند تغيّر تفاصيل الفاتورة.
+  watch(headerGrandTotal, (newTotal) => {
+    if (form.value.invoice_type !== 'sale') return
+
+    const total = roundCurrency(newTotal)
+    if (form.value.payment_mode === 'bank') {
+      form.value.cash_amount = 0
+      form.value.bank_amount = total
+    } else if (form.value.payment_mode === 'cash') {
+      form.value.cash_amount = total
+      form.value.bank_amount = 0
+    } else if (form.value.payment_mode === 'credit') {
+      form.value.cash_amount = 0
+      form.value.bank_amount = 0
+    }
+  })
+
   const getValidationError = (path) => {
     return saleStore.validationErrors?.[path]?.[0] || null
   }
@@ -217,12 +348,17 @@ export function useSaleFormLogic() {
       if (saleStore.currentSale) {
         const cur = saleStore.currentSale
 
+        const existingPayment = resolveExistingPayment(cur)
+
         form.value = {
           invoice_type: cur.invoice_type,
           parent_id: cur.parent_id,
           store_id: cur.store_id || '',
           treasury_id: cur.treasury_id || '',
           bank_id: cur.bank_id || '',
+          cash_amount: existingPayment.cashAmount,
+          bank_amount: existingPayment.bankAmount,
+          payment_mode: existingPayment.paymentMode,
           customer_id: cur.customer_id,
           invoice_date: cur.invoice_date.substr(0, 10),
           payment_type: cur.payment_type,
@@ -271,6 +407,10 @@ export function useSaleFormLogic() {
           store_id: cur.store_id || '',
           treasury_id: cur.treasury_id || '',
           bank_id: cur.bank_id || '',
+          cash_amount: null,
+          bank_amount: null,
+          payment_mode:
+            cur.payment_type === 'cash' ? 'cash' : cur.payment_type === 'card' ? 'bank' : 'credit',
           customer_id: cur.customer_id,
           invoice_date: new Date().toISOString().substr(0, 10),
           payment_type: cur.payment_type,
@@ -315,8 +455,11 @@ export function useSaleFormLogic() {
         form.value.customer_name_text = null
       }
 
-      // 1. تأكيد اختيار طريقة الدفع (شبكة / دفع إلكتروني) وتعيين البنك المربوط ببيانات المستخدم
+      // 1. الوضع الافتراضي هو كامل المبلغ على البنك، وفق حساب المستخدم.
       form.value.payment_type = 'card'
+      form.value.payment_mode = 'bank'
+      form.value.cash_amount = 0
+      form.value.bank_amount = roundCurrency(headerGrandTotal.value)
       if (authStore.user?.bank_id) {
         form.value.bank_id = authStore.user.bank_id
       }
@@ -379,7 +522,18 @@ export function useSaleFormLogic() {
       ...form.value,
       subtotal: headerSubtotal.value,
       grand_total: headerGrandTotal.value,
+      cash_amount: roundCurrency(form.value.cash_amount),
+      bank_amount: roundCurrency(form.value.bank_amount),
       items: dynamicItemsPayload,
+    }
+
+    // payment_mode حالة واجهة فقط، ولا تُرسل إلى الخادم.
+    delete finalPayload.payment_mode
+
+    // لا تُرسل حقول الدفع الجديدة في المرتجعات، للحفاظ على مسارها الحالي.
+    if (finalPayload.invoice_type === 'return') {
+      delete finalPayload.cash_amount
+      delete finalPayload.bank_amount
     }
 
     try {

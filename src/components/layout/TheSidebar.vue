@@ -1,7 +1,7 @@
-<!---src\components\layout\TheSidebar.vue--->
+<!--src/components/layout/TheSidebar.vue-->
 <template>
   <aside
-    class="flex h-full flex-col bg-surface-section border-l border-surface-border lg:border-l-0 lg:border-r"
+    class="flex h-full flex-col bg-surface-section border-l border-surface-border lg:border-l-0 lg:border-r transition-colors duration-200"
   >
     <div class="flex h-16 items-center justify-between px-5 flex-shrink-0">
       <RouterLink :to="{ name: 'Dashboard' }" class="flex items-center gap-2">
@@ -33,7 +33,7 @@
             <button
               @click="toggleGroup(item.name)"
               class="nav-group-button"
-              :class="{ 'text-primary': isGroupActive(item) }"
+              :class="{ 'text-primary font-bold': isGroupActive(item) }"
             >
               <div class="flex items-center">
                 <component :is="item.icon" class="h-6 w-6" stroke-width="1.5" />
@@ -55,7 +55,7 @@
             >
               <div
                 v-show="isGroupOpen(item.name)"
-                class="mt-1 space-y-1 overflow-hidden bg-black/5 rounded-lg py-1"
+                class="mt-1 space-y-1 overflow-hidden bg-black/5 dark:bg-black/20 rounded-lg py-1"
               >
                 <template v-for="(child, index) in item.children" :key="child.name || index">
                   <div
@@ -96,15 +96,10 @@
 import { computed, shallowRef, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/authStore'
-import {
-  ArrowLeftOnRectangleIcon,
-  XMarkIcon,
-  ChevronDownIcon,
-  CurrencyDollarIcon,
-} from '@heroicons/vue/24/outline'
-const logoUrl = '/PandaRep.png'
-// استيراد مصفوفة الإعدادات المجرّدة
+import { ArrowLeftOnRectangleIcon, XMarkIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import { navigationConfig } from '@/config/navigation'
+
+const logoUrl = '/PandaRep.png'
 
 defineEmits(['close-sidebar'])
 
@@ -112,7 +107,6 @@ const authStore = useAuthStore()
 const route = useRoute()
 
 const projectName = ref(import.meta.env.VITE_APP_NAME || 'لوحة تحكم')
-const projectLogo = ref(import.meta.env.VITE_APP_LOGO || '/PandaRep.png')
 
 const allNavLinks = shallowRef(navigationConfig)
 
@@ -121,21 +115,17 @@ const isGroupActive = (group) => {
   return group.children.some((child) => child.routeName === route.name)
 }
 
-// الفلترة المتقدمة التي تدعم العناوين البينية (Headers) والصلاحيات بشكل متناسق
 const filteredNavLinks = computed(() => {
   const filterChildren = (children) => {
-    // خطوة 1: فلترة الروابط بناءً على الصلاحيات مع الإبقاء المؤقت على الـ headers
     const rawFiltered = children.filter((child) => {
       if (child.type === 'header') return true
       return authStore.can(child.permission)
     })
 
-    // خطوة 2: تنظيف العناوين الفرعية التي فرغت من الروابط التابعة لها بصورة ديناميكية
     const cleanedChildren = []
     for (let i = 0; i < rawFiltered.length; i++) {
       if (rawFiltered[i].type === 'header') {
         let hasValidChildrenAhead = false
-        // الفحص المسبق: هل يوجد رابط مسموح به قبل الوصول للـ header القادم أو نهاية المصفوفة؟
         for (let j = i + 1; j < rawFiltered.length; j++) {
           if (rawFiltered[j].type === 'header') break
           hasValidChildrenAhead = true
@@ -155,7 +145,6 @@ const filteredNavLinks = computed(() => {
     .map((item) => {
       if (item.children) {
         const filteredChildren = filterChildren(item.children)
-        // لا تظهر المجموعة الرئيسية إذا لم يتبقَ بها عناصر أو عناوين فرعية صالحة
         if (filteredChildren.length > 0 && filteredChildren.some((c) => c.type !== 'header')) {
           return { ...item, children: filteredChildren }
         }
@@ -201,30 +190,23 @@ const handleLogout = async () => {
 
 <style scoped>
 .nav-link {
-  @apply flex items-center rounded-lg px-3 py-2.5 text-text-secondary transition-colors duration-300 transform;
+  @apply flex items-center rounded-lg px-3 py-2.5 text-text-secondary transition-all duration-200;
 }
 .nav-link:hover {
-  @apply bg-surface-border text-text-primary;
+  @apply bg-surface-ground text-text-primary;
 }
 .nav-link.router-link-exact-active {
-  @apply bg-gradient-to-b from-primary-light to-primary-dark text-white;
-  --tw-shadow-color: theme('colors.primary.DEFAULT');
-  --tw-shadow: 0 4px 14px 0 var(--tw-shadow-color);
-  box-shadow:
-    var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
-  --tw-shadow-opacity: 0.3;
-  --tw-shadow-color: rgba(theme('colors.primary.DEFAULT'), var(--tw-shadow-opacity));
+  @apply bg-gradient-to-r from-primary to-primary-dark text-white font-semibold shadow-md shadow-primary/25;
 }
 .nav-sub-link.router-link-exact-active {
-  @apply bg-gradient-to-b from-primary-light to-primary-dark;
-  @apply text-white;
-  @apply border-r-4 border-primary-dark;
+  @apply bg-primary/10 text-primary dark:bg-primary/20 dark:text-orange-300 font-bold border-r-4 border-primary rounded-r-none;
+  background-image: none;
   box-shadow: none;
 }
 .nav-group-button {
-  @apply flex items-center justify-between w-full rounded-lg px-3 py-2.5 text-text-secondary transition-colors duration-300 transform;
+  @apply flex items-center justify-between w-full rounded-lg px-3 py-2.5 text-text-secondary transition-all duration-200;
 }
 .nav-group-button:hover {
-  @apply bg-surface-border text-text-primary;
+  @apply bg-surface-ground text-text-primary;
 }
 </style>

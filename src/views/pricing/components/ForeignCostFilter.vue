@@ -1,7 +1,7 @@
 <!-- src/views/pricing/components/ForeignCostFilter.vue -->
 <template>
   <AppCard class="mb-6">
-    <form @submit.prevent="handlePreviewSubmit" class="p-5 space-y-4">
+    <form @submit.prevent="handlePreviewSubmit" class="space-y-4 text-right" dir="rtl">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
         <!-- 1. اختيار التصنيف المجموعي -->
         <div>
@@ -18,7 +18,7 @@
             <p
               v-for="(error, index) in validationErrors.category_id"
               :key="index"
-              class="text-rose-500 text-xs mt-1 font-bold"
+              class="text-danger text-xs mt-1 font-bold"
             >
               {{ error }}
             </p>
@@ -41,7 +41,7 @@
             <p
               v-for="(error, index) in validationErrors.method"
               :key="index"
-              class="text-rose-500 text-xs mt-1 font-bold"
+              class="text-danger text-xs mt-1 font-bold"
             >
               {{ error }}
             </p>
@@ -64,7 +64,7 @@
             <p
               v-for="(error, index) in validationErrors.currency_id"
               :key="index"
-              class="text-rose-500 text-xs mt-1 font-bold"
+              class="text-danger text-xs mt-1 font-bold"
             >
               {{ error }}
             </p>
@@ -86,7 +86,7 @@
             <p
               v-for="(error, index) in validationErrors.exchange_rate"
               :key="index"
-              class="text-rose-500 text-xs mt-1 font-bold"
+              class="text-danger text-xs mt-1 font-bold"
             >
               {{ error }}
             </p>
@@ -111,7 +111,7 @@
             <p
               v-for="(error, index) in validationErrors.profit_margin"
               :key="index"
-              class="text-rose-500 text-xs mt-1 font-bold"
+              class="text-danger text-xs mt-1 font-bold"
             >
               {{ error }}
             </p>
@@ -136,7 +136,7 @@
             <p
               v-for="(error, index) in validationErrors.margin_ratio"
               :key="index"
-              class="text-rose-500 text-xs mt-1 font-bold"
+              class="text-danger text-xs mt-1 font-bold"
             >
               {{ error }}
             </p>
@@ -144,7 +144,7 @@
         </div>
       </div>
 
-      <!-- خيار حصر الأصناف التي ليس لها تكلفة أجنبية وأزرار الإجراءات -->
+      <!-- خيار حصر الأصناف وأزرار الإجراءات -->
       <div
         class="flex flex-col sm:flex-row justify-between items-start sm:items-center pt-3 border-t border-surface-border gap-4"
       >
@@ -152,7 +152,7 @@
           <input
             type="checkbox"
             v-model="form.only_missing"
-            class="rounded border-surface-border text-primary focus:ring-primary w-4 h-4"
+            class="rounded border-surface-border text-primary focus:ring-primary w-4 h-4 cursor-pointer"
           />
           <span class="text-xs font-semibold text-text-primary">
             حصر الأصناف التي تفتقر لتكلفة أجنبية فقط (تخطي الأصناف المؤصلة مسبقاً)

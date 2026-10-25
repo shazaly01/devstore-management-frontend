@@ -1,33 +1,23 @@
-<!--src\components\ui\AppCurrencyInput.vue--->
+<!--src/components/ui/AppCurrencyInput.vue-->
 <template>
   <div class="w-full">
     <div v-if="label" class="flex justify-between items-center mb-1">
-      <label
-        :for="id"
-        :class="[
-          'block text-sm font-medium',
-          labelClass,
-          variant === 'sales' ? 'text-gray-300' : 'text-gray-700 dark:text-text-secondary',
-        ]"
-      >
+      <label :for="id" :class="['block text-sm font-medium text-text-secondary', labelClass]">
         {{ label }}
       </label>
       <slot name="label-append"></slot>
     </div>
 
     <div class="relative w-full flex items-center">
-      <!-- شارة العملة المخصصة (اختيارية) -->
+      <!-- شارة العملة المخصصة -->
       <div
         v-if="hasSymbol"
-        :class="[
-          'absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none z-10 text-xs font-mono font-bold select-none',
-          variant === 'sales' ? 'text-gray-400' : 'text-gray-500 dark:text-text-muted',
-        ]"
+        class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none z-10 text-xs font-mono font-bold select-none text-text-muted"
       >
         <span>{{ displaySymbol }}</span>
       </div>
 
-      <!-- حقل الإدخال الرقمي المنسق تلقائياً -->
+      <!-- حقل الإدخال الرقمي -->
       <input
         :id="id"
         ref="inputRef"
@@ -46,8 +36,8 @@
           'block w-full rounded-md shadow-sm py-2 text-sm font-bold text-right font-mono transition-all duration-200 focus:outline-none disabled:opacity-60 disabled:cursor-not-allowed',
           hasSymbol ? 'pr-12 pl-3' : 'px-3',
           variant === 'sales'
-            ? 'bg-[#25272e] border border-[#383b45] text-white placeholder:text-gray-500 focus:border-[#e05e2b] focus:ring-1 focus:ring-[#e05e2b] focus:shadow-[0_0_10px_rgba(224,94,43,0.3)]'
-            : 'bg-gray-50 border-2 border-gray-300 text-gray-900 placeholder:text-gray-400 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 dark:bg-surface-ground dark:border-surface-border dark:text-text-primary dark:placeholder:text-text-muted dark:focus:ring-2 dark:focus:ring-emerald-400 dark:focus:border-emerald-400 dark:shadow-[0_0_15px_rgba(52,211,153,0.1)]',
+            ? 'bg-transparent border-0 text-text-primary placeholder:text-text-muted focus:ring-0 p-0'
+            : 'bg-surface-section border border-surface-border text-text-primary placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20',
           inputClass,
         ]"
       />
@@ -83,9 +73,6 @@ const isFocused = ref(false)
 const hasSymbol = computed(() => props.showSymbol || !!props.symbol)
 const displaySymbol = computed(() => props.symbol || DEFAULT_CURRENCY)
 
-/**
- * تنسيق الرقم وإضافة فواصل الآلاف بدقة
- */
 const formatNumberWithCommas = (val) => {
   if (val === null || val === undefined || val === '') return ''
   const str = val.toString().replace(/,/g, '')
@@ -94,9 +81,6 @@ const formatNumberWithCommas = (val) => {
   return parts.join('.')
 }
 
-/**
- * مزامنة القيمة الممررة من الخارج مع العرض الداخلي
- */
 watch(
   () => props.modelValue,
   (newVal) => {
@@ -115,31 +99,22 @@ watch(
   { immediate: true },
 )
 
-/**
- * معالجة الإدخال اللحظي مع الحفاظ على الفاصلة العشرية أثناء الكتابة
- */
 const onInput = (event) => {
   let val = event.target.value
-
-  // السماح بالأرقام والنقطة العشرية فقط
   val = val.replace(/[^0-9.]/g, '')
 
-  // معالجة النقطة العشرية المتعددة
   const parts = val.split('.')
   if (parts.length > 2) {
     val = parts[0] + '.' + parts.slice(1).join('')
   }
 
-  // تحديد عدد الخانات العشرية المسموح بها
   if (parts.length === 2 && parts[1].length > props.precision) {
     val = parts[0] + '.' + parts[1].substring(0, props.precision)
   }
 
-  // تحديث القيمة المعروضة مع الفواصل
   const formatted = formatNumberWithCommas(val)
   formattedValue.value = formatted
 
-  // استخراج القيمة الرقمية النظيفة وتمريرها للأب
   if (val === '' || val === '.') {
     emit('update:modelValue', null)
   } else {

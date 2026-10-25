@@ -1,17 +1,17 @@
-<!--src\components\forms\VoucherSubLedgerDropdown.vue--->
+<!--src/components/forms/VoucherSubLedgerDropdown.vue-->
 <template>
   <div class="relative w-full">
-    <!-- دعم رندرة العنوان الموجه محاسبياً بشكل متناسق مع النمط الجديد -->
-    <label v-if="label" class="block text-xs font-bold text-gray-300 mb-1.5 pr-1">
+    <!-- عنوان الحقل -->
+    <label v-if="label" class="block text-xs font-bold text-text-secondary mb-1.5 pr-1">
       {{ label }}
     </label>
 
-    <!-- الإطار الرئيسي للمنسدلة - مطابق تماماً لهيكل حقول شاشات المبيعات والـ AppDropdown -->
+    <!-- الإطار الرئيسي للمنسدلة -->
     <div
-      class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:shadow-[0_0_10px_rgba(224,94,43,0.15)] cursor-pointer"
+      class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 cursor-pointer shadow-sm"
       @click="toggleDropdown"
     >
-      <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
+      <span class="absolute right-3 text-text-muted pointer-events-none z-10">
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
@@ -27,39 +27,47 @@
         readonly
         :value="selectedLedgerName"
         placeholder="اضغط لاختيار الحساب المساعد (مورد، عميل، مصروف)..."
-        class="block w-full h-full pr-10 pl-10 bg-transparent text-white focus:outline-none text-xs font-bold placeholder-gray-500 cursor-pointer text-right"
+        class="block w-full h-full pr-10 pl-10 bg-transparent text-text-primary focus:outline-none text-xs font-bold placeholder:text-text-muted cursor-pointer text-right"
         required
       />
 
-      <span class="absolute left-4 text-gray-500 pointer-events-none text-[10px]">▼</span>
+      <span class="absolute left-4 text-text-muted pointer-events-none text-[10px]">▼</span>
     </div>
 
-    <!-- شريط عرض الرصيد اللحظي للحساب المختار أسفل خانة الاختيار مباشرة ليكون كاشفاً للمحاسب -->
+    <!-- شريط عرض الرصيد اللحظي للحساب المختار -->
     <div
       v-if="props.subLedgerId && currentSelectedBalance !== null"
       class="mt-1.5 flex items-center justify-end pl-1 text-[11px] font-bold animate-fade-in"
     >
-      <span class="text-gray-400 ml-1">الرصيد الحالي للحساب المحدد:</span>
-      <span :class="currentSelectedBalance < 0 ? 'text-rose-400' : 'text-emerald-400'">
+      <span class="text-text-muted ml-1">الرصيد الحالي للحساب المحدد:</span>
+      <span
+        :class="
+          currentSelectedBalance < 0
+            ? 'text-rose-600 dark:text-rose-400'
+            : 'text-emerald-600 dark:text-emerald-400'
+        "
+      >
         {{ Number(currentSelectedBalance).toLocaleString() }} جنيه
       </span>
     </div>
 
-    <!-- لوحة الخيارات المنسدلة (Dropdown Panel) الموحدة داكناً بنسبة 100% -->
+    <!-- لوحة الخيارات المنسدلة (Dropdown Panel) -->
     <div
       v-if="isDropdownOpen"
-      class="absolute right-0 z-50 mt-1 w-full bg-[#1a1b20] border border-[#383b45] rounded-lg shadow-2xl p-3 space-y-3 animate-fade-in"
+      class="absolute right-0 z-50 mt-1 w-full bg-surface-section border border-surface-border rounded-xl shadow-2xl p-3 space-y-3 animate-fade-in"
     >
-      <!-- شريط تصنيفات التبويب المطور بألوان الهيدر العازل -->
-      <div class="flex flex-wrap gap-1 bg-[#25272e] border border-[#383b45] p-1 rounded-md">
+      <!-- شريط تصنيفات التبويب -->
+      <div
+        class="flex flex-wrap gap-1 bg-surface-ground border border-surface-border p-1 rounded-lg"
+      >
         <button
           type="button"
           @click="activeTab = 'all'"
           :class="[
-            'flex-1 text-[11px] py-1.5 px-1 rounded font-medium transition-all text-center',
+            'flex-1 text-[11px] py-1.5 px-1 rounded-md font-bold transition-all text-center cursor-pointer',
             activeTab === 'all'
-              ? 'bg-[#e05e2b] text-white shadow-sm font-bold'
-              : 'text-gray-400 hover:text-white',
+              ? 'bg-primary text-white shadow-sm'
+              : 'text-text-secondary hover:text-text-primary hover:bg-surface-section',
           ]"
         >
           الكل
@@ -68,10 +76,10 @@
           type="button"
           @click="activeTab = 'bank_treasury'"
           :class="[
-            'flex-1 text-[11px] py-1.5 px-1 rounded font-medium transition-all text-center',
+            'flex-1 text-[11px] py-1.5 px-1 rounded-md font-bold transition-all text-center cursor-pointer',
             activeTab === 'bank_treasury'
-              ? 'bg-[#e05e2b] text-white shadow-sm font-bold'
-              : 'text-gray-400 hover:text-white',
+              ? 'bg-primary text-white shadow-sm'
+              : 'text-text-secondary hover:text-text-primary hover:bg-surface-section',
           ]"
         >
           الخزائن والبنوك
@@ -80,10 +88,10 @@
           type="button"
           @click="activeTab = 'expense'"
           :class="[
-            'flex-1 text-[11px] py-1.5 px-1 rounded font-medium transition-all text-center',
+            'flex-1 text-[11px] py-1.5 px-1 rounded-md font-bold transition-all text-center cursor-pointer',
             activeTab === 'expense'
-              ? 'bg-[#e05e2b] text-white shadow-sm font-bold'
-              : 'text-gray-400 hover:text-white',
+              ? 'bg-primary text-white shadow-sm'
+              : 'text-text-secondary hover:text-text-primary hover:bg-surface-section',
           ]"
         >
           المصروفات
@@ -92,10 +100,10 @@
           type="button"
           @click="activeTab = 'supplier'"
           :class="[
-            'flex-1 text-[11px] py-1.5 px-1 rounded font-medium transition-all text-center',
+            'flex-1 text-[11px] py-1.5 px-1 rounded-md font-bold transition-all text-center cursor-pointer',
             activeTab === 'supplier'
-              ? 'bg-[#e05e2b] text-white shadow-sm font-bold'
-              : 'text-gray-400 hover:text-white',
+              ? 'bg-primary text-white shadow-sm'
+              : 'text-text-secondary hover:text-text-primary hover:bg-surface-section',
           ]"
         >
           الموردين
@@ -104,10 +112,10 @@
           type="button"
           @click="activeTab = 'customer'"
           :class="[
-            'flex-1 text-[11px] py-1.5 px-1 rounded font-medium transition-all text-center',
+            'flex-1 text-[11px] py-1.5 px-1 rounded-md font-bold transition-all text-center cursor-pointer',
             activeTab === 'customer'
-              ? 'bg-[#e05e2b] text-white shadow-sm font-bold'
-              : 'text-gray-400 hover:text-white',
+              ? 'bg-primary text-white shadow-sm'
+              : 'text-text-secondary hover:text-text-primary hover:bg-surface-section',
           ]"
         >
           العملاء
@@ -116,75 +124,81 @@
           type="button"
           @click="activeTab = 'designer'"
           :class="[
-            'flex-1 text-[11px] py-1.5 px-1 rounded font-medium transition-all text-center',
+            'flex-1 text-[11px] py-1.5 px-1 rounded-md font-bold transition-all text-center cursor-pointer',
             activeTab === 'designer'
-              ? 'bg-[#e05e2b] text-white shadow-sm font-bold'
-              : 'text-gray-400 hover:text-white',
+              ? 'bg-primary text-white shadow-sm'
+              : 'text-text-secondary hover:text-text-primary hover:bg-surface-section',
           ]"
         >
           المصممون
         </button>
       </div>
 
-      <!-- مربع البحث الداخلي الموحد -->
+      <!-- مربع البحث الداخلي -->
       <input
         type="text"
         v-model="searchQuery"
         ref="searchInputRef"
         placeholder="اكتب اسم الحساب المساعد للبحث الفوري..."
-        class="block w-full p-2 border rounded-md bg-[#25272e] border-[#383b45] text-white focus:outline-none focus:border-[#e05e2b] text-xs font-medium placeholder-gray-500"
+        class="block w-full p-2 border border-surface-border rounded-md bg-surface-ground text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-xs font-medium transition-all"
       />
 
-      <!-- مؤشر جلب البيانات الاستراتيجي -->
-      <div v-if="isDataLoading" class="text-center py-4 text-xs text-gray-400 font-bold">
+      <!-- مؤشر جلب البيانات -->
+      <div v-if="isDataLoading" class="text-center py-4 text-xs text-text-muted font-bold">
         جاري تحديث جلب الحسابات المساعدة...
       </div>
 
-      <!-- قائمة الحسابات المنسابة بالـ Custom Scrollbar الموحد للمنشأة -->
+      <!-- قائمة الحسابات المنسابة -->
       <ul
         v-else
-        class="max-h-48 overflow-y-auto divide-y divide-[#383b45] text-xs custom-scrollbar"
+        class="max-h-48 overflow-y-auto divide-y divide-surface-border/60 text-xs custom-scrollbar"
       >
         <li v-for="item in filteredSubLedgers" :key="item.composite_key">
           <button
             type="button"
             @click="selectLedger(item)"
             :class="[
-              'w-full text-right px-3 py-2.5 flex justify-between items-center transition-colors rounded-md text-xs font-bold',
+              'w-full text-right px-3 py-2.5 flex justify-between items-center transition-colors rounded-lg text-xs font-bold cursor-pointer',
               normalizedSubLedgerType === item.type && props.subLedgerId == item.id
-                ? 'bg-[#e05e2b]/20 text-[#e05e2b] font-black'
-                : 'text-gray-300 hover:bg-[#25272e] hover:text-white',
+                ? 'bg-primary/10 text-primary font-black'
+                : 'text-text-primary hover:bg-surface-ground',
             ]"
           >
             <div class="flex flex-col text-right">
               <span>{{ item.name }}</span>
               <span
-                :class="item.balance < 0 ? 'text-rose-400' : 'text-emerald-400'"
-                class="text-[10px] font-bold mt-0.5 opacity-90"
+                :class="
+                  item.balance < 0
+                    ? 'text-rose-600 dark:text-rose-400'
+                    : 'text-emerald-600 dark:text-emerald-400'
+                "
+                class="text-[10px] font-bold mt-0.5"
               >
                 الرصيد: {{ Number(item.balance).toLocaleString() }} جنيه
               </span>
             </div>
-            <span :class="['text-[10px] px-2 py-0.5 rounded-full font-bold', item.badgeClass]">
+            <span
+              :class="['text-[10px] px-2 py-0.5 rounded-full font-bold border', item.badgeClass]"
+            >
               {{ item.displayType }}
             </span>
           </button>
         </li>
         <li
           v-if="filteredSubLedgers.length === 0"
-          class="text-center py-4 text-gray-500 text-xs font-medium"
+          class="text-center py-4 text-text-muted text-xs font-medium"
         >
           لا توجد نتائج مطابقة للبحث أو التصنيف الحالي
         </li>
       </ul>
     </div>
 
-    <!-- رسائل التحقق ومطابقة القيود -->
+    <!-- رسائل التحقق -->
     <p
       v-if="validationErrors?.sub_ledger_id || validationErrors?.account_id"
-      class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
+      class="text-danger text-[10px] font-bold mt-1 pr-1"
     >
-      رجى تحديد حساب مستهدف صحيح من القائمة
+      يرجى تحديد حساب مستهدف صحيح من القائمة
     </p>
   </div>
 </template>
@@ -201,26 +215,11 @@ import { useTreasuryStore } from '@/stores/treasuryStore'
 import { useBankStore } from '@/stores/bankStore'
 
 const props = defineProps({
-  label: {
-    type: String,
-    default: '',
-  },
-  subLedgerType: {
-    type: String,
-    default: '',
-  },
-  subLedgerId: {
-    type: [String, Number],
-    default: null,
-  },
-  accounts: {
-    type: Array,
-    required: true,
-  },
-  validationErrors: {
-    type: Object,
-    default: null,
-  },
+  label: { type: String, default: '' },
+  subLedgerType: { type: String, default: '' },
+  subLedgerId: { type: [String, Number], default: null },
+  accounts: { type: Array, required: true },
+  validationErrors: { type: Object, default: null },
 })
 
 const emit = defineEmits(['update:subLedgerType', 'update:subLedgerId', 'update:accountId'])
@@ -245,7 +244,6 @@ const searchQuery = ref('')
 const selectedLedgerName = ref('')
 const searchInputRef = ref(null)
 
-// مواءمة النوع القادم من الـ API ليتوافق مع الأنواع المعرفة محلياً في الـ Component
 const normalizedSubLedgerType = computed(() => {
   return props.subLedgerType === 'user' ? 'designer' : props.subLedgerType
 })
@@ -276,7 +274,6 @@ onMounted(async () => {
       promises.push(customerStore.fetchCustomers(1, { per_page: 1000 }))
     if (designers.value.length === 0)
       promises.push(userStore.fetchUsers(1, { type: 'designer', per_page: 1000 }))
-
     if (treasuries.value.length === 0)
       promises.push(treasuryStore.fetchTreasuries(1, { per_page: 1000 }))
     if (banks.value.length === 0) promises.push(bankStore.fetchBanks(1, { per_page: 1000 }))
@@ -302,7 +299,8 @@ const unifiedSubLedgers = computed(() => {
       name: item.name,
       balance: item.current_balance ?? 0,
       displayType: 'مصروف',
-      badgeClass: 'bg-rose-950/40 text-rose-400 border border-rose-900/50',
+      badgeClass:
+        'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900/50',
     })
   })
 
@@ -315,7 +313,8 @@ const unifiedSubLedgers = computed(() => {
       name: item.name,
       balance: item.current_balance ?? 0,
       displayType: 'مورد',
-      badgeClass: 'bg-amber-950/40 text-amber-400 border border-amber-900/50',
+      badgeClass:
+        'bg-amber-50 text-amber-800 border-amber-200 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-900/50',
     })
   })
 
@@ -328,7 +327,8 @@ const unifiedSubLedgers = computed(() => {
       name: item.name,
       balance: item.current_balance ?? 0,
       displayType: 'عميل',
-      badgeClass: 'bg-blue-950/40 text-blue-400 border border-blue-900/50',
+      badgeClass:
+        'bg-sky-50 text-sky-700 border-sky-200 dark:bg-sky-950/40 dark:text-sky-400 dark:border-sky-900/50',
     })
   })
 
@@ -342,7 +342,8 @@ const unifiedSubLedgers = computed(() => {
         name: item.full_name,
         balance: item.current_balance ?? 0,
         displayType: 'مصمم',
-        badgeClass: 'bg-purple-950/40 text-purple-400 border border-purple-900/50',
+        badgeClass:
+          'bg-purple-50 text-purple-700 border-purple-200 dark:bg-purple-950/40 dark:text-purple-400 dark:border-purple-900/50',
       })
     }
   })
@@ -356,7 +357,8 @@ const unifiedSubLedgers = computed(() => {
       name: item.name,
       balance: item.current_balance ?? 0,
       displayType: 'بنك',
-      badgeClass: 'bg-emerald-950/40 text-emerald-400 border border-emerald-900/50',
+      badgeClass:
+        'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900/50',
     })
   })
 
@@ -369,7 +371,8 @@ const unifiedSubLedgers = computed(() => {
       name: item.name,
       balance: item.current_balance ?? 0,
       displayType: 'خزنة',
-      badgeClass: 'bg-cyan-950/40 text-cyan-400 border border-cyan-900/50',
+      badgeClass:
+        'bg-teal-50 text-teal-700 border-teal-200 dark:bg-teal-950/40 dark:text-teal-400 dark:border-teal-900/50',
     })
   })
 
@@ -388,8 +391,6 @@ const filteredSubLedgers = computed(() => {
   })
 })
 
-// تتبع ورصد الرصيد الحالي للكيان المختار لعرضه بشكل فوري أسفل حقل الاختيار
-// تتبع ورصد الرصيد الحالي للكيان المختار لعرضه بشكل فوري أسفل حقل الاختيار
 const currentSelectedBalance = computed(() => {
   if (!props.subLedgerType || !props.subLedgerId) return null
   const selected = unifiedSubLedgers.value.find(
@@ -478,11 +479,11 @@ watch(
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #4b5563;
+  background-color: rgb(var(--color-surface-border));
   border-radius: 10px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: #e05e2b;
+  background-color: rgb(var(--color-primary));
 }
 
 .animate-fade-in {

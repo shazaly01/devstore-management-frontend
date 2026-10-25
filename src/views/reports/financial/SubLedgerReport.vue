@@ -1,9 +1,13 @@
+<!--src/views/reports/SubLedgerReport.vue-->
 <template>
-  <div class="space-y-6 print:hidden">
-    <div class="flex justify-between items-center">
+  <div class="space-y-6 print:hidden text-right font-sans" dir="rtl">
+    <!-- الترويسة العلوية -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
-        <h1 class="text-3xl font-black text-white tracking-tight">كشف حساب الكيانات المساعدة</h1>
-        <p class="text-sm text-gray-400 mt-1">
+        <h1 class="text-2xl font-black text-text-primary tracking-tight">
+          كشف حساب الكيانات المساعدة
+        </h1>
+        <p class="text-xs text-text-muted mt-1">
           كشف حركة تفصيلي ديناميكي لحسابات العملاء، الموردين، البنوك، الخزائن، والمصممون المساعدون
         </p>
       </div>
@@ -11,14 +15,15 @@
         <AppButton
           @click="handlePrint"
           :disabled="subLedgerList.length === 0"
-          class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold border border-indigo-700 rounded-none disabled:opacity-50"
+          class="flex items-center gap-2"
         >
-          <PrinterIcon class="w-5 h-5 ml-2" />
+          <PrinterIcon class="w-4 h-4 ml-1" />
           طباعة كشف الحساب
         </AppButton>
       </div>
     </div>
 
+    <!-- بطاقة الفلاتر الموحدة -->
     <SubLedgerFilterCard
       :sub-ledgers-list="unifiedSubLedgers"
       :is-data-loading="isDataLoading"
@@ -26,56 +31,55 @@
       @fetch="handleFetch"
     />
 
+    <!-- بطاقات الملخص المالي -->
     <SubLedgerSummaryCards v-if="subLedgerList.length > 0" :summary="derivedSummary" />
 
-    <AppCard
-      v-if="subLedgerList.length > 0 || loading"
-      class="border border-gray-800 bg-surface-section/40 rounded-none"
-    >
+    <!-- جدول الحركات التفصيلية -->
+    <AppCard v-if="subLedgerList.length > 0 || loading">
       <AppTable :headers="tableHeaders" :items="subLedgerList" :is-loading="loading">
         <template #cell-entry_date="{ item }">
-          <span class="text-xs text-gray-400 font-mono">{{ item.entry_date ?? '-' }}</span>
+          <span class="text-xs text-text-muted font-mono">{{ item.entry_date ?? '-' }}</span>
         </template>
 
         <template #cell-entry_number="{ item }">
           <span
             v-if="item.source_type && item.source_id"
             @click="openSourceDocument(item)"
-            class="font-mono text-cyan-400 text-xs font-bold cursor-pointer hover:text-cyan-300 hover:underline flex items-center gap-1"
+            class="font-mono text-primary text-xs font-bold cursor-pointer hover:underline flex items-center gap-1"
             title="اضغط لعرض المستند الأصلي"
           >
             {{ item.entry_number ?? '-' }}
           </span>
-          <span class="font-mono text-gray-500 text-xs" v-else>
+          <span class="font-mono text-text-muted text-xs" v-else>
             {{ item.entry_number ?? '-' }}
           </span>
         </template>
 
         <template #cell-account_name="{ item }">
-          <span class="text-xs font-bold text-gray-200">{{ item.account_name ?? '-' }}</span>
+          <span class="text-xs font-bold text-text-primary">{{ item.account_name ?? '-' }}</span>
         </template>
 
         <template #cell-line_notes="{ item }">
-          <span class="text-xs text-gray-400">{{ item.line_notes ?? '-' }}</span>
+          <span class="text-xs text-text-secondary">{{ item.line_notes ?? '-' }}</span>
         </template>
 
         <template #cell-debit="{ item }">
-          <span class="font-mono text-xs font-bold text-emerald-400" v-if="item.debit > 0">
+          <span class="font-mono text-xs font-bold text-success" v-if="item.debit > 0">
             {{ formatCurrency(item.debit) }}
           </span>
-          <span class="text-gray-700 text-xs" v-else>-</span>
+          <span class="text-text-muted text-xs" v-else>-</span>
         </template>
 
         <template #cell-credit="{ item }">
-          <span class="font-mono text-xs font-bold text-rose-400" v-if="item.credit > 0">
+          <span class="font-mono text-xs font-bold text-danger" v-if="item.credit > 0">
             {{ formatCurrency(item.credit) }}
           </span>
-          <span class="text-gray-700 text-xs" v-else>-</span>
+          <span class="text-text-muted text-xs" v-else>-</span>
         </template>
 
         <template #cell-running_total="{ item }">
           <span
-            class="font-black text-xs text-white bg-surface-background/80 px-2 py-1 rounded-none border border-gray-800 font-mono"
+            class="font-black text-xs text-text-primary bg-surface-ground px-2 py-1 rounded-lg border border-surface-border font-mono"
           >
             {{ formatCurrency(item.running_total) }}
           </span>
@@ -102,7 +106,6 @@ import { formatCurrency } from '@/utils/formatters'
 import { PrinterIcon } from '@heroicons/vue/24/outline'
 
 import { useReportStore } from '@/stores/reportStore'
-// استدعاء الـ Composable والـ Component المساعدين من المجلد المخصص
 import { useSubLedgerInfrastructure } from './components/useSubLedgerInfrastructure'
 import SourceDocumentModal from './components/SourceDocumentModal.vue'
 
@@ -116,13 +119,11 @@ import AppButton from '@/components/ui/AppButton.vue'
 const router = useRouter()
 const reportStore = useReportStore()
 
-// امتصاص منطق المتاجر الخمسة والتحميل المسبق عبر الـ Composable المعزول
 const { unifiedSubLedgers, isDataLoading } = useSubLedgerInfrastructure()
 const { subLedgerList, subLedgerSummary, loading } = storeToRefs(reportStore)
 
 const currentFetchedFilters = ref(null)
 
-// متغيرات حالة التحكم بنافذة العرض المنبثقة
 const isModalOpen = ref(false)
 const activeSourceType = ref('')
 const activeSourceId = ref('')
@@ -227,13 +228,3 @@ export default {
   name: 'SubLedgerReport',
 }
 </script>
-
-<style scoped>
-:deep(.AppTable th) {
-  @apply text-gray-400 font-bold uppercase tracking-wider text-xs border-b border-gray-800;
-}
-
-:deep(.AppTable td) {
-  @apply py-3 border-b border-gray-800/50;
-}
-</style>

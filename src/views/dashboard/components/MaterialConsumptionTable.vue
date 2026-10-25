@@ -1,44 +1,43 @@
 <!-- src/views/dashboard/components/MaterialConsumptionTable.vue -->
 <template>
   <div
-    class="bg-surface-section border border-surface-border/60 rounded-xl p-5 shadow-sm relative overflow-hidden"
+    class="bg-surface-section border border-surface-border rounded-xl p-5 shadow-sm relative overflow-hidden font-sans"
+    dir="rtl"
   >
     <!-- عنوان الجدول والمؤشر البصري -->
-    <div class="flex items-center justify-between mb-4 pb-3 border-b border-surface-border/40">
+    <div class="flex items-center justify-between mb-4 pb-3 border-b border-surface-border">
       <div class="flex items-center gap-2.5">
-        <span
-          class="w-2 h-5 bg-emerald-500 rounded-full shadow-[0_0_12px_rgba(52,211,153,0.4)]"
-        ></span>
+        <span class="w-2 h-5 bg-success rounded-full"></span>
         <h3 class="text-base font-bold text-text-primary">تقرير استهلاك الأصناف</h3>
       </div>
       <span
-        class="text-xs font-semibold px-2.5 py-1 bg-emerald-500/10 text-emerald-400 rounded-md border border-emerald-500/20"
+        class="text-xs font-semibold px-2.5 py-1 bg-success/10 text-success rounded-md border border-success/20"
       >
         {{ items.length }} صنف
       </span>
     </div>
 
     <!-- جدول عرض الأصناف المستهلكة -->
-    <div class="overflow-x-auto">
-      <table class="w-full text-right border-collapse">
-        <thead>
-          <tr class="border-b border-surface-border/40 text-xs font-bold text-text-muted">
-            <th class="pb-3 pr-2 font-black">اسم الصنف</th>
-            <th class="pb-3 pl-2 text-left font-black">إجمالي الاستهلاك</th>
+    <div class="overflow-x-auto rounded-lg border border-surface-border bg-surface-ground">
+      <table class="w-full text-right border-collapse whitespace-nowrap">
+        <thead class="bg-surface-section text-xs font-bold text-text-secondary">
+          <tr class="border-b border-surface-border">
+            <th class="py-3 px-3 font-black">اسم الصنف</th>
+            <th class="py-3 px-3 text-left font-black">إجمالي الاستهلاك</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-surface-border/30">
+        <tbody class="divide-y divide-surface-border bg-surface-section text-sm">
           <tr
             v-for="item in items"
             :key="item.item_id"
-            class="text-sm hover:bg-surface-ground/30 transition-colors group"
+            class="hover:bg-surface-ground transition-colors duration-150 group"
           >
             <td
-              class="py-3.5 pr-2 font-medium text-text-primary group-hover:text-primary transition-colors"
+              class="py-3.5 px-3 font-medium text-text-primary group-hover:text-primary transition-colors"
             >
               {{ item.item_name }}
             </td>
-            <td class="py-3.5 pl-2 text-left font-mono font-bold text-emerald-400">
+            <td class="py-3.5 px-3 text-left font-mono font-bold text-success">
               {{ formatQuantity(item.consumed_meters) }}
             </td>
           </tr>
@@ -56,8 +55,6 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
-
 defineProps({
   items: {
     type: Array,

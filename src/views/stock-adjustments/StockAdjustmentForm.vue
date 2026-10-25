@@ -1,4 +1,4 @@
-<!--src\views\stock-adjustments\StockAdjustmentForm.vue--->
+<!--src/views/stock-adjustments/StockAdjustmentForm.vue-->
 <template>
   <div class="space-y-4 text-right font-sans pb-24" dir="rtl">
     <div class="flex justify-between items-center py-1 border-b border-surface-border/60">
@@ -12,7 +12,7 @@
 
     <div
       v-if="stockAdjustmentStore.error"
-      class="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs font-bold shadow-sm"
+      class="p-3 bg-danger/10 border border-danger/30 text-danger rounded-lg text-xs font-bold shadow-sm"
     >
       {{ stockAdjustmentStore.error }}
     </div>
@@ -24,9 +24,10 @@
     />
 
     <AppCard>
-      <div class="p-3 space-y-3">
+      <div class="space-y-4">
+        <!-- حاوية البحث الذكي -->
         <div
-          class="w-full text-xs bg-[#e05e2b] p-1 rounded-lg shadow-[0_0_15px_rgba(224,94,43,0.25)] border border-[#e05e2b]"
+          class="w-full text-xs bg-primary p-1 rounded-xl shadow-md shadow-primary/20 border border-primary transition-all duration-200"
         >
           <SmartSearchGrid
             :data="searchableItems"
@@ -44,7 +45,7 @@
 
         <p
           v-if="getValidationError('items')"
-          class="p-2 bg-rose-950/40 text-rose-400 rounded-lg text-xs font-bold border border-rose-900/50"
+          class="p-2.5 bg-danger/10 text-danger rounded-lg text-xs font-bold border border-danger/30 shadow-sm"
         >
           {{ getValidationError('items') }}
         </p>
@@ -61,22 +62,21 @@
                 v-model="row.item_unit_id"
                 @change="syncUnitCostAndFields(row)"
                 :disabled="!row.available_units || row.available_units.length === 0"
-                style="color-scheme: dark"
-                class="w-full p-1 bg-transparent text-white border border-transparent hover:border-gray-500 focus:border-[#e05e2b] rounded-md text-xs font-bold outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed text-right appearance-none"
+                class="w-full p-1 bg-transparent text-text-primary border border-transparent hover:border-surface-border focus:border-primary focus:bg-surface-ground rounded-md text-xs font-bold outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed text-right appearance-none"
               >
-                <option value="" class="bg-[#16171b] text-gray-400">اختر الوحدة...</option>
+                <option value="" class="bg-surface-section text-text-muted">اختر الوحدة...</option>
                 <option
                   v-for="u in row.available_units"
                   :key="u.id"
                   :value="u.id"
-                  class="bg-[#16171b] text-white"
+                  class="bg-surface-section text-text-primary"
                 >
                   {{ u.unit_name || 'وحدة مجهولة' }}
                 </option>
               </select>
               <p
                 v-if="getValidationError(`items.${index}.item_unit_id`)"
-                class="text-rose-500 text-[9px] font-bold mt-0.5"
+                class="text-danger text-[9px] font-bold mt-0.5"
               >
                 الوحدة مطلوبة للسطر
               </p>
@@ -85,10 +85,10 @@
 
           <template #cell-quantity_difference="{ row }">
             <div class="w-full text-center font-mono font-black text-xs">
-              <span v-if="row.quantity_difference > 0" class="text-emerald-400">
+              <span v-if="row.quantity_difference > 0" class="text-success">
                 +{{ row.quantity_difference }} (فائض)
               </span>
-              <span v-else-if="row.quantity_difference < 0" class="text-rose-400">
+              <span v-else-if="row.quantity_difference < 0" class="text-danger">
                 {{ row.quantity_difference }} (عجز)
               </span>
               <span v-else class="text-text-muted">0.00</span>
@@ -171,7 +171,6 @@ const items = ref([])
 const searchableItems = computed(() => {
   if (!itemStore.items) return []
   return itemStore.items.map((item) => {
-    // استخراج وتجميع الباركودات المباشرة وتلك التابعة للوحدات
     const directBarcodes = Array.isArray(item.barcodes)
       ? item.barcodes.map((b) => (typeof b === 'object' ? b.barcode : b))
       : []
@@ -190,9 +189,7 @@ const searchableItems = computed(() => {
       ...item,
       id_display: `PRD-${item.id}`,
       name: item.name || '',
-      price_display: item.units?.[0]
-        ? `${parseFloat(item.units[0].price).toFixed(2)} د.ل`
-        : '0.00 د.ل',
+      price_display: item.units?.[0] ? `${parseFloat(item.units[0].price).toFixed(2)}` : '0.00',
       stock_display: item.current_stock !== undefined ? `${item.current_stock}` : '0',
       all_barcodes: allBarcodes,
     }
@@ -290,7 +287,6 @@ const { createEmptyRow, handleItemSelected, removeRow } = useDynamicDetails(item
   mergeQtyKey: null,
 })
 
-// حساب قيمة العجز التراكمي لأسطر الجدول لتغذية الـ Footer
 const totalShortageValue = computed(() => {
   return items.value.reduce((sum, row) => {
     const diff = parseFloat(row.quantity_difference) || 0
@@ -299,7 +295,6 @@ const totalShortageValue = computed(() => {
   }, 0)
 })
 
-// حساب قيمة الفائض التراكمي لأسطر الجدول لتغذية الـ Footer
 const totalSurplusValue = computed(() => {
   return items.value.reduce((sum, row) => {
     const diff = parseFloat(row.quantity_difference) || 0
@@ -370,22 +365,20 @@ onMounted(async () => {
     if (stockAdjustmentStore.currentStockAdjustment) {
       const cur = stockAdjustmentStore.currentStockAdjustment
 
-      items.value = cur.items.map((it) => {
-        return {
-          item_id_display: it.item_id ? `PRD-${it.item_id}` : '',
-          item_name: it.item_name || '',
-          item_id: it.item_id,
-          item_unit_id: it.item_unit_id,
-          book_quantity: parseFloat(it.book_quantity) || 0,
-          physical_quantity: parseFloat(it.physical_quantity) || 0,
-          quantity_difference: parseFloat(it.quantity_difference) || 0,
-          unit_cost: parseFloat(it.unit_cost) || 0,
-          available_units: it.available_units || [],
-          base_stock: parseFloat(it.current_stock) || 0,
-          available_stock: 0,
-          _flashing: false,
-        }
-      })
+      items.value = cur.items.map((it) => ({
+        item_id_display: it.item_id ? `PRD-${it.item_id}` : '',
+        item_name: it.item_name || '',
+        item_id: it.item_id,
+        item_unit_id: it.item_unit_id,
+        book_quantity: parseFloat(it.book_quantity) || 0,
+        physical_quantity: parseFloat(it.physical_quantity) || 0,
+        quantity_difference: parseFloat(it.quantity_difference) || 0,
+        unit_cost: parseFloat(it.unit_cost) || 0,
+        available_units: it.available_units || [],
+        base_stock: parseFloat(it.current_stock) || 0,
+        available_stock: 0,
+        _flashing: false,
+      }))
 
       form.value = {
         store_id: cur.store_id,
@@ -445,10 +438,5 @@ const handleCancel = () => {
 :deep(.smart-search-dropdown .text-right),
 :deep(table td:nth-child(2)) {
   text-align: right !important;
-}
-
-select option {
-  background-color: #1e293b !important;
-  color: #f8fafc !important;
 }
 </style>

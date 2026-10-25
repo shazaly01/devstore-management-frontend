@@ -1,28 +1,31 @@
+<!--src/views/stock-adjustments/components/StockAdjustmentFooter.vue-->
 <template>
   <div
-    class="p-3 bg-surface-ground/95 rounded-lg border border-primary/40 shadow-[0_0_12px_3px_rgba(30,129,255,0.15)] grid grid-cols-1 md:grid-cols-3 gap-3 items-start text-right transition-all duration-300"
+    class="p-4 bg-surface-section rounded-xl border border-surface-border shadow-sm grid grid-cols-1 md:grid-cols-3 gap-4 items-start text-right font-sans transition-all duration-200"
     dir="rtl"
   >
-    <div class="flex flex-col space-y-1 md:col-span-1">
-      <label class="text-[11px] font-black text-text-secondary"
-        >ملاحظات وبيان التسوية الجردية</label
-      >
+    <!-- 1. الملاحظات والبيان الجردي -->
+    <div class="flex flex-col space-y-1.5 md:col-span-1">
+      <label class="text-[11px] font-black text-text-secondary">
+        ملاحظات وبيان التسوية الجردية
+      </label>
       <textarea
         v-model="notesModel"
-        rows="2"
+        rows="3"
         placeholder="سجل أسباب الفروقات الجردية أو تفاصيل تسوية المستودع الحالية..."
-        class="block w-full px-3 py-1.5 border border-surface-border/70 rounded-md bg-surface-ground text-text-primary text-xs font-semibold focus:border-primary/60 outline-none transition-all resize-none focus:ring-1 focus:ring-primary/10"
+        class="block w-full p-2.5 border border-surface-border rounded-lg bg-surface-ground text-text-primary placeholder:text-text-muted text-xs font-semibold focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
       ></textarea>
     </div>
 
+    <!-- 2. تفاصيل الفحص وفروقات الكميات -->
     <div
-      class="p-2 bg-surface-ground rounded-md border border-surface-border/60 grid grid-cols-2 gap-2 md:col-span-1"
+      class="p-3 bg-surface-ground rounded-xl border border-surface-border grid grid-cols-2 gap-3 md:col-span-1"
     >
       <div class="flex flex-col space-y-1 col-span-2">
         <div class="flex justify-between items-center text-xs font-semibold text-text-secondary">
           <span>إجمالي بنود الفحص الجردي:</span>
           <span
-            class="font-mono font-bold text-text-primary bg-surface-card px-2 py-0.5 rounded border border-surface-border"
+            class="font-mono font-bold text-text-primary bg-surface-section px-2 py-0.5 rounded-lg border border-surface-border shadow-xs"
           >
             {{ totalItems }} أصناف
           </span>
@@ -30,39 +33,40 @@
       </div>
 
       <div class="flex flex-col space-y-1">
-        <label class="text-[11px] font-black text-rose-500">إجمالي قيمة العجز (-)</label>
+        <label class="text-[11px] font-black text-danger">إجمالي قيمة العجز (-)</label>
         <div
-          class="block w-full px-2 py-1.5 border border-surface-border/70 rounded-md bg-surface-ground font-mono text-left font-bold text-xs text-rose-500 bg-rose-950/10 border-rose-500/20"
+          class="block w-full px-2 py-2 border border-danger/30 rounded-lg bg-danger/10 font-mono text-left font-bold text-xs text-danger shadow-xs"
         >
           {{ formatCurrency(totalShortage) }}
         </div>
       </div>
 
       <div class="flex flex-col space-y-1">
-        <label class="text-[11px] font-black text-emerald-500">إجمالي قيمة الفائض (+)</label>
+        <label class="text-[11px] font-black text-success">إجمالي قيمة الفائض (+)</label>
         <div
-          class="block w-full px-2 py-1.5 border border-surface-border/70 rounded-md bg-surface-ground font-mono text-left font-bold text-xs text-emerald-500 bg-emerald-950/10 border-emerald-500/20"
+          class="block w-full px-2 py-2 border border-success/30 rounded-lg bg-success/10 font-mono text-left font-bold text-xs text-success shadow-xs"
         >
           {{ formatCurrency(totalSurplus) }}
         </div>
       </div>
     </div>
 
+    <!-- 3. الأثر المالي الإجمالي -->
     <div
-      class="p-2 bg-surface-ground rounded-md border border-surface-border/60 space-y-1.5 md:col-span-1 font-semibold text-xs"
+      class="p-3 bg-surface-ground rounded-xl border border-surface-border space-y-2 md:col-span-1 font-semibold text-xs h-full flex flex-col justify-between"
     >
-      <div class="flex justify-between border-b border-surface-border/40 pb-1 text-rose-500/90">
+      <div class="flex justify-between border-b border-surface-border/60 pb-1.5 text-danger">
         <span>خسائر عجز المخزون الحالية:</span>
         <span class="font-mono font-bold">{{ formatCurrency(totalShortage) }}</span>
       </div>
 
-      <div class="flex justify-between border-b border-surface-border/40 pb-1 text-emerald-500/90">
+      <div class="flex justify-between border-b border-surface-border/60 pb-1.5 text-success">
         <span>أرباح فائض المخزون الحالية:</span>
         <span class="font-mono font-bold">{{ formatCurrency(totalSurplus) }}</span>
       </div>
 
       <div
-        class="flex justify-between items-center p-1.5 rounded-md border transition-all duration-300"
+        class="flex justify-between items-center p-2 rounded-lg border transition-all duration-200 shadow-sm"
         :class="netImpactClass"
       >
         <span class="font-black text-[11px]">صافي تأثير التسوية المالي:</span>
@@ -71,7 +75,7 @@
         </span>
       </div>
 
-      <p v-if="getFieldError('items')" class="text-rose-500 text-[10px] text-center font-bold mt-1">
+      <p v-if="getFieldError('items')" class="text-danger text-[10px] text-center font-bold mt-1">
         {{ getFieldError('items') }}
       </p>
     </div>
@@ -82,33 +86,28 @@
 import { computed } from 'vue'
 import { formatCurrency } from '@/utils/formatters'
 
-// ارتباط الملاحظات ثنائي الاتجاه مع شاشة التسوية الجردية الأب
 const notesModel = defineModel('notes', { type: String, default: '' })
 
-// استقبال قيم الجرد والتسوية الممررة من الشاشة الأب (StockAdjustmentForm)
 const props = defineProps({
   totalItems: { type: Number, default: 0 },
-  totalShortage: { type: Number, default: 0 }, // قيمة العجز المالي التراكمي لأسطر الجدول
-  totalSurplus: { type: Number, default: 0 }, // قيمة الفائض المالي التراكمي لأسطر الجدول
+  totalShortage: { type: Number, default: 0 },
+  totalSurplus: { type: Number, default: 0 },
   validationErrors: { type: Object, default: () => null },
 })
 
-// احتساب صافي التأثير المالي النهائي لتوجيه الحسابات
 const netImpact = computed(() => {
   return props.totalSurplus - props.totalShortage
 })
 
-// ديناميكية تلوين الإطار والصافي بناءً على حالة الجرد الفعلي (فائض أم عجز) لإبهار الإدارة
 const netImpactClass = computed(() => {
   if (netImpact.value > 0) {
-    return 'bg-emerald-950/40 border-emerald-500/30 text-emerald-400 drop-shadow-[0_0_6px_rgba(16,185,129,0.25)]'
+    return 'bg-success/10 border-success/30 text-success'
   } else if (netImpact.value < 0) {
-    return 'bg-rose-950/40 border-rose-500/30 text-rose-400 drop-shadow-[0_0_6px_rgba(239,68,68,0.25)]'
+    return 'bg-danger/10 border-danger/30 text-danger'
   }
-  return 'bg-slate-900 border-surface-border text-text-primary'
+  return 'bg-surface-section border-surface-border text-text-primary'
 })
 
-// استخراج وفك رسائل الأخطاء الواردة من السيرفر
 const getFieldError = (path) => {
   if (!props.validationErrors) return null
   return props.validationErrors[path]?.[0] || null

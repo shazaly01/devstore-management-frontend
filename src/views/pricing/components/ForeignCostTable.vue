@@ -1,9 +1,9 @@
 <!-- src/views/pricing/components/ForeignCostTable.vue -->
 <template>
-  <AppCard>
+  <AppCard class="!p-0 overflow-hidden" dir="rtl">
     <!-- رأس الجدول والإحصائيات -->
     <div
-      class="p-4 border-b border-surface-border flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+      class="p-4 border-b border-surface-border flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-right"
     >
       <div>
         <h2 class="text-lg font-bold text-text-primary">معاينة ومطابقة التكلفة بالعملة الأجنبية</h2>
@@ -32,7 +32,7 @@
     >
       <!-- بيانات الصنف والتصنيف -->
       <template #cell-item_info="{ item }">
-        <div class="flex flex-col py-1">
+        <div class="flex flex-col py-1 text-right">
           <span class="font-bold text-text-primary text-sm">{{ item.item_name }}</span>
           <span class="text-xs text-text-muted">{{ item.category_name || 'عام' }}</span>
         </div>
@@ -40,9 +40,9 @@
 
       <!-- الوحدة ومعامل التحويل -->
       <template #cell-unit_name="{ item }">
-        <div class="flex flex-col items-start gap-0.5">
+        <div class="flex flex-col items-start gap-0.5 text-right">
           <span
-            class="text-xs font-semibold px-2 py-0.5 rounded bg-surface-ground border border-surface-border"
+            class="text-xs font-semibold px-2 py-0.5 rounded bg-surface-ground border border-surface-border text-text-secondary"
           >
             {{ item.unit_name }}
           </span>
@@ -54,7 +54,7 @@
 
       <!-- التكلفة المحلية وسعر البيع الحالي -->
       <template #cell-local_prices="{ item }">
-        <div class="flex flex-col text-xs font-mono">
+        <div class="flex flex-col text-xs font-mono text-right">
           <span class="font-bold text-text-primary">
             التكلفة: {{ formatNumber(item.current_cost) }}
           </span>
@@ -66,7 +66,7 @@
       <template #cell-current_foreign="{ item }">
         <div
           v-if="item.current_foreign_cost !== null"
-          class="flex items-center gap-1.5 font-mono text-xs"
+          class="flex items-center gap-1.5 font-mono text-xs text-right"
         >
           <span class="text-text-primary font-bold">
             {{ formatNumber(item.current_foreign_cost) }}
@@ -78,7 +78,7 @@
             {{ item.purchase_currency_code }}
           </span>
         </div>
-        <span v-else class="text-xs text-text-muted font-mono"> غير محددة </span>
+        <span v-else class="text-xs text-text-muted font-mono text-right block"> غير محددة </span>
       </template>
 
       <!-- التكلفة الأجنبية المقترحة (حقل إدخال فوري قابل للتعديل) -->
@@ -88,15 +88,15 @@
             :id="`suggested-foreign-cost-${item.item_unit_id}`"
             v-model="item.suggested_foreign_cost"
             :precision="4"
-            input-class="!py-1 text-xs"
+            input-class="!py-1 text-xs font-bold font-mono text-primary"
           />
         </div>
       </template>
 
       <!-- التكلفة المعاد تقديرها بالعملة المحلية بناءً على الصرف المدخل -->
       <template #cell-calculated_cost="{ item }">
-        <div class="flex flex-col text-xs font-mono">
-          <span class="font-bold text-emerald-600 dark:text-emerald-400">
+        <div class="flex flex-col text-xs font-mono text-right">
+          <span class="font-bold text-success">
             {{ formatNumber(item.suggested_foreign_cost * (selectedExchangeRate || 1)) }}
           </span>
           <span class="text-[10px] text-text-muted">بسعر الصرف المعتمد</span>
@@ -107,30 +107,34 @@
     <!-- شريط الترقيم والتنقل بين الصفحات -->
     <div
       v-if="editableItems.length > 0"
-      class="px-4 py-3 border-t border-surface-border flex flex-col sm:flex-row justify-between items-center gap-3 bg-surface-ground/50"
+      class="px-4 py-3 border-t border-surface-border flex flex-col sm:flex-row justify-between items-center gap-3 bg-surface-card text-xs text-text-muted"
     >
-      <div class="flex items-center gap-2 text-xs text-text-muted">
+      <div class="flex items-center gap-2">
         <span>عرض</span>
         <select
           v-model="perPage"
           @change="currentPage = 1"
-          class="bg-surface-section border border-surface-border rounded-lg text-xs font-bold py-1 px-2 text-text-primary outline-none focus:border-primary cursor-pointer"
+          class="bg-surface-ground border border-surface-border rounded-lg text-xs font-bold py-1 px-2 text-text-primary outline-none focus:border-primary cursor-pointer"
         >
-          <option :value="25">25</option>
-          <option :value="50">50</option>
-          <option :value="100">100</option>
-          <option :value="editableItems.length">الكل ({{ editableItems.length }})</option>
+          <option :value="25" class="bg-surface-section text-text-primary">25</option>
+          <option :value="50" class="bg-surface-section text-text-primary">50</option>
+          <option :value="100" class="bg-surface-section text-text-primary">100</option>
+          <option :value="editableItems.length" class="bg-surface-section text-text-primary">
+            الكل ({{ editableItems.length }})
+          </option>
         </select>
         <span>عنصر |</span>
         <span>
-          عرض <strong>{{ startIndex + 1 }}</strong> - <strong>{{ endIndex }}</strong> من أصل
-          <strong>{{ editableItems.length }}</strong> وحدة
+          عرض <strong class="text-text-primary">{{ startIndex + 1 }}</strong> -
+          <strong class="text-text-primary">{{ endIndex }}</strong> من أصل
+          <strong class="text-text-primary">{{ editableItems.length }}</strong> وحدة
         </span>
       </div>
 
       <div class="flex items-center gap-2">
-        <span class="text-xs text-text-muted font-medium">
-          صفحة <strong>{{ currentPage }}</strong> من <strong>{{ totalPages }}</strong>
+        <span class="font-medium">
+          صفحة <strong class="text-text-primary">{{ currentPage }}</strong> من
+          <strong class="text-text-primary">{{ totalPages }}</strong>
         </span>
 
         <div class="flex items-center gap-1">
@@ -177,7 +181,6 @@
           type="button"
           @click="handleApply"
           :disabled="isSaving || editableItems.length === 0"
-          class="bg-primary hover:bg-primary-hover text-white font-bold"
         >
           <span v-if="isSaving">جاري التثبيت والحفظ...</span>
           <span v-else

@@ -1,7 +1,8 @@
+<!-- src/views/pricing/components/BulkRepriceTable.vue -->
 <template>
-  <AppCard>
+  <AppCard class="!p-0 overflow-hidden" dir="rtl">
     <div
-      class="p-4 border-b border-surface-border flex flex-col md:flex-row justify-between items-start md:items-center gap-4"
+      class="p-4 border-b border-surface-border flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-right"
     >
       <div>
         <h2 class="text-lg font-bold text-text-primary">معاينة نتائج التسعير الجماعي</h2>
@@ -17,12 +18,12 @@
           <select
             v-model.number="perPage"
             @change="currentPage = 1"
-            class="bg-surface-ground border border-surface-border rounded-lg px-2 py-1 text-text-primary font-medium focus:outline-none focus:border-primary"
+            class="bg-surface-ground border border-surface-border rounded-lg px-2 py-1 text-text-primary font-medium focus:outline-none focus:border-primary cursor-pointer"
           >
-            <option :value="10">10</option>
-            <option :value="20">20</option>
-            <option :value="50">50</option>
-            <option :value="100">100</option>
+            <option :value="10" class="bg-surface-section text-text-primary">10</option>
+            <option :value="20" class="bg-surface-section text-text-primary">20</option>
+            <option :value="50" class="bg-surface-section text-text-primary">50</option>
+            <option :value="100" class="bg-surface-section text-text-primary">100</option>
           </select>
         </div>
 
@@ -41,7 +42,7 @@
       :row-clickable="false"
     >
       <template #cell-item_unit="{ item }">
-        <div class="flex flex-col gap-1 py-1">
+        <div class="flex flex-col gap-1 py-1 text-right">
           <span class="font-bold text-text-primary text-sm leading-snug">{{ item.item_name }}</span>
           <div class="flex items-center gap-2 flex-wrap">
             <span class="text-xs text-text-muted">{{ item.category_name || 'عام' }}</span>
@@ -62,7 +63,7 @@
       </template>
 
       <template #cell-cost_details="{ item }">
-        <div class="flex flex-col gap-1 py-1 font-mono text-xs w-44">
+        <div class="flex flex-col gap-1 py-1 font-mono text-xs w-44 text-right">
           <div class="flex items-center justify-between gap-2">
             <span class="text-text-muted text-[11px]">الحالية:</span>
             <span class="text-text-secondary font-medium">{{
@@ -72,7 +73,7 @@
 
           <div
             v-if="item.expected_cost !== item.current_cost"
-            class="flex items-center justify-between gap-2 text-emerald-600 dark:text-emerald-400 font-bold"
+            class="flex items-center justify-between gap-2 text-success font-bold"
           >
             <span class="text-[11px]">الجديدة:</span>
             <span>{{ formatNumber(item.expected_cost) }}</span>
@@ -112,7 +113,7 @@
           <div class="flex items-center justify-between gap-1 text-[11px] font-mono">
             <span
               :class="
-                item.current_margin_percentage <= 0 ? 'text-rose-500 font-bold' : 'text-text-muted'
+                item.current_margin_percentage <= 0 ? 'text-danger font-bold' : 'text-text-muted'
               "
             >
               {{ formatNumber(item.current_margin_percentage) }}%
@@ -120,12 +121,12 @@
             <span class="text-text-muted text-[10px]">&larr;</span>
             <span
               :class="[
-                'font-bold px-1.5 py-0.5 rounded text-[10px]',
+                'font-bold px-1.5 py-0.5 rounded text-[10px] border',
                 item.expected_margin_percentage > item.current_margin_percentage
-                  ? 'bg-emerald-50 text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-400'
+                  ? 'bg-success/10 text-success border-success/30'
                   : item.expected_margin_percentage < item.current_margin_percentage
-                    ? 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-400'
-                    : 'bg-surface-ground text-text-primary',
+                    ? 'bg-warning/10 text-warning border-warning/30'
+                    : 'bg-surface-ground text-text-primary border-surface-border',
               ]"
             >
               {{ formatNumber(item.expected_margin_percentage) }}%
@@ -136,7 +137,7 @@
 
       <!-- 4. التسعير المقترح وفارق السعر -->
       <template #cell-price_details="{ item }">
-        <div class="flex flex-col gap-1.5 py-1 w-44">
+        <div class="flex flex-col gap-1.5 py-1 w-44 text-right">
           <div>
             <AppCurrencyInput
               :id="`suggested-price-${item.item_id}-${item.item_unit_id}`"
@@ -160,9 +161,9 @@
               :class="[
                 'font-bold text-[11px]',
                 item.suggested_price - item.current_price > 0
-                  ? 'text-emerald-600'
+                  ? 'text-success'
                   : item.suggested_price - item.current_price < 0
-                    ? 'text-rose-600'
+                    ? 'text-danger'
                     : 'text-text-muted',
               ]"
             >
@@ -181,6 +182,7 @@
       </template>
     </AppTable>
 
+    <!-- الترقيم والصفحات -->
     <div
       v-if="editableItems.length > 0"
       class="px-4 py-3 border-t border-surface-border flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-text-muted bg-surface-card"
@@ -196,7 +198,7 @@
           type="button"
           @click="currentPage = 1"
           :disabled="currentPage === 1"
-          class="px-2.5 py-1 rounded border border-surface-border bg-surface-ground hover:bg-surface-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          class="px-2.5 py-1 rounded border border-surface-border bg-surface-ground hover:bg-surface-section text-text-secondary disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
         >
           &laquo;
         </button>
@@ -205,7 +207,7 @@
           type="button"
           @click="currentPage--"
           :disabled="currentPage === 1"
-          class="px-2.5 py-1 rounded border border-surface-border bg-surface-ground hover:bg-surface-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          class="px-2.5 py-1 rounded border border-surface-border bg-surface-ground hover:bg-surface-section text-text-secondary disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
         >
           السابق
         </button>
@@ -217,10 +219,10 @@
             type="button"
             @click="currentPage = page"
             :class="[
-              'w-7 h-7 rounded border font-bold text-xs flex items-center justify-center transition-colors',
+              'w-7 h-7 rounded border font-bold text-xs flex items-center justify-center transition-colors cursor-pointer',
               currentPage === page
                 ? 'bg-primary text-white border-primary'
-                : 'border-surface-border bg-surface-ground hover:bg-surface-border text-text-secondary',
+                : 'border-surface-border bg-surface-ground hover:bg-surface-section text-text-secondary',
             ]"
           >
             {{ page }}
@@ -231,7 +233,7 @@
           type="button"
           @click="currentPage++"
           :disabled="currentPage === totalPages"
-          class="px-2.5 py-1 rounded border border-surface-border bg-surface-ground hover:bg-surface-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          class="px-2.5 py-1 rounded border border-surface-border bg-surface-ground hover:bg-surface-section text-text-secondary disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
         >
           التالي
         </button>
@@ -240,13 +242,14 @@
           type="button"
           @click="currentPage = totalPages"
           :disabled="currentPage === totalPages"
-          class="px-2.5 py-1 rounded border border-surface-border bg-surface-ground hover:bg-surface-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+          class="px-2.5 py-1 rounded border border-surface-border bg-surface-ground hover:bg-surface-section text-text-secondary disabled:opacity-40 disabled:cursor-not-allowed transition-colors cursor-pointer"
         >
           &raquo;
         </button>
       </div>
     </div>
 
+    <!-- شريط الإجراءات السفلي -->
     <div
       v-if="editableItems.length > 0"
       class="p-4 bg-surface-ground border-t border-surface-border flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4"
@@ -268,9 +271,9 @@
 
         <AppButton
           type="button"
+          variant="success"
           @click="handleApply"
           :disabled="isSaving || editableItems.length === 0"
-          class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
         >
           <span v-if="isSaving">جاري اعتماد وحفظ الأسعار...</span>
           <span v-else>اعتماد وتطبيق الأسعار الجديدة ({{ editableItems.length }})</span>
@@ -301,11 +304,9 @@ const emit = defineEmits(['apply', 'cancel'])
 const editableItems = ref([])
 const notes = ref('')
 
-// إعدادات الصفحات
 const currentPage = ref(1)
 const perPage = ref(20)
 
-// تعريف الأعمدة المدمجة (4 أعمدة واضحة وشاملة)
 const tableHeaders = [
   { key: 'item_unit', label: 'الصنف والوحدة' },
   { key: 'cost_details', label: 'التكلفة (الحالية / المتوقعة)' },
@@ -313,7 +314,6 @@ const tableHeaders = [
   { key: 'price_details', label: 'السعر المقترح وفارق السعر' },
 ]
 
-// مزامنة البيانات عند ورود نتائج معاينة جديدة
 watch(
   () => props.previewData,
   (newData) => {
@@ -337,7 +337,6 @@ watch(
   { immediate: true, deep: true },
 )
 
-// حسابات الصفحات
 const totalPages = computed(() => {
   return Math.ceil(editableItems.value.length / perPage.value) || 1
 })
@@ -358,7 +357,6 @@ const paginationTo = computed(() => {
   return to > editableItems.value.length ? editableItems.value.length : to
 })
 
-// توليد أزرار أرقام الصفحات الذكية (حد أقصى 5 أزرار متجاورة)
 const visiblePages = computed(() => {
   const total = totalPages.value
   const current = currentPage.value
@@ -382,7 +380,6 @@ const visiblePages = computed(() => {
   return pages
 })
 
-// عند تعديل هامش الربح للصنف: تحديث السعر المقترح والهامش المتوقع فورياً
 const handleMarginChange = (item) => {
   const cost = Number(item.expected_cost ?? item.current_cost) || 0
   const margin = Number(item.profit_margin) || 0
@@ -394,7 +391,6 @@ const handleMarginChange = (item) => {
   }
 }
 
-// عند تعديل السعر المقترح مباشرة: تحديث هامش الربح المحقق فورياً
 const handlePriceChange = (item) => {
   const price = Number(item.suggested_price) || 0
   const cost = Number(item.expected_cost ?? item.current_cost) || 0
@@ -410,7 +406,6 @@ const handlePriceChange = (item) => {
   }
 }
 
-// تنسيق الأرقام
 const formatNumber = (val) => {
   if (val === null || val === undefined || isNaN(val)) return '0.00'
   return Number(val).toLocaleString('en-US', {
@@ -419,7 +414,6 @@ const formatNumber = (val) => {
   })
 }
 
-// تجهيز الـ Payload واعتماد كافة التعديلات في جميع الصفحات
 const handleApply = () => {
   const payload = {
     currency_id: props.selectedCurrencyId ? Number(props.selectedCurrencyId) : null,

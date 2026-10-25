@@ -10,7 +10,7 @@
   >
     <div
       v-if="modelValue"
-      class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4"
+      class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
       @click.self="close"
     >
       <Transition
@@ -23,15 +23,16 @@
         leave-to-class="opacity-0 scale-95"
       >
         <div
-          class="bg-surface-section rounded-2xl shadow-2xl p-6 w-full max-w-lg border border-surface-border transform"
+          class="bg-surface-section rounded-2xl shadow-2xl p-6 w-full max-w-lg border border-surface-border transform text-right font-sans"
           role="dialog"
           aria-modal="true"
+          dir="rtl"
         >
           <!-- رأس النافذة المنبثقة -->
           <div class="flex justify-between items-center border-b border-surface-border pb-3 mb-4">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2.5">
               <div
-                class="w-8 h-8 rounded-lg bg-rose-100 dark:bg-rose-950/50 text-rose-600 flex items-center justify-center"
+                class="w-9 h-9 rounded-lg bg-danger/10 text-danger border border-danger/20 flex items-center justify-center shrink-0"
               >
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -44,7 +45,7 @@
               </div>
               <div>
                 <h3 class="text-base font-bold text-text-primary">التراجع عن مجموعة التسعير</h3>
-                <p class="text-xs text-text-muted">
+                <p class="text-xs text-text-muted mt-0.5">
                   إلغاء واعتماد الأسعار والتكاليف السابقة لكافة أصناف هذه المجموعة
                 </p>
               </div>
@@ -53,7 +54,7 @@
             <button
               type="button"
               @click="close"
-              class="text-text-muted hover:text-text-primary p-1 rounded-full hover:bg-surface-ground transition-colors"
+              class="text-text-muted hover:text-text-primary p-1.5 rounded-lg hover:bg-surface-ground transition-colors cursor-pointer"
               aria-label="إغلاق"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -80,7 +81,7 @@
             </div>
             <div class="flex justify-between items-center" v-if="batchData.currency_code">
               <span class="text-text-muted">سعر الصرف المعتمد:</span>
-              <span class="font-mono font-bold text-emerald-600 dark:text-emerald-400">
+              <span class="font-mono font-bold text-success">
                 {{ formatNumber(batchData.exchange_rate) }} ({{ batchData.currency_code }})
               </span>
             </div>
@@ -100,7 +101,7 @@
           <form @submit.prevent="handleSubmit" class="space-y-4">
             <!-- تنبيه تحذيري -->
             <div
-              class="p-3 bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900 rounded-xl text-rose-700 dark:text-rose-400 text-xs leading-relaxed"
+              class="p-3 bg-danger/10 border border-danger/30 rounded-xl text-danger text-xs leading-relaxed"
             >
               <span class="font-bold">تنبيه أمان:</span> سيقوم هذا الإجراء باسترجاع الأسعار
               والتكاليف السابقة تلقائياً لجميع الأصناف التابعة لهذه المجموعة وإغلاقها كدفعة تم
@@ -119,13 +120,13 @@
                 rows="3"
                 v-model="form.notes"
                 placeholder="اكتب سبب إلغاء هذه المجموعة (مثال: تصحيح خطأ بسعر صرف العملة)..."
-                class="block w-full rounded-xl shadow-xs py-2 px-3 transition-all duration-200 text-xs focus:outline-none bg-surface-ground border border-surface-border text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-rose-500 focus:border-rose-500"
+                class="block w-full rounded-xl py-2 px-3 transition-all duration-200 text-xs focus:outline-none bg-surface-ground border border-surface-border text-text-primary placeholder:text-text-muted focus:ring-2 focus:ring-danger/20 focus:border-danger resize-none"
               ></textarea>
               <div v-if="validationErrors?.notes">
                 <p
                   v-for="(error, index) in validationErrors.notes"
                   :key="index"
-                  class="text-rose-500 text-xs mt-1 font-bold"
+                  class="text-danger text-xs mt-1 font-bold"
                 >
                   {{ error }}
                 </p>
@@ -141,8 +142,8 @@
               </AppButton>
               <AppButton
                 type="submit"
+                variant="danger"
                 :disabled="isSaving || (!form.main_id && !form.batch_code)"
-                class="bg-rose-600 hover:bg-rose-700 text-white font-bold"
               >
                 <span v-if="isSaving">جاري استرجاع الأسعار...</span>
                 <span v-else>تأكيد التراجع الآن</span>

@@ -1,4 +1,4 @@
-<!--src\views\vouchers\VoucherTable.vue--->
+<!--src/views/vouchers/VoucherTable.vue-->
 <template>
   <AppCard>
     <AppTable
@@ -9,7 +9,7 @@
       @row-click="$emit('row-clicked', $event)"
     >
       <template #cell-voucher_info="{ item }">
-        <div class="flex flex-col gap-1 py-1">
+        <div class="flex flex-col gap-1 py-1 text-right" dir="rtl">
           <span class="font-bold text-text-primary text-base font-mono leading-tight">
             {{ item.voucher_number }}
           </span>
@@ -19,27 +19,19 @@
 
       <template #cell-type_badge="{ item }">
         <div class="flex items-center">
-          <span
-            :class="[
-              'px-2.5 py-0.5 text-xs font-bold rounded-full border flex items-center gap-1',
-              item.voucher_type === 'receipt'
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                : 'bg-rose-50 text-rose-700 border-rose-100',
-            ]"
+          <AppBadge
+            :variant="item.voucher_type === 'receipt' ? 'success' : 'danger'"
+            size="xs"
+            pill
+            dot
           >
-            <span
-              :class="[
-                'w-1.5 h-1.5 rounded-full',
-                item.voucher_type === 'receipt' ? 'bg-emerald-500' : 'bg-rose-500',
-              ]"
-            ></span>
             {{ item.voucher_type_lbl }}
-          </span>
+          </AppBadge>
         </div>
       </template>
 
       <template #cell-accounting_info="{ item }">
-        <div class="flex flex-col justify-center">
+        <div class="flex flex-col justify-center text-right" dir="rtl">
           <!-- العنوان الرئيسي: يظهر اسم الحساب المساعد الفعلي (عميل/مورد/مصروف) مباشرة -->
           <span class="font-bold text-sm text-text-primary">
             {{ item.sub_ledger_name || item.account_name || '-' }}
@@ -55,7 +47,7 @@
       </template>
 
       <template #cell-fund_info="{ item }">
-        <div class="flex flex-col justify-center">
+        <div class="flex flex-col justify-center text-right" dir="rtl">
           <span class="text-xs font-bold text-text-secondary">
             {{ item.payment_method_lbl }}
           </span>
@@ -66,11 +58,11 @@
       </template>
 
       <template #cell-financials="{ item }">
-        <div class="flex flex-col justify-center">
+        <div class="flex flex-col justify-center text-right" dir="rtl">
           <span
             :class="[
               'font-mono font-bold text-base',
-              item.voucher_type === 'receipt' ? 'text-emerald-600' : 'text-rose-600',
+              item.voucher_type === 'receipt' ? 'text-success' : 'text-danger',
             ]"
           >
             {{ item.voucher_type === 'receipt' ? '+' : '-' }} {{ formatCurrency(item.amount || 0) }}
@@ -79,13 +71,13 @@
       </template>
 
       <template #cell-date_info="{ item }">
-        <div class="flex flex-col justify-center min-w-[140px]">
-          <span class="text-xs text-text-primary font-mono">{{
-            item.voucher_date.split(' ')[0]
-          }}</span>
-          <span class="text-[11px] text-text-muted mt-0.5"
-            >بواسطة: {{ item.user_name || '-' }}</span
-          >
+        <div class="flex flex-col justify-center min-w-[140px] text-right" dir="rtl">
+          <span class="text-xs text-text-primary font-mono">
+            {{ item.voucher_date.split(' ')[0] }}
+          </span>
+          <span class="text-[11px] text-text-muted mt-0.5">
+            بواسطة: {{ item.user_name || '-' }}
+          </span>
         </div>
       </template>
 
@@ -93,7 +85,7 @@
         <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <button
             @click="$emit('print-voucher', item)"
-            class="p-1.5 text-purple-500 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+            class="p-1.5 text-text-secondary hover:text-text-primary hover:bg-surface-ground rounded-lg transition-colors cursor-pointer"
             title="طباعة السند المالي المعتمد A5"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -109,7 +101,7 @@
           <button
             v-if="authStore.can('voucher.update')"
             @click="$emit('edit-voucher', item)"
-            class="p-1.5 text-sky-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل السند المالي"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -125,7 +117,7 @@
           <button
             v-if="authStore.can('voucher.delete')"
             @click="$emit('delete-voucher', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="حذف السند"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -150,6 +142,7 @@ import { computed } from 'vue'
 import { useAuthStore } from '@/stores/authStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
 import { formatCurrency } from '@/utils/formatters'
 

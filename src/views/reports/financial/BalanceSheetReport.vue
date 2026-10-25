@@ -1,11 +1,13 @@
+<!--src/views/reports/financial/BalanceSheetReport.vue-->
 <template>
-  <div class="space-y-6 print:hidden">
-    <div class="flex justify-between items-center">
+  <div class="space-y-6 print:hidden text-right font-sans" dir="rtl">
+    <!-- الترويسة العلوية -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
-        <h1 class="text-3xl font-black text-white tracking-tight">
+        <h1 class="text-2xl font-black text-text-primary tracking-tight">
           الميزانية العمومية / المركز المالي
         </h1>
-        <p class="text-sm text-gray-400 mt-1">
+        <p class="text-xs text-text-muted mt-1">
           عرض الموقف المالي للمنشأة وتقييم الأصول مقابل الخصوم وحقوق الملكية
         </p>
       </div>
@@ -13,131 +15,125 @@
         <AppButton
           @click="handlePrint"
           :disabled="!balanceSheetSummary"
-          class="bg-indigo-500 hover:bg-indigo-400 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)] disabled:opacity-50"
+          class="flex items-center gap-2"
         >
-          <PrinterIcon class="w-5 h-5 ml-2" />
+          <PrinterIcon class="w-4 h-4 ml-1" />
           طباعة المركز المالي
         </AppButton>
       </div>
     </div>
 
-    <AppCard class="border border-gray-800 bg-surface-section/60 p-5 backdrop-blur-sm">
+    <!-- بطاقة الفلاتر -->
+    <AppCard>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
         <div class="md:col-span-2">
-          <label class="block text-xs font-bold text-gray-400 uppercase mb-2">
+          <label class="block text-xs font-bold text-text-secondary uppercase mb-2">
             الميزانية موقوفة حتى تاريخ
           </label>
           <input
             type="date"
             v-model="filters.to_date"
-            class="w-full bg-surface-background border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 text-sm"
-            style="color-scheme: dark"
+            class="block w-full h-10 px-3 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-xs font-bold font-mono outline-none transition-all cursor-pointer shadow-sm"
           />
         </div>
 
         <div>
           <AppButton
             @click="handleFetch"
-            :loading="loading"
-            class="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold shadow-[0_0_15px_rgba(34,211,238,0.3)]"
+            :disabled="loading"
+            class="w-full h-10 flex items-center justify-center font-bold shadow-sm"
           >
-            <ArrowPathIcon class="w-5 h-5 ml-2" :class="{ 'animate-spin': loading }" />
+            <ArrowPathIcon class="w-4 h-4 ml-2" :class="{ 'animate-spin': loading }" />
             توليد الميزانية العمومية
           </AppButton>
         </div>
       </div>
     </AppCard>
 
+    <!-- بطاقات مؤشرات المركز المالي -->
     <div v-if="balanceSheetSummary" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <AppCard class="p-4 border-r-4 border-r-cyan-500 bg-surface-section/60 shadow-lg">
-        <div class="text-[10px] text-cyan-300/60 font-bold uppercase mb-1">
+      <AppCard class="p-4 border-r-4 border-r-primary bg-surface-section shadow-sm">
+        <div class="text-[10px] text-primary font-bold uppercase mb-1">
           إجمالي الأصول والجرود (+)
         </div>
-        <div class="text-xl font-black text-cyan-400 font-mono">
+        <div class="text-xl font-black text-primary font-mono">
           {{ formatCurrency(balanceSheetSummary.total_assets) }}
         </div>
       </AppCard>
 
-      <AppCard class="p-4 border-r-4 border-r-indigo-500 bg-surface-section/60 shadow-lg">
-        <div class="text-[10px] text-indigo-300/60 font-bold uppercase mb-1">
+      <AppCard class="p-4 border-r-4 border-r-info bg-surface-section shadow-sm">
+        <div class="text-[10px] text-info font-bold uppercase mb-1">
           أرباح النشاط للفترة الحالية
         </div>
-        <div class="text-xl font-black text-indigo-400 font-mono">
+        <div class="text-xl font-black text-info font-mono">
           {{ formatCurrency(balanceSheetSummary.current_period_net_profit) }}
         </div>
       </AppCard>
 
-      <AppCard class="p-4 border-r-4 border-r-fuchsia-500 bg-surface-section/60 shadow-lg">
-        <div class="text-[10px] text-fuchsia-300/60 font-bold uppercase mb-1">
+      <AppCard class="p-4 border-r-4 border-r-warning bg-surface-section shadow-sm">
+        <div class="text-[10px] text-warning font-bold uppercase mb-1">
           إجمالي الخصوم وحقوق الملكية
         </div>
-        <div class="text-xl font-black text-fuchsia-400 font-mono">
+        <div class="text-xl font-black text-warning font-mono">
           {{ formatCurrency(balanceSheetSummary.total_liabilities_and_equity) }}
         </div>
       </AppCard>
 
       <AppCard
-        class="p-4 border-r-4 bg-surface-section/60 transition-all duration-300 shadow-lg"
-        :class="
-          balanceSheetSummary.is_perfectly_balanced
-            ? 'border-r-emerald-500 shadow-[0_0_12px_rgba(52,211,153,0.15)]'
-            : 'border-r-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.15)]'
-        "
+        class="p-4 border-r-4 bg-surface-section transition-all duration-300 shadow-sm"
+        :class="balanceSheetSummary.is_perfectly_balanced ? 'border-r-success' : 'border-r-danger'"
       >
         <div
           class="text-[10px] font-bold uppercase mb-1"
-          :class="
-            balanceSheetSummary.is_perfectly_balanced ? 'text-emerald-300/60' : 'text-rose-300/60'
-          "
+          :class="balanceSheetSummary.is_perfectly_balanced ? 'text-success' : 'text-danger'"
         >
           حالة توازن المركز المالي
         </div>
         <div
           class="text-lg font-black"
-          :class="
-            balanceSheetSummary.is_perfectly_balanced
-              ? 'text-emerald-400 drop-shadow-[0_0_4px_rgba(52,211,153,0.5)]'
-              : 'text-rose-400 drop-shadow-[0_0_4px_rgba(251,113,133,0.5)]'
-          "
+          :class="balanceSheetSummary.is_perfectly_balanced ? 'text-success' : 'text-danger'"
         >
           {{ balanceSheetSummary.is_perfectly_balanced ? 'ميزانية متزنة ✓' : 'يوجد فارق غير متزن' }}
         </div>
       </AppCard>
     </div>
 
+    <!-- جداول المقارنة الثنائية (الأصول مقابل الخصوم) -->
     <div v-if="balanceSheetData" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <AppCard class="border border-gray-800 bg-surface-section/40 backdrop-blur-sm p-4">
-        <div class="flex justify-between items-center mb-3 border-b border-gray-800 pb-2">
-          <h3 class="text-sm font-bold text-cyan-400 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></span>
+      <!-- جانب الأصول -->
+      <AppCard class="p-4">
+        <div class="flex justify-between items-center mb-3 border-b border-surface-border pb-2">
+          <h3 class="text-sm font-bold text-primary flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
             الأصــــول / الـمـوجــودات (1)
           </h3>
-          <span class="text-xs font-mono font-bold text-gray-400" v-if="balanceSheetSummary">
+          <span class="text-xs font-mono font-bold text-text-muted" v-if="balanceSheetSummary">
             الكامل: {{ formatCurrency(balanceSheetSummary.total_assets) }}
           </span>
         </div>
         <AppTable :headers="tableHeaders" :items="balanceSheetData.assets" :is-loading="loading">
           <template #cell-code="{ item }">
-            <span class="font-mono text-xs text-gray-500">{{ item.code }}</span>
+            <span class="font-mono text-xs text-text-muted">#{{ item.code }}</span>
           </template>
           <template #cell-name="{ item }">
-            <span class="font-medium text-gray-200 text-xs">{{ item.name }}</span>
+            <span class="font-bold text-text-primary text-xs">{{ item.name }}</span>
           </template>
           <template #cell-balance="{ item }">
-            <span class="font-mono text-xs font-bold text-cyan-300">
+            <span class="font-mono text-xs font-bold text-primary">
               {{ formatCurrency(item.balance) }}
             </span>
           </template>
         </AppTable>
       </AppCard>
 
-      <AppCard class="border border-gray-800 bg-surface-section/40 backdrop-blur-sm p-4">
-        <div class="flex justify-between items-center mb-3 border-b border-gray-800 pb-2">
-          <h3 class="text-sm font-bold text-fuchsia-400 flex items-center gap-2">
-            <span class="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse"></span>
+      <!-- جانب الخصوم وحقوق الملكية -->
+      <AppCard class="p-4">
+        <div class="flex justify-between items-center mb-3 border-b border-surface-border pb-2">
+          <h3 class="text-sm font-bold text-warning flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-warning animate-pulse"></span>
             الخصوم والالتزامات ورأس المال (2)
           </h3>
-          <span class="text-xs font-mono font-bold text-gray-400" v-if="balanceSheetSummary">
+          <span class="text-xs font-mono font-bold text-text-muted" v-if="balanceSheetSummary">
             الكامل: {{ formatCurrency(balanceSheetSummary.total_liabilities_and_equity) }}
           </span>
         </div>
@@ -147,13 +143,13 @@
           :is-loading="loading"
         >
           <template #cell-code="{ item }">
-            <span class="font-mono text-xs text-gray-500">{{ item.code }}</span>
+            <span class="font-mono text-xs text-text-muted">#{{ item.code }}</span>
           </template>
           <template #cell-name="{ item }">
-            <span class="font-medium text-gray-200 text-xs">{{ item.name }}</span>
+            <span class="font-bold text-text-primary text-xs">{{ item.name }}</span>
           </template>
           <template #cell-balance="{ item }">
-            <span class="font-mono text-xs font-bold text-fuchsia-300">
+            <span class="font-mono text-xs font-bold text-warning">
               {{ formatCurrency(item.balance) }}
             </span>
           </template>
@@ -161,12 +157,10 @@
 
         <div
           v-if="balanceSheetSummary"
-          class="mt-2 p-2 bg-indigo-950/20 border border-indigo-900/40 rounded flex justify-between items-center text-xs"
+          class="mt-3 p-2.5 bg-info/10 border border-info/30 rounded-lg flex justify-between items-center text-xs shadow-xs"
         >
-          <span class="text-indigo-300 font-bold">
-            (+) صافي أرباح النشاط الدورية المحتجزة للخصوم:
-          </span>
-          <span class="font-mono font-bold text-indigo-400">
+          <span class="text-info font-bold"> (+) صافي أرباح النشاط الدورية المحتجزة للخصوم: </span>
+          <span class="font-mono font-bold text-info">
             {{ formatCurrency(balanceSheetSummary.current_period_net_profit) }}
           </span>
         </div>
@@ -194,7 +188,6 @@ const filters = ref({
   to_date: '',
 })
 
-// ربط متجر استدعاء الميزانية العمومية
 const { balanceSheetData, balanceSheetSummary, loading } = storeToRefs(reportStore)
 
 const tableHeaders = [
@@ -242,7 +235,6 @@ const handlePrint = () => {
     })
   }
 
-  // إضافة سطر الأرباح الدورية المحتجزة في كشف الطباعة
   printItems.push({
     id: '3999',
     name: 'صافي أرباح النشاط المالية للفترة الجارية',
@@ -280,11 +272,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
-:deep(.AppTable th) {
-  @apply text-gray-400 font-bold uppercase tracking-wider text-xs border-b border-gray-800;
+:global(.dark input[type='date']::-webkit-calendar-picker-indicator) {
+  filter: invert(1);
 }
 
-:deep(.AppTable td) {
-  @apply py-3 border-b border-gray-800/40;
+input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
 }
 </style>

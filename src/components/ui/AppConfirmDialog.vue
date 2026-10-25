@@ -1,17 +1,16 @@
+<!--src/components/ui/AppConfirmDialog.vue-->
 <template>
-  <div
-    v-if="isOpen"
-    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
-  >
+  <div v-if="isOpen" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
     <div
-      class="bg-surface-section rounded-lg shadow-xl p-6 w-full max-w-sm transform transition-all duration-300 scale-95"
+      class="bg-surface-section border border-surface-border rounded-xl shadow-2xl p-6 w-full max-w-sm transform transition-all duration-300 scale-95 text-right font-sans"
       :class="{ 'scale-100': isOpen }"
+      dir="rtl"
     >
-      <h3 class="text-lg font-semibold text-gray-900 dark:text-text-primary mb-4">{{ title }}</h3>
-      <p class="text-sm text-gray-700 dark:text-text-secondary mb-6">{{ message }}</p>
-      <div class="flex justify-end space-x-3 space-x-reverse">
-        <AppButton variant="outline" @click="cancel">إلغاء</AppButton>
-        <AppButton variant="danger" @click="confirm">تأكيد</AppButton>
+      <h3 class="text-lg font-bold text-text-primary mb-2">{{ title }}</h3>
+      <p class="text-xs leading-relaxed text-text-secondary mb-6">{{ message }}</p>
+      <div class="flex justify-end space-x-2 space-x-reverse">
+        <AppButton variant="outline" size="sm" @click="cancel">إلغاء</AppButton>
+        <AppButton variant="danger" size="sm" @click="confirm">تأكيد</AppButton>
       </div>
     </div>
   </div>
@@ -19,11 +18,10 @@
 
 <script setup>
 import { ref, watch } from 'vue'
-import AppButton from './AppButton.vue' // تأكد من المسار الصحيح لـ AppButton
+import AppButton from './AppButton.vue'
 
 const props = defineProps({
   modelValue: {
-    // لربطها بـ v-model
     type: Boolean,
     default: false,
   },

@@ -1,44 +1,60 @@
+<!--src/views/journal-entries/JournalEntryHeader.vue-->
 <template>
   <div
-    class="p-3 bg-surface-ground/95 rounded-lg border border-primary/40 shadow-[0_0_12px_3px_rgba(30,129,255,0.15)] grid grid-cols-1 md:grid-cols-3 gap-3 text-right items-end transition-all duration-300"
+    class="p-4 bg-surface-section rounded-xl border border-surface-border shadow-sm grid grid-cols-1 md:grid-cols-3 gap-4 text-right items-end transition-all duration-200"
     dir="rtl"
   >
-    <div class="flex flex-col space-y-1">
+    <!-- رقم السند / القيد -->
+    <div class="flex flex-col space-y-1.5">
       <label class="text-[11px] font-black text-text-secondary">رقم السند / القيد *</label>
       <input
         type="text"
         v-model="formData.entry_number"
         placeholder="أدخل رقم القيد المالي..."
-        class="block w-full px-2 py-1.5 border border-surface-border/80 rounded-md bg-surface-ground text-text-primary focus:border-primary text-xs font-bold outline-none transition-all focus:ring-1 focus:ring-primary/20"
+        class="block w-full h-10 px-3 border border-surface-border rounded-lg bg-surface-ground text-text-primary placeholder:text-text-muted focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-xs font-bold outline-none transition-all shadow-sm"
       />
-      <p v-if="getFieldError('entry_number')" class="text-rose-500 text-[10px] font-bold mt-0.5">
+      <p v-if="getFieldError('entry_number')" class="text-danger text-[10px] font-bold mt-0.5">
         {{ getFieldError('entry_number') }}
       </p>
     </div>
 
-    <div class="flex flex-col space-y-1">
+    <!-- نوع المعاملة -->
+    <div class="flex flex-col space-y-1.5">
       <label class="text-[11px] font-black text-text-secondary">نوع المعاملة *</label>
-      <select
-        v-model="formData.type"
-        class="block w-full px-2 py-1.5 border border-surface-border/80 rounded-md bg-surface-ground text-text-primary focus:border-primary text-xs font-bold outline-none transition-all appearance-none cursor-pointer focus:ring-1 focus:ring-primary/20"
-      >
-        <option value="journal">قيد يومية عام (Journal)</option>
-        <option value="receipt">سند قبض (Receipt)</option>
-        <option value="payment">سند صرف (Payment)</option>
-      </select>
-      <p v-if="getFieldError('type')" class="text-rose-500 text-[10px] font-bold mt-0.5">
+      <div class="relative w-full">
+        <select
+          v-model="formData.type"
+          class="block w-full h-10 pr-3 pl-8 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-xs font-bold outline-none transition-all appearance-none cursor-pointer shadow-sm"
+        >
+          <option value="journal" class="bg-surface-section text-text-primary">
+            قيد يومية عام (Journal)
+          </option>
+          <option value="receipt" class="bg-surface-section text-text-primary">
+            سند قبض (Receipt)
+          </option>
+          <option value="payment" class="bg-surface-section text-text-primary">
+            سند صرف (Payment)
+          </option>
+        </select>
+        <span
+          class="absolute left-3 top-1/2 -translate-y-1/2 text-text-muted pointer-events-none text-[10px]"
+          >▼</span
+        >
+      </div>
+      <p v-if="getFieldError('type')" class="text-danger text-[10px] font-bold mt-0.5">
         {{ getFieldError('type') }}
       </p>
     </div>
 
-    <div class="flex flex-col space-y-1">
+    <!-- تاريخ الحركة المالية -->
+    <div class="flex flex-col space-y-1.5">
       <label class="text-[11px] font-black text-text-secondary">تاريخ الحركة المالية *</label>
       <input
         type="date"
         v-model="formData.entry_date"
-        class="block w-full px-2 py-1 border border-surface-border/80 rounded-md bg-surface-ground text-text-primary focus:border-primary text-xs font-bold outline-none transition-all focus:ring-1 focus:ring-primary/20"
+        class="block w-full h-10 px-3 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-xs font-bold font-mono outline-none transition-all cursor-pointer shadow-sm"
       />
-      <p v-if="getFieldError('entry_date')" class="text-rose-500 text-[10px] font-bold mt-0.5">
+      <p v-if="getFieldError('entry_date')" class="text-danger text-[10px] font-bold mt-0.5">
         {{ getFieldError('entry_date') }}
       </p>
     </div>
@@ -57,3 +73,14 @@ const getFieldError = (path) => {
   return props.validationErrors[path]?.[0] || null
 }
 </script>
+
+<style scoped>
+:global(.dark input[type='date']::-webkit-calendar-picker-indicator) {
+  filter: invert(1);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
+}
+</style>

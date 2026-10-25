@@ -1,6 +1,7 @@
+<!--src/views/treasuries/TreasuryForm.vue-->
 <template>
-  <form @submit.prevent="handleSubmit">
-    <div class="space-y-5">
+  <form @submit.prevent="handleSubmit" dir="rtl">
+    <div class="space-y-5 text-right">
       <div>
         <AppInput
           id="treasury-name"
@@ -9,7 +10,7 @@
           placeholder="ادخل اسم الخزنة (مثال: الخزينة الرئيسية)"
           required
         />
-        <p v-if="errors.name" class="text-rose-500 text-xs mt-1 font-bold">
+        <p v-if="errors.name" class="text-danger text-xs mt-1 font-bold">
           اسم الخزنة مطلوب ولا يمكن تركه فارغاً.
         </p>
       </div>
@@ -22,7 +23,7 @@
             v-model="form.opening_balance"
             placeholder="0.00 (اختياري)"
           />
-          <p v-if="errors.opening_balance" class="text-rose-500 text-xs mt-1 font-bold">
+          <p v-if="errors.opening_balance" class="text-danger text-xs mt-1 font-bold">
             لا يمكن أن يكون الرصيد الافتتاحي للخزينة بالسالب.
           </p>
         </div>
@@ -42,7 +43,6 @@
 <script setup>
 import { ref, watch, reactive } from 'vue'
 
-// استيراد مكونات الواجهة القياسية المعتمدة في النظام
 import AppInput from '@/components/ui/AppInput.vue'
 import AppCurrencyInput from '@/components/ui/AppCurrencyInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
@@ -60,13 +60,11 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'cancel'])
 
-// إدارة الأخطاء يدوياً بالتطابق التام مع رسائل الباك إند
 const errors = reactive({
   name: false,
   opening_balance: false,
 })
 
-// دالة تصفير وإنشاء كائن النموذج الافتراضي
 const createFreshForm = () => ({
   id: null,
   name: '',
@@ -75,7 +73,6 @@ const createFreshForm = () => ({
 
 const form = ref(createFreshForm())
 
-// مراقبة البيانات الممررة لتهيئة النموذج للتعديل أو إعادته لحالته الأولى عند الإضافة
 watch(
   () => props.initialData,
   (newData) => {
@@ -95,7 +92,6 @@ watch(
   { immediate: true, deep: true },
 )
 
-// دالة التحقق اليدوي والإرسال للأب
 const handleSubmit = () => {
   errors.name = false
   errors.opening_balance = false
@@ -110,7 +106,6 @@ const handleSubmit = () => {
     return
   }
 
-  // إعداد البيانات وتجهيزها بشكل نهائي للباك إند
   const payload = {
     ...form.value,
     opening_balance: form.value.opening_balance !== '' ? Number(form.value.opening_balance) : null,

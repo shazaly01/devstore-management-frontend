@@ -1,4 +1,4 @@
-<!--src\views\banks\BanksTable.vue--->
+<!--src/views/banks/BanksTable.vue-->
 <template>
   <AppCard>
     <AppTable
@@ -9,7 +9,7 @@
       @row-click="$emit('row-clicked', $event)"
     >
       <template #cell-bank_info="{ item }">
-        <div class="flex flex-col gap-1 py-1">
+        <div class="flex flex-col gap-1 py-1 text-right" dir="rtl">
           <span class="font-bold text-text-primary text-base leading-tight">
             {{ item.name }}
           </span>
@@ -35,7 +35,7 @@
       </template>
 
       <template #cell-accounting_info="{ item }">
-        <div class="flex flex-col justify-center">
+        <div class="flex flex-col justify-center text-right" dir="rtl">
           <span class="font-medium text-sm text-text-primary">
             {{ item.account?.name || '-' }}
           </span>
@@ -46,12 +46,12 @@
       </template>
 
       <template #cell-financials="{ item }">
-        <div class="flex flex-col justify-center min-w-[120px]">
+        <div class="flex flex-col justify-center min-w-[120px] text-right" dir="rtl">
           <span class="text-xs text-text-muted mb-0.5">الرصيد الفعلي:</span>
           <span
             :class="[
-              'font-bold text-sm',
-              item.current_balance >= 0 ? 'text-emerald-600' : 'text-rose-600',
+              'font-bold text-sm font-mono',
+              item.current_balance >= 0 ? 'text-success' : 'text-danger',
             ]"
           >
             {{ formatCurrency(item.current_balance || 0) }}
@@ -61,31 +61,18 @@
 
       <template #cell-status="{ item }">
         <div class="flex items-center">
-          <span
-            :class="[
-              'px-2 py-0.5 text-[11px] font-bold rounded-full border flex items-center gap-1',
-              item.is_active
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                : 'bg-gray-50 text-gray-600 border-gray-200',
-            ]"
-          >
-            <span
-              :class="[
-                'w-1.5 h-1.5 rounded-full',
-                item.is_active ? 'bg-emerald-500' : 'bg-gray-400',
-              ]"
-            ></span>
+          <AppBadge :variant="item.is_active ? 'success' : 'neutral'" size="xs" pill dot>
             {{ item.is_active ? 'نشط' : 'غير نشط' }}
-          </span>
+          </AppBadge>
         </div>
       </template>
 
       <template #cell-actions="{ item }">
-        <div class="flex items-center justify-end space-x-1 space-x-reverse">
+        <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <button
             v-if="authStore.can('bank.update')"
-            @click.stop="$emit('edit-bank', item)"
-            class="p-1.5 text-sky-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
+            @click="$emit('edit-bank', item)"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل البنك"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -100,8 +87,8 @@
 
           <button
             v-if="authStore.can('bank.delete')"
-            @click.stop="$emit('delete-bank', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+            @click="$emit('delete-bank', item)"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="حذف البنك"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -127,6 +114,7 @@ import { useAuthStore } from '@/stores/authStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 import { formatCurrency } from '@/utils/formatters'
 
 const props = defineProps({
@@ -139,7 +127,6 @@ defineEmits(['page-change', 'edit-bank', 'delete-bank', 'row-clicked'])
 
 const authStore = useAuthStore()
 
-// بناء الأعمدة المحسنة بالتوافق مع الـ Resource الممرر
 const tableHeaders = computed(() => {
   const headers = [
     { key: 'id', label: '#' },
@@ -149,7 +136,6 @@ const tableHeaders = computed(() => {
     { key: 'status', label: 'الحالة' },
   ]
 
-  // إظهار عمود الإجراءات بناءً على صلاحيات المستخدم للبنوك
   if (authStore.can('bank.update') || authStore.can('bank.delete')) {
     headers.push({ key: 'actions', label: 'إجراءات', class: 'text-left min-w-[100px]' })
   }

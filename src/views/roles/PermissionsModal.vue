@@ -1,30 +1,32 @@
 <!-- src/views/roles/PermissionsModal.vue -->
 <template>
   <div
-    class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40"
+    v-if="modelValue"
+    class="fixed inset-0 bg-black/60 flex items-center justify-center z-40 p-4"
     @click.self="close"
   >
     <div
-      class="bg-surface-section rounded-lg shadow-xl p-6 w-full max-w-3xl transform transition-all duration-300 scale-95"
+      class="bg-surface-section border border-surface-border rounded-xl shadow-2xl p-6 w-full max-w-3xl transform transition-all duration-300 scale-95 text-right font-sans"
       :class="{ 'scale-100': modelValue }"
+      dir="rtl"
     >
       <div class="flex justify-between items-center border-b border-surface-border pb-3 mb-5">
-        <h3 class="text-lg font-semibold text-text-primary">
+        <h3 class="text-lg font-bold text-text-primary">
           تعديل صلاحيات دور: <span class="font-bold text-primary">{{ role?.name }}</span>
         </h3>
         <button
           @click="close"
-          class="text-text-muted hover:text-text-primary text-2xl leading-none"
+          class="text-text-muted hover:text-text-primary p-1.5 rounded-lg hover:bg-surface-ground transition-colors cursor-pointer text-xl leading-none"
         >
           &times;
         </button>
       </div>
 
-      <div class="max-h-[60vh] overflow-y-auto pr-2">
+      <div class="max-h-[60vh] overflow-y-auto pr-1">
         <PermissionsChecklist v-model:selectedPermissions="selectedPermissions" />
       </div>
 
-      <div class="mt-8 flex justify-end gap-4">
+      <div class="mt-8 flex justify-end gap-3 pt-3 border-t border-surface-border">
         <AppButton type="button" variant="secondary" @click="close"> إلغاء </AppButton>
         <AppButton @click="handleSave" :disabled="isSaving">
           <span v-if="isSaving">جاري الحفظ...</span>
@@ -50,16 +52,14 @@ const emit = defineEmits(['update:modelValue', 'save'])
 
 const selectedPermissions = ref([])
 
-// هذا الـ watcher مهم لتعبئة الصلاحيات عند فتح النافذة
 watch(
   () => props.role,
   (newRole) => {
     if (newRole && props.modelValue) {
-      // املأ الصلاحيات الحالية للدور
       selectedPermissions.value = newRole.permissions ? newRole.permissions.map((p) => p.name) : []
     }
   },
-  { immediate: true }, // immediate: true تضمن تشغيله عند تحميل المكون لأول مرة
+  { immediate: true },
 )
 
 const close = () => {
@@ -67,12 +67,11 @@ const close = () => {
 }
 
 const handleSave = () => {
-  // تأكد من وجود الدور قبل إرسال البيانات
   if (!props.role) return
 
   const payload = {
     id: props.role.id,
-    name: props.role.name, // يجب إرسال الاسم لتجنب فشل التحقق في الـ Backend
+    name: props.role.name,
     permissions: selectedPermissions.value,
   }
   emit('save', payload)

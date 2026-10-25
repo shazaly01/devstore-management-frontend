@@ -1,6 +1,7 @@
+<!--src/views/categories/CategoryForm.vue-->
 <template>
-  <form @submit.prevent="handleSubmit">
-    <div class="space-y-5">
+  <form @submit.prevent="handleSubmit" dir="rtl">
+    <div class="space-y-5 text-right">
       <div>
         <AppInput
           id="category-name"
@@ -10,14 +11,14 @@
           required
           @input="clearBackendError('name')"
         />
-        <p v-if="errors.name" class="text-rose-500 text-xs mt-1 font-bold">
+        <p v-if="errors.name" class="text-danger text-xs mt-1 font-bold">
           اسم التصنيف مطلوب ولا يمكن تركه فارغاً.
         </p>
         <div v-if="validationErrors && validationErrors.name">
           <p
             v-for="(error, index) in validationErrors.name"
             :key="index"
-            class="text-rose-500 text-xs mt-1 font-bold"
+            class="text-danger text-xs mt-1 font-bold"
           >
             {{ error }}
           </p>
@@ -37,7 +38,7 @@
           <p
             v-for="(error, index) in validationErrors.parent_id"
             :key="index"
-            class="text-rose-500 text-xs mt-1 font-bold"
+            class="text-danger text-xs mt-1 font-bold"
           >
             {{ error }}
           </p>
@@ -92,7 +93,6 @@ const createFreshForm = () => ({
 
 const form = ref(createFreshForm())
 
-// فلترة التصنيفات المتاحة واختيار المسار النصي المقروء للعرض
 const parentOptions = computed(() => {
   return categories.value
     .filter((cat) => !form.value.id || cat.id !== form.value.id)

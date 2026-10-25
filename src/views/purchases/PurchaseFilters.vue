@@ -1,131 +1,143 @@
+<!--src/views/purchases/PurchaseFilters.vue-->
 <template>
-  <AppCard class="mb-6">
-    <div class="p-4">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-        <div class="w-full">
-          <h3 class="font-semibold text-sm mb-2 text-text-secondary">بحث سريع</h3>
-          <div class="relative">
-            <span
-              class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-text-muted"
-            >
-              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                />
-              </svg>
-            </span>
-            <input
-              :value="searchQuery"
-              @input="$emit('update:searchQuery', $event.target.value)"
-              type="text"
-              placeholder="رقم الفاتورة، الملاحظات..."
-              class="block w-full pl-10 pr-4 py-2 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:ring-2 focus:ring-primary outline-none transition-all sm:text-sm"
-            />
-          </div>
+  <div
+    class="p-5 bg-surface-section rounded-xl border border-surface-border shadow-sm space-y-4 text-right font-sans transition-colors duration-200 mb-6"
+    dir="rtl"
+  >
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <!-- 1. البحث السريع -->
+      <div class="flex flex-col space-y-1">
+        <label class="text-[11px] font-bold text-text-secondary pr-1">بحث سريع</label>
+        <div
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
+        >
+          <span class="absolute right-3 text-text-muted pointer-events-none z-10">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+              />
+            </svg>
+          </span>
+          <input
+            :value="searchQuery"
+            @input="$emit('update:searchQuery', $event.target.value)"
+            type="text"
+            placeholder="رقم الفاتورة، الملاحظات..."
+            class="block w-full h-full pr-10 pl-3 bg-transparent text-text-primary placeholder:text-text-muted focus:outline-none text-xs font-semibold"
+          />
         </div>
+      </div>
 
-        <div class="w-full">
-          <h3 class="font-semibold text-sm mb-2 text-text-secondary">نوع المستند</h3>
-          <div class="relative">
-            <select
-              :value="invoiceTypeFilter"
-              @change="$emit('update:invoiceTypeFilter', $event.target.value)"
-              class="block w-full px-3 py-2 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:ring-2 focus:ring-primary outline-none transition-all sm:text-sm appearance-none cursor-pointer"
-            >
-              <option value="">الكل</option>
-              <option value="purchase">فاتورة شراء</option>
-              <option value="return">مرتجع مشتريات</option>
-            </select>
-            <div class="absolute inset-y-0 left-0 flex items-center px-2 pointer-events-none">
-              <svg
-                class="w-4 h-4 text-text-muted"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </div>
-          </div>
+      <!-- 2. نوع المستند -->
+      <div class="flex flex-col space-y-1">
+        <label class="text-[11px] font-bold text-text-secondary pr-1">نوع المستند</label>
+        <div
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
+        >
+          <span class="absolute right-3 text-primary pointer-events-none z-10">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+              />
+            </svg>
+          </span>
+          <select
+            :value="invoiceTypeFilter"
+            @change="$emit('update:invoiceTypeFilter', $event.target.value)"
+            class="block w-full h-full pr-10 pl-8 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer"
+          >
+            <option value="" class="bg-surface-section text-text-primary">الكل</option>
+            <option value="purchase" class="bg-surface-section text-text-primary">
+              فاتورة شراء
+            </option>
+            <option value="return" class="bg-surface-section text-text-primary">
+              مرتجع مشتريات
+            </option>
+          </select>
+          <span class="absolute left-3 text-text-muted pointer-events-none text-[10px]">▼</span>
         </div>
+      </div>
 
-        <div class="w-full">
-          <h3 class="font-semibold text-sm mb-2 text-text-secondary">المستودع</h3>
-          <div class="relative">
-            <select
-              :value="storeFilter"
-              @change="$emit('update:storeFilter', $event.target.value)"
-              class="block w-full px-3 py-2 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:ring-2 focus:ring-primary outline-none transition-all sm:text-sm appearance-none cursor-pointer"
+      <!-- 3. المستودع -->
+      <div class="flex flex-col space-y-1">
+        <label class="text-[11px] font-bold text-text-secondary pr-1">المستودع</label>
+        <div
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
+        >
+          <span class="absolute right-3 text-text-muted pointer-events-none z-10">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"
+              />
+            </svg>
+          </span>
+          <select
+            :value="storeFilter"
+            @change="$emit('update:storeFilter', $event.target.value)"
+            class="block w-full h-full pr-10 pl-8 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer"
+          >
+            <option value="" class="bg-surface-section text-text-primary">كل المستودعات</option>
+            <option
+              v-for="store in stores"
+              :key="store.id"
+              :value="store.id"
+              class="bg-surface-section text-text-primary"
             >
-              <option value="">كل المستودعات</option>
-              <option v-for="store in stores" :key="store.id" :value="store.id">
-                {{ store.name }}
-              </option>
-            </select>
-            <div class="absolute inset-y-0 left-0 flex items-center px-2 pointer-events-none">
-              <svg
-                class="w-4 h-4 text-text-muted"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </div>
-          </div>
+              {{ store.name }}
+            </option>
+          </select>
+          <span class="absolute left-3 text-text-muted pointer-events-none text-[10px]">▼</span>
         </div>
+      </div>
 
-        <div class="w-full">
-          <h3 class="font-semibold text-sm mb-2 text-text-secondary">المورد المعتمد</h3>
-          <div class="relative">
-            <select
-              :value="supplierFilter"
-              @change="$emit('update:supplierFilter', $event.target.value)"
-              class="block w-full px-3 py-2 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:ring-2 focus:ring-primary outline-none transition-all sm:text-sm appearance-none cursor-pointer"
+      <!-- 4. المورد المعتمد -->
+      <div class="flex flex-col space-y-1">
+        <label class="text-[11px] font-bold text-text-secondary pr-1">المورد المعتمد</label>
+        <div
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
+        >
+          <span class="absolute right-3 text-primary pointer-events-none z-10">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
+              />
+            </svg>
+          </span>
+          <select
+            :value="supplierFilter"
+            @change="$emit('update:supplierFilter', $event.target.value)"
+            class="block w-full h-full pr-10 pl-8 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer"
+          >
+            <option value="" class="bg-surface-section text-text-primary">كل الموردين</option>
+            <option
+              v-for="supplier in suppliers"
+              :key="supplier.id"
+              :value="supplier.id"
+              class="bg-surface-section text-text-primary"
             >
-              <option value="">كل الموردين</option>
-              <option v-for="supplier in suppliers" :key="supplier.id" :value="supplier.id">
-                {{ supplier.name }}
-              </option>
-            </select>
-            <div class="absolute inset-y-0 left-0 flex items-center px-2 pointer-events-none">
-              <svg
-                class="w-4 h-4 text-text-muted"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
-            </div>
-          </div>
+              {{ supplier.name }}
+            </option>
+          </select>
+          <span class="absolute left-3 text-text-muted pointer-events-none text-[10px]">▼</span>
         </div>
       </div>
     </div>
-  </AppCard>
+  </div>
 </template>
 
 <script setup>
-import AppCard from '@/components/ui/AppCard.vue'
-
 defineProps({
   searchQuery: { type: String, default: '' },
   invoiceTypeFilter: { type: String, default: '' },

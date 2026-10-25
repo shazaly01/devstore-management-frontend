@@ -1,7 +1,7 @@
-<!---src\views\sales\components\SaleHeader.vue--->
+<!--src/views/sales/components/SaleHeader.vue-->
 <template>
   <div
-    class="p-5 bg-[#23252e] rounded-xl border-2 border-[#5d6170] shadow-2xl space-y-4 text-right font-sans"
+    class="p-5 bg-surface-section rounded-xl border border-surface-border shadow-sm space-y-4 text-right font-sans transition-colors duration-200"
     dir="rtl"
   >
     <!-- الصف الأول: 4 أعمدة (نوع الفاتورة + المخزن + التاريخ + الخزنة/البنك) -->
@@ -9,9 +9,9 @@
       <!-- invoice_type -->
       <div class="relative w-full">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#e05e2b] rounded-lg flex items-center shadow-[0_0_10px_rgba(224,94,43,0.15)]"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center shadow-sm transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
-          <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
+          <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -22,23 +22,22 @@
             </svg>
           </span>
 
-          <!-- قفل حقل نوع المستند لمنع تغييره أثناء معالجة المردود المباشر -->
           <select
             v-model="formData.invoice_type"
             :disabled="!!formData.parent_id"
-            style="color-scheme: dark"
-            class="block w-full h-full pr-10 pl-10 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            class="block w-full h-full pr-10 pl-10 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <option value="sale" class="bg-[#16171b]">فاتورة مبيعات نشطة</option>
-            <option value="return" class="bg-[#16171b]">مردودات مبيعات</option>
+            <option value="sale" class="bg-surface-section text-text-primary">
+              فاتورة مبيعات نشطة
+            </option>
+            <option value="return" class="bg-surface-section text-text-primary">
+              مردودات مبيعات
+            </option>
           </select>
 
-          <span class="absolute left-4 text-gray-500 pointer-events-none text-[10px]">▼</span>
+          <span class="absolute left-4 text-text-muted pointer-events-none text-[10px]">▼</span>
         </div>
-        <p
-          v-if="getFieldError('invoice_type')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('invoice_type')" class="text-danger text-[10px] font-bold mt-1 pr-1">
           {{ getFieldError('invoice_type') }}
         </p>
       </div>
@@ -46,9 +45,9 @@
       <!-- store_id -->
       <div class="relative w-full">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
-          <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
+          <span class="absolute right-3 text-text-muted pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -70,7 +69,7 @@
             />
           </div>
         </div>
-        <p v-if="getFieldError('store_id')" class="text-rose-500 text-[10px] font-bold mt-1 pr-1">
+        <p v-if="getFieldError('store_id')" class="text-danger text-[10px] font-bold mt-1 pr-1">
           {{ getFieldError('store_id') }}
         </p>
       </div>
@@ -78,18 +77,18 @@
       <!-- invoice_date -->
       <div class="relative w-full">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
           <input
             type="date"
             v-model="formData.invoice_date"
-            class="block w-full h-full pr-4 pl-20 bg-transparent text-white focus:outline-none text-xs font-mono font-bold text-right"
+            class="block w-full h-full pr-4 pl-20 bg-transparent text-text-primary focus:outline-none text-xs font-mono font-bold text-right cursor-pointer"
           />
 
           <span
-            class="absolute left-3 text-gray-400 pointer-events-none flex items-center gap-1.5 text-xs z-10"
+            class="absolute left-3 text-text-muted pointer-events-none flex items-center gap-1.5 text-xs z-10"
           >
-            <span class="text-gray-400 font-medium text-[11px]">تاريخ</span>
+            <span class="font-medium text-[11px]">تاريخ</span>
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -100,21 +99,18 @@
             </svg>
           </span>
         </div>
-        <p
-          v-if="getFieldError('invoice_date')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('invoice_date')" class="text-danger text-[10px] font-bold mt-1 pr-1">
           {{ getFieldError('invoice_date') }}
         </p>
       </div>
 
-      <!-- treasury_id / bank_id (حسب payment_type) -->
-      <div class="relative w-full">
+      <!-- اختيار الخزينة والبنك حسب القنوات المستخدمة في الفاتورة -->
+      <div class="relative w-full space-y-2">
         <div
-          v-if="formData.payment_type === 'cash'"
-          class="relative w-full h-11 bg-[#16171b] border border-[#e05e2b] rounded-lg flex items-center animate-fade-in shadow-[0_0_10px_rgba(224,94,43,0.15)]"
+          v-if="showTreasurySelector"
+          class="relative w-full h-11 bg-surface-ground border border-primary/50 focus-within:border-primary rounded-lg flex items-center animate-fade-in shadow-sm transition-all focus-within:ring-2 focus-within:ring-primary/20"
         >
-          <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
+          <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -135,10 +131,10 @@
         </div>
 
         <div
-          v-if="formData.payment_type === 'card'"
-          class="relative w-full h-11 bg-[#16171b] border border-[#e05e2b] rounded-lg flex items-center animate-fade-in shadow-[0_0_10px_rgba(224,94,43,0.15)]"
+          v-if="showBankSelector"
+          class="relative w-full h-11 bg-surface-ground border border-primary/50 focus-within:border-primary rounded-lg flex items-center animate-fade-in shadow-sm transition-all focus-within:ring-2 focus-within:ring-primary/20"
         >
-          <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
+          <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -159,15 +155,16 @@
         </div>
 
         <div
-          v-if="formData.payment_type === 'credit'"
-          class="relative w-full h-11 bg-[#16171b] border border-dashed border-[#3e414c] rounded-lg flex items-center justify-center text-gray-500 text-xs font-medium"
+          v-if="!showTreasurySelector && !showBankSelector"
+          class="relative w-full h-11 bg-surface-ground border border-dashed border-surface-border rounded-lg flex items-center justify-center text-text-muted text-[10px] font-medium select-none px-2 text-center"
         >
-          <span>دين آجل - لا يوجد خزنة أو بنك</span>
+          <span v-if="formData.invoice_type === 'return'">دين آجل - لا يوجد خزنة أو بنك</span>
+          <span v-else>يظهر اختيار الخزينة أو البنك عند تسجيل مبلغ في القناة</span>
         </div>
 
         <p
           v-if="getFieldError('treasury_id') || getFieldError('bank_id')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
+          class="text-danger text-[10px] font-bold mt-1 pr-1"
         >
           {{ getFieldError('treasury_id') || getFieldError('bank_id') }}
         </p>
@@ -175,13 +172,16 @@
     </div>
 
     <!-- الصف الثاني: 4 أعمدة (طريقة الدفع + فحص هاتف العميل + قائمة اختيار العميل + اسم العميل النصي) -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <!-- payment_type -->
-      <div class="relative w-full">
+    <div
+      class="grid grid-cols-1 gap-4"
+      :class="formData.invoice_type === 'return' ? 'md:grid-cols-4' : 'md:grid-cols-3'"
+    >
+      <!-- payment_type للمرتجعات فقط؛ البيع يستخدم توزيع المبالغ -->
+      <div v-if="formData.invoice_type === 'return'" class="relative w-full">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b]"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
-          <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
+          <span class="absolute right-3 text-text-muted pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -195,30 +195,30 @@
           <select
             v-model="formData.payment_type"
             :disabled="!!formData.parent_id"
-            style="color-scheme: dark"
-            class="block w-full h-full pr-10 pl-10 bg-transparent text-white focus:outline-none text-xs font-bold appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            class="block w-full h-full pr-10 pl-10 bg-transparent text-text-primary focus:outline-none text-xs font-bold appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <option value="cash" class="bg-[#16171b]">نقدي (Cash)</option>
-            <option value="card" class="bg-[#16171b]">دفع بنكك (Card)</option>
-            <option value="credit" class="bg-[#16171b]">دفع آجل (Credit)</option>
+            <option value="cash" class="bg-surface-section text-text-primary">نقدي (Cash)</option>
+            <option value="card" class="bg-surface-section text-text-primary">
+              دفع بنكي (Card)
+            </option>
+            <option value="credit" class="bg-surface-section text-text-primary">
+              دفع آجل (Credit)
+            </option>
           </select>
 
-          <span class="absolute left-4 text-gray-500 pointer-events-none text-[10px]">▼</span>
+          <span class="absolute left-4 text-text-muted pointer-events-none text-[10px]">▼</span>
         </div>
-        <p
-          v-if="getFieldError('payment_type')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('payment_type')" class="text-danger text-[10px] font-bold mt-1 pr-1">
           {{ getFieldError('payment_type') }}
         </p>
       </div>
 
-      <!-- customer_phone_search (فحص هاتف العميل واختياره أو فتح المودال آلياً) -->
+      <!-- customer_phone_search -->
       <div class="relative w-full">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
-          <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
+          <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -235,14 +235,14 @@
             @keydown.enter.prevent="checkCustomerPhone"
             :disabled="!!formData.parent_id"
             placeholder="رقم الهاتف (Enter للفحص)..."
-            class="block w-full h-full pr-10 pl-16 bg-transparent text-white focus:outline-none text-xs font-medium placeholder-gray-500 disabled:opacity-60 disabled:cursor-not-allowed"
+            class="block w-full h-full pr-10 pl-16 bg-transparent text-text-primary placeholder:text-text-muted focus:outline-none text-xs font-medium disabled:opacity-60 disabled:cursor-not-allowed"
           />
 
           <button
             type="button"
             @click="checkCustomerPhone"
             :disabled="isCheckingPhone || !customerPhone.trim() || !!formData.parent_id"
-            class="absolute left-1.5 px-2.5 py-1 bg-[#e05e2b] hover:bg-[#c94e20] text-white text-[11px] font-bold rounded flex items-center gap-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+            class="absolute left-1.5 px-2.5 py-1 bg-primary hover:bg-primary-dark text-white text-[11px] font-bold rounded flex items-center gap-1 transition-colors disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer shadow-sm"
             title="فحص وجود العميل برقم الهاتف"
           >
             <svg
@@ -264,7 +264,7 @@
             <span v-else>فحص</span>
           </button>
         </div>
-        <span class="text-[10px] text-gray-400 mt-1 pr-1 block">
+        <span class="text-[10px] text-text-muted mt-1 pr-1 block">
           اضغط Enter أو زر فحص لاختيار العميل أو تسجيله
         </span>
       </div>
@@ -272,9 +272,9 @@
       <!-- customer_id -->
       <div class="relative w-full flex flex-col">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#e05e2b] rounded-lg flex items-center transition-all duration-200 focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b] shadow-[0_0_10px_rgba(224,94,43,0.15)]"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
-          <span class="absolute right-3 text-[#e05e2b] pointer-events-none z-10">
+          <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -298,21 +298,17 @@
           </div>
         </div>
 
-        <!-- شارة عرض فئة الأسعار الخاصة بالعميل الحالي -->
         <div
           v-if="selectedCustomerPriceListName"
           class="mt-1 flex items-center gap-1 animate-fade-in pr-1"
         >
-          <span class="inline-block w-1.5 h-1.5 bg-emerald-500 rounded-full"></span>
-          <span class="text-[10px] text-emerald-400 font-bold"
-            >فئة السعر المعتمدة: {{ selectedCustomerPriceListName }}</span
-          >
+          <span class="inline-block w-1.5 h-1.5 bg-success rounded-full"></span>
+          <span class="text-[10px] text-success font-bold">
+            فئة السعر المعتمدة: {{ selectedCustomerPriceListName }}
+          </span>
         </div>
 
-        <p
-          v-if="getFieldError('customer_id')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
-        >
+        <p v-if="getFieldError('customer_id')" class="text-danger text-[10px] font-bold mt-1 pr-1">
           {{ getFieldError('customer_id') }}
         </p>
       </div>
@@ -320,9 +316,9 @@
       <!-- customer_name_text -->
       <div class="relative w-full">
         <div
-          class="relative w-full h-11 bg-[#16171b] border border-[#3e414c] rounded-lg flex items-center transition-all duration-200 hover:border-[#e05e2b] focus-within:border-[#e05e2b] focus-within:ring-1 focus-within:ring-[#e05e2b]"
+          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
-          <span class="absolute right-3 text-gray-400 pointer-events-none z-10">
+          <span class="absolute right-3 text-text-muted pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path
                 stroke-linecap="round"
@@ -338,28 +334,28 @@
             v-model="formData.customer_name_text"
             :readonly="!!formData.parent_id"
             placeholder="اسم العميل (نص حر - اختياري)"
-            class="block w-full h-full pr-10 pl-4 bg-transparent text-white focus:outline-none text-xs font-medium placeholder-gray-500 readonly:opacity-70"
+            class="block w-full h-full pr-10 pl-4 bg-transparent text-text-primary placeholder:text-text-muted focus:outline-none text-xs font-medium readonly:opacity-70"
           />
         </div>
         <p
           v-if="getFieldError('customer_name_text')"
-          class="text-rose-500 text-[10px] font-bold mt-1 pr-1"
+          class="text-danger text-[10px] font-bold mt-1 pr-1"
         >
           {{ getFieldError('customer_name_text') }}
         </p>
       </div>
     </div>
 
-    <!-- حالة المرتجع: اختيار الفاتورة الأم (في صف منفصل أسفل الصفين) -->
+    <!-- حالة المرتجع: اختيار الفاتورة الأم -->
     <div
       v-if="formData.invoice_type === 'return'"
       class="grid grid-cols-1 gap-4 mt-2 animate-fade-in"
     >
       <div
-        class="w-full bg-orange-950/20 border border-dashed border-[#e05e2b] rounded-lg p-3 flex items-center gap-3"
+        class="w-full bg-primary/10 border border-dashed border-primary/40 rounded-lg p-3 flex items-center gap-3"
       >
         <span
-          class="text-[#e05e2b] bg-[#e05e2b]/10 p-2 rounded-md flex items-center justify-center shrink-0"
+          class="text-primary bg-primary/10 p-2 rounded-md flex items-center justify-center shrink-0"
         >
           <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path
@@ -371,22 +367,22 @@
           </svg>
         </span>
         <div class="flex items-center gap-2 text-right">
-          <span class="text-xs font-black text-[#e05e2b]"
-            >مستند مردود مبيعات للفاتورة الأصلية المربوطة:</span
-          >
+          <span class="text-xs font-black text-primary">
+            مستند مردود مبيعات للفاتورة الأصلية المربوطة:
+          </span>
           <span
-            class="font-mono font-black text-xs text-white bg-[#e05e2b] px-2 py-0.5 rounded shadow-sm"
+            class="font-mono font-black text-xs text-white bg-primary px-2 py-0.5 rounded shadow-sm"
           >
             #{{ formData.parent_id }}
           </span>
         </div>
       </div>
-      <p v-if="getFieldError('parent_id')" class="text-rose-500 text-[10px] font-bold mt-0.5 pr-1">
+      <p v-if="getFieldError('parent_id')" class="text-danger text-[10px] font-bold mt-0.5 pr-1">
         {{ getFieldError('parent_id') }}
       </p>
     </div>
 
-    <!-- نافذة إضافة عميل جديد السريعة عند عدم تطابق رقم الهاتف -->
+    <!-- نافذة إضافة عميل جديد السريعة -->
     <CustomerModal
       v-if="isCustomerModalOpen"
       v-model="isCustomerModalOpen"
@@ -418,16 +414,30 @@ const customerStore = useCustomerStore()
 const saleStore = useSaleStore()
 const toast = useToast()
 
+const showTreasurySelector = computed(() => {
+  if (formData.value.invoice_type === 'return') {
+    return formData.value.payment_type === 'cash'
+  }
+
+  return Number(formData.value.cash_amount ?? 0) > 0
+})
+
+const showBankSelector = computed(() => {
+  if (formData.value.invoice_type === 'return') {
+    return formData.value.payment_type === 'card'
+  }
+
+  return Number(formData.value.bank_amount ?? 0) > 0
+})
+
 const originalSales = ref([])
 
-// متغيرات التحقق برقم الهاتف ومودال العميل الجديد
 const customerPhone = ref('')
 const isCheckingPhone = ref(false)
 const isCustomerModalOpen = ref(false)
 const newCustomerInitialData = ref(null)
 const isSavingCustomer = ref(false)
 
-// فحص وجود العميل برقم الهاتف
 const checkCustomerPhone = async () => {
   const phone = customerPhone.value?.trim()
   if (!phone) {
@@ -461,7 +471,6 @@ const checkCustomerPhone = async () => {
   }
 }
 
-// حفظ العميل الجديد وتحديده فوراً في الفاتورة
 const handleSaveNewCustomer = async (customerData) => {
   isSavingCustomer.value = true
   try {
@@ -484,7 +493,6 @@ const handleSaveNewCustomer = async (customerData) => {
   }
 }
 
-// مزامنة حقل الهاتف إذا تم اختيار العميل مباشرة من القائمة المنسدلة
 watch(
   () => formData.value.customer_id,
   (newId) => {
@@ -497,7 +505,6 @@ watch(
   },
 )
 
-// تتبع واستخراج اسم قائمة أسعار العميل الحالي المختار ديناميكياً
 const selectedCustomerPriceListName = computed(() => {
   if (!formData.value.customer_id || !customerStore.customers) return null
   const currentCust = customerStore.customers.find((c) => c.id === formData.value.customer_id)
@@ -553,8 +560,11 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-input[type='date']::-webkit-calendar-picker-indicator {
+:global(.dark input[type='date']::-webkit-calendar-picker-indicator) {
   filter: invert(1);
+}
+
+input[type='date']::-webkit-calendar-picker-indicator {
   cursor: pointer;
   opacity: 0.6;
 }

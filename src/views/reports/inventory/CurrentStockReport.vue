@@ -1,16 +1,16 @@
-<!---src\views\reports\inventory\CurrentStockReport.vue--->
+<!--src/views/reports/inventory/CurrentStockReport.vue-->
 <template>
-  <div class="space-y-6 print:hidden">
-    <!-- Header -->
+  <div class="space-y-6 print:hidden text-right font-sans" dir="rtl">
+    <!-- الترويسة العلوية -->
     <div>
-      <h1 class="text-3xl font-black text-white tracking-tight">تقرير الأرصدة اللحظية</h1>
-      <p class="text-sm text-gray-400 mt-1">
+      <h1 class="text-2xl font-black text-text-primary tracking-tight">تقرير الأرصدة اللحظية</h1>
+      <p class="text-xs text-text-muted mt-1">
         جرد شامل وتقييم للكميات المتوفرة والقيمة المالية وهوامش الربحية
       </p>
     </div>
 
-    <!-- Filters & Actions Bar -->
-    <AppCard class="border border-gray-800 bg-surface-section/30 backdrop-blur-sm p-4">
+    <!-- شريط الفلاتر والإجراءات -->
+    <AppCard>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-end">
         <div class="w-full">
           <StoresDropdown
@@ -31,119 +31,118 @@
         <div class="flex gap-2 w-full lg:col-span-2 justify-end">
           <AppButton
             @click="handleRefresh"
-            :loading="loading"
+            :disabled="loading"
             variant="secondary"
-            class="border-gray-700 hover:border-gray-600 text-gray-200 flex-1 md:flex-none px-5"
+            class="flex-1 md:flex-none px-4"
           >
-            <ArrowPathIcon class="w-5 h-5 ml-2" :class="{ 'animate-spin': loading }" />
+            <ArrowPathIcon class="w-4 h-4 ml-1.5" :class="{ 'animate-spin': loading }" />
             تحديث البيانات
           </AppButton>
 
           <AppButton
             @click="handlePrint"
-            class="bg-indigo-600 hover:bg-indigo-500 text-white shadow-[0_0_15px_rgba(99,102,241,0.3)] flex-1 md:flex-none px-5"
+            :disabled="displaySummary.total_items === 0 || currentStockList.length === 0"
+            class="flex-1 md:flex-none px-4"
           >
-            <PrinterIcon class="w-5 h-5 ml-2" />
+            <PrinterIcon class="w-4 h-4 ml-1.5" />
             طباعة التقرير
           </AppButton>
         </div>
       </div>
     </AppCard>
 
-    <!-- Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-      <AppCard
-        class="relative overflow-hidden p-5 border-r-4 border-r-fuchsia-500 bg-surface-section/60 shadow-[0_4_20px_rgba(0,0,0,0.3)]"
-      >
-        <div class="text-xs text-fuchsia-200/60 uppercase tracking-widest mb-2 font-bold">
+    <!-- بطاقات ملخص الأرصدة والمخزون -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <AppCard class="p-4 border-r-4 border-r-primary bg-surface-section shadow-sm">
+        <div class="text-[10px] text-primary uppercase tracking-widest mb-1 font-bold">
           إجمالي الأصناف
         </div>
-        <div
-          class="text-2xl font-black text-fuchsia-300 drop-shadow-[0_0_8px_rgba(232,121,249,0.8)]"
-        >
+        <div class="text-xl font-black text-primary font-mono">
           {{ displaySummary.total_items }}
-          <span class="text-sm font-normal text-gray-400">صنف</span>
+          <span class="text-xs font-normal text-text-muted">صنف</span>
         </div>
       </AppCard>
 
-      <AppCard
-        class="relative overflow-hidden p-5 border-r-4 border-r-cyan-400 bg-surface-section/60 shadow-[0_4_20px_rgba(0,0,0,0.3)]"
-      >
-        <div class="text-xs text-cyan-200/60 uppercase tracking-widest mb-2 font-bold">
+      <AppCard class="p-4 border-r-4 border-r-info bg-surface-section shadow-sm">
+        <div class="text-[10px] text-info uppercase tracking-widest mb-1 font-bold">
           إجمالي كميات المخزون
         </div>
-        <div class="text-2xl font-black text-cyan-300 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]">
+        <div class="text-xl font-black text-info font-mono">
           {{ formatNumber(displaySummary.grand_total_quantity) }}
         </div>
       </AppCard>
 
-      <AppCard
-        class="relative overflow-hidden p-5 border-r-4 border-r-emerald-400 bg-surface-section/60 shadow-[0_4_20px_rgba(0,0,0,0.3)]"
-      >
-        <div class="text-xs text-emerald-200/60 uppercase tracking-widest mb-2 font-bold">
+      <AppCard class="p-4 border-r-4 border-r-warning bg-surface-section shadow-sm">
+        <div class="text-[10px] text-warning uppercase tracking-widest mb-1 font-bold">
           إجمالي قيمة التكلفة
         </div>
-        <div
-          class="text-2xl font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]"
-        >
+        <div class="text-xl font-black text-warning font-mono">
           {{ formatNumber(displaySummary.grand_total_cost_value) }}
         </div>
       </AppCard>
 
-      <AppCard
-        class="relative overflow-hidden p-5 border-r-4 border-r-blue-400 bg-surface-section/60 shadow-[0_4_20px_rgba(0,0,0,0.3)]"
-      >
-        <div class="text-xs text-blue-200/60 uppercase tracking-widest mb-2 font-bold">
+      <AppCard class="p-4 border-r-4 border-r-success bg-surface-section shadow-sm">
+        <div class="text-[10px] text-success uppercase tracking-widest mb-1 font-bold">
           إجمالي القيمة البيعية
         </div>
-        <div class="text-2xl font-black text-blue-400 drop-shadow-[0_0_8px_rgba(96,165,250,0.8)]">
+        <div class="text-xl font-black text-success font-mono">
           {{ formatNumber(displaySummary.grand_total_sale_value) }}
         </div>
       </AppCard>
     </div>
 
-    <!-- Data Table -->
-    <AppCard class="border border-gray-800 bg-surface-section/40 backdrop-blur-sm">
+    <!-- جدول الأرصدة اللحظية التفصيلي -->
+    <AppCard>
       <AppTable :headers="tableHeaders" :items="currentStockList" :is-loading="loading">
+        <template #cell-stock_id="{ item }">
+          <span class="font-mono text-xs text-text-muted">#{{ item.stock_id }}</span>
+        </template>
+
         <template #cell-item_name="{ item }">
           <div class="flex flex-col">
-            <span class="font-bold text-cyan-300 transition-all duration-300">
+            <span class="font-bold text-text-primary text-xs">
               {{ item.item_name }}
             </span>
-            <span class="text-[10px] text-gray-500">كود: #{{ item.item_id }}</span>
+            <span class="text-[10px] text-text-muted font-mono">كود: #{{ item.item_id }}</span>
           </div>
         </template>
 
         <template #cell-store_name="{ item }">
-          <span class="text-gray-300 font-medium">{{ item.store_name ?? 'غير محدد' }}</span>
+          <span class="text-text-secondary font-medium text-xs">{{
+            item.store_name ?? 'غير محدد'
+          }}</span>
         </template>
 
         <template #cell-current_quantity_base="{ item }">
-          <span class="text-gray-200 font-bold">
+          <span class="text-text-primary font-bold font-mono text-xs">
             {{ formatNumber(item.current_quantity_base) }}
-            <span class="text-xs font-normal text-gray-400">({{ item.unit1_name }})</span>
+            <span class="text-[11px] font-normal text-text-muted">({{ item.unit1_name }})</span>
           </span>
         </template>
 
         <template #cell-unit_cost="{ item }">
-          <span class="text-gray-300 font-medium">{{ formatNumber(item.unit_cost) }}</span>
+          <span class="text-text-secondary font-mono text-xs font-medium">{{
+            formatNumber(item.unit_cost)
+          }}</span>
         </template>
 
         <template #cell-profit_margin_percentage="{ item }">
           <span
-            :class="item.profit_margin_percentage >= 0 ? 'text-emerald-400' : 'text-rose-400'"
-            class="font-bold text-xs"
+            :class="item.profit_margin_percentage >= 0 ? 'text-success' : 'text-danger'"
+            class="font-bold font-mono text-xs"
           >
             {{ formatNumber(item.profit_margin_percentage) }}%
           </span>
         </template>
 
         <template #cell-unit_price="{ item }">
-          <span class="text-blue-400 font-semibold">{{ formatNumber(item.unit_price) }}</span>
+          <span class="text-primary font-bold font-mono text-xs">{{
+            formatNumber(item.unit_price)
+          }}</span>
         </template>
 
         <template #cell-total_cost_value="{ item }">
-          <span class="text-emerald-400 font-black drop-shadow-[0_0_5px_rgba(52,211,153,0.3)]">
+          <span class="text-text-primary font-black font-mono text-xs">
             {{ formatNumber(item.total_cost_value) }}
           </span>
         </template>
@@ -266,13 +265,3 @@ onMounted(() => {
   handleRefresh()
 })
 </script>
-
-<style scoped>
-:deep(.AppTable th) {
-  @apply text-gray-400 font-bold uppercase tracking-wider text-xs border-b border-gray-800;
-}
-
-:deep(.AppTable td) {
-  @apply py-4 border-b border-gray-800/50;
-}
-</style>

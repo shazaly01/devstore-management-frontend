@@ -1,3 +1,4 @@
+<!--src/views/journal-entries/JournalEntryForm.vue-->
 <template>
   <div class="space-y-4 text-right font-sans pb-24" dir="rtl">
     <div class="flex justify-between items-center py-1 border-b border-surface-border/60">
@@ -11,7 +12,7 @@
 
     <div
       v-if="journalEntryStore.error"
-      class="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs font-bold shadow-sm"
+      class="p-3 bg-danger/10 border border-danger/30 text-danger rounded-lg text-xs font-bold shadow-sm"
     >
       {{ journalEntryStore.error }}
     </div>
@@ -19,9 +20,10 @@
     <JournalEntryHeader v-model="form" :validation-errors="journalEntryStore.validationErrors" />
 
     <AppCard>
-      <div class="p-3 space-y-3">
+      <div class="space-y-4">
+        <!-- حاوية البحث الذكي -->
         <div
-          class="w-full text-xs bg-slate-950 p-1.5 rounded-lg border border-primary/50 shadow-[0_0_10px_rgba(30,129,255,0.15)]"
+          class="w-full text-xs bg-primary p-1 rounded-xl shadow-md shadow-primary/20 border border-primary transition-all duration-200"
         >
           <SmartSearchGrid
             ref="accountSearchRef"
@@ -38,7 +40,7 @@
 
         <p
           v-if="getValidationError('lines')"
-          class="p-2 bg-rose-50 text-rose-600 rounded-lg text-xs font-bold border border-rose-100"
+          class="p-2.5 bg-danger/10 text-danger rounded-lg text-xs font-bold border border-danger/30 shadow-sm"
         >
           {{ getValidationError('lines') }}
         </p>
@@ -59,11 +61,11 @@
                 data-type="number"
                 :data-row="index"
                 data-col="debit"
-                class="w-full p-1 bg-surface-ground/60 border border-surface-border/40 hover:border-surface-border focus:border-primary focus:bg-surface-card rounded transition-all text-xs text-center font-mono text-primary font-bold outline-none focus:ring-1 focus:ring-primary/20"
+                class="w-full p-1 bg-surface-ground border border-surface-border hover:border-primary/50 focus:border-primary focus:bg-surface-section rounded text-xs text-center font-mono text-primary font-bold outline-none transition-all focus:ring-1 focus:ring-primary/20"
               />
               <p
                 v-if="getValidationError(`lines.${index}.debit`)"
-                class="text-rose-500 text-[9px] font-bold mt-0.5 text-center"
+                class="text-danger text-[9px] font-bold mt-0.5 text-center"
               >
                 خطأ في القيمة
               </p>
@@ -80,11 +82,11 @@
                 data-type="number"
                 :data-row="index"
                 data-col="credit"
-                class="w-full p-1 bg-surface-ground/60 border border-surface-border/40 hover:border-surface-border focus:border-primary focus:bg-surface-card rounded transition-all text-xs text-center font-mono text-emerald-500 font-bold outline-none focus:ring-1 focus:ring-primary/20"
+                class="w-full p-1 bg-surface-ground border border-surface-border hover:border-success/50 focus:border-success focus:bg-surface-section rounded text-xs text-center font-mono text-success font-bold outline-none transition-all focus:ring-1 focus:ring-success/20"
               />
               <p
                 v-if="getValidationError(`lines.${index}.credit`)"
-                class="text-rose-500 text-[9px] font-bold mt-0.5 text-center"
+                class="text-danger text-[9px] font-bold mt-0.5 text-center"
               >
                 خطأ في القيمة
               </p>
@@ -133,7 +135,6 @@ import { useJournalEntryStore } from '@/stores/journalEntryStore'
 import { useDynamicDetails } from '@/composables/useDynamicDetails'
 import { useToast } from 'vue-toastification'
 
-// استيراد المكونات المشتركة والأدوات
 import AppButton from '@/components/ui/AppButton.vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import InvoiceDetailTable from '@/components/ui/dynamic-invoice/InvoiceDetailTable.vue'
@@ -141,22 +142,16 @@ import SmartSearchGrid from '@/components/ui/SmartSearchGrid.vue'
 import JournalEntryHeader from './components/JournalEntryHeader.vue'
 import JournalEntryFooter from './components/JournalEntryFooter.vue'
 
-// تهيئة محركات التوجيه والبيانات
 const router = useRouter()
 const route = useRoute()
 const toast = useToast()
 
 const journalEntryStore = useJournalEntryStore()
-
-// مراجع العناصر للتحكم بالتركيز البصري
 const accountSearchRef = ref(null)
-
-// مصفوفة شجرة الحسابات الفرعية النشطة
 const activeSubAccounts = ref([])
 
 const isEdit = computed(() => !!route.params.id)
 
-// الحالة الابتدائية لبيانات الرأس
 const form = ref({
   entry_number: '',
   entry_date: new Date().toISOString().substr(0, 10),
@@ -164,10 +159,8 @@ const form = ref({
   notes: '',
 })
 
-// id المصفوفة التفاعلية الحاضنة للأسطر
 const lines = ref([])
 
-// تعريف السكيما المالية المتوافقة تماماً مع الـ Composable ومعطيات الـ API Request
 const detailSchema = [
   {
     key: 'account_code',
@@ -214,10 +207,8 @@ const detailSchema = [
   },
 ]
 
-// تصفية السكيما لعرض الحقول ذات العناوين فقط داخل الجدول
 const visibleTableSchema = computed(() => detailSchema.filter((col) => col.label))
 
-// استدعاء الـ Composable المحايد وضبط إعداداته ماليّاً (إيقاف دمج الأسطر المتكررة للحساب الواحد)
 const { handleItemSelected, removeRow, calculateColumnTotal } = useDynamicDetails(
   lines,
   detailSchema,
@@ -227,13 +218,11 @@ const { handleItemSelected, removeRow, calculateColumnTotal } = useDynamicDetail
   },
 )
 
-// دالة استقبال ترحيل الحساب المختار من محرك البحث الشبكي العلوي إلى الجدول تلقائياً
 const handleGlobalAccountSelect = (selectedAccount) => {
   if (!selectedAccount) return
   handleItemSelected(selectedAccount)
 }
 
-// دالة إعادة توجيه مؤشر التركيز إلى محرك البحث العلوي عند ضغط Enter في السطر الأخير
 const handleLastRowEnter = () => {
   nextTick(() => {
     const searchInput = accountSearchRef.value?.$el.querySelector('input')
@@ -244,23 +233,14 @@ const handleLastRowEnter = () => {
   })
 }
 
-// احتساب مجاميع الأعمدة لحظياً للتحقق من الاتزان المالي في الواجهة
-const headerTotalDebit = computed(() => {
-  return calculateColumnTotal('debit')
-})
+const headerTotalDebit = computed(() => calculateColumnTotal('debit'))
+const headerTotalCredit = computed(() => calculateColumnTotal('credit'))
 
-const headerTotalCredit = computed(() => {
-  return calculateColumnTotal('credit')
-})
-
-// جلب رسائل أخطاء التحقق للمسالك البرمجية المختلفة القادمة من السيرفر
 const getValidationError = (path) => {
   return journalEntryStore.validationErrors?.[path]?.[0] || null
 }
 
-// دورة حياة المكون وشحن البيانات
 onMounted(async () => {
-  // تغذية قائمة الحسابات الفرعية النشطة (الحسابات غير التجميعية التي تقبل حركات مباشرة)
   activeSubAccounts.value = [
     { id: 1, code: '1101001', name: 'خزينة الإدارة العامة' },
     { id: 2, code: '1102001', name: 'مصرف الجمهورية - الحساب الجاري' },
@@ -280,25 +260,20 @@ onMounted(async () => {
         notes: cur.notes || '',
       }
 
-      // شحن وتحويل بيانات الأسطر القادمة من الـ API لتطابق هيكل الشاشة
-      lines.value = cur.lines.map((ln) => {
-        return {
-          account_id: ln.account_id,
-          account_code: ln.account_code || '',
-          account_name: ln.account_name || '',
-          debit: parseFloat(ln.debit) || 0,
-          credit: parseFloat(ln.credit) || 0,
-          line_notes: ln.line_notes || '',
-          _flashing: false,
-        }
-      })
+      lines.value = cur.lines.map((ln) => ({
+        account_id: ln.account_id,
+        account_code: ln.account_code || '',
+        account_name: ln.account_name || '',
+        debit: parseFloat(ln.debit) || 0,
+        credit: parseFloat(ln.credit) || 0,
+        line_notes: ln.line_notes || '',
+        _flashing: false,
+      }))
     }
   }
 })
 
-// تجميع البايلود النهائي وإرساله للستور
 const handleSubmit = async () => {
-  // تصفية وحصر الأسطر الفعالة التي تحتوي على حساب مالي تم اختياره
   const dynamicLinesPayload = lines.value
     .filter((row) => row.account_id)
     .map((row) => ({
@@ -308,9 +283,8 @@ const handleSubmit = async () => {
       line_notes: row.line_notes || '',
     }))
 
-  // التحقق الأولي لمنع ترحيل مستند فارغ أو ناقص الأطراف قبل الوصول للسيرفر
   if (dynamicLinesPayload.length < 2) {
-    toast.warning('يجب إدخل سطرين ماليين على الأقل لتكوين أطراف الحركة الحسابية.')
+    toast.warning('يجب إدخال سطرين ماليين على الأقل لتكوين أطراف الحركة الحسابية.')
     return
   }
 
@@ -337,10 +311,3 @@ const handleCancel = () => {
   router.push('/app/journal-entries')
 }
 </script>
-
-<style scoped>
-select option {
-  background-color: #1e293b !important;
-  color: #f8fafc !important;
-}
-</style>

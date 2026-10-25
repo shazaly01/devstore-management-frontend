@@ -1,42 +1,50 @@
 <!-- src/views/roles/RolePermissionsDialog.vue -->
 <template>
-  <AppDialog :model-value="modelValue" @update:modelValue="close" :title="dialogTitle">
-    <div v-if="isLoading" class="text-center py-8">جاري التحميل...</div>
-    <!-- [تعديل] التحقق من وجود بيانات قبل العرض -->
-    <div v-else-if="permissionGroups.length === 0" class="text-center py-8">
+  <AppDialog
+    :model-value="modelValue"
+    @update:modelValue="close"
+    :title="dialogTitle"
+    size-class="max-w-4xl"
+  >
+    <div v-if="isLoading" class="text-center py-8 text-text-muted text-xs">جاري التحميل...</div>
+    <div v-else-if="permissionGroups.length === 0" class="text-center py-8 text-text-muted text-xs">
       لا توجد صلاحيات لعرضها.
     </div>
-    <div v-else>
-      <div class="max-h-[60vh] overflow-y-auto border border-surface-border rounded-md">
-        <table class="min-w-full divide-y divide-surface-border">
-          <thead class="bg-surface-section sticky top-0 z-10">
+    <div v-else class="text-right font-sans" dir="rtl">
+      <div
+        class="max-h-[60vh] overflow-y-auto border border-surface-border rounded-xl bg-surface-section"
+      >
+        <table class="min-w-full divide-y divide-surface-border text-xs">
+          <thead
+            class="bg-surface-ground sticky top-0 z-10 text-text-secondary border-b border-surface-border"
+          >
             <tr>
-              <th class="p-3 font-bold text-text-primary text-right">المجموعة</th>
-              <!-- [تعديل] بناء الأعمدة ديناميكيًا من actions -->
+              <th class="p-3 font-bold text-right">المجموعة</th>
               <th
                 v-for="action in permissionActions"
                 :key="action.key"
-                class="p-3 font-bold text-text-primary text-center"
+                class="p-3 font-bold text-center"
               >
                 {{ action.display_name }}
               </th>
             </tr>
           </thead>
-          <tbody class="divide-y divide-surface-border">
-            <!-- [تعديل] المرور على المجموعات مباشرة -->
-            <tr v-for="group in permissionGroups" :key="group.key">
+          <tbody class="divide-y divide-surface-border bg-surface-section">
+            <tr
+              v-for="group in permissionGroups"
+              :key="group.key"
+              class="hover:bg-surface-ground/60 transition-colors"
+            >
               <td class="p-3 font-semibold text-text-primary">
                 {{ group.display_name }}
               </td>
-              <!-- [تعديل] بناء الخلايا ديناميكيًا -->
               <td v-for="action in permissionActions" :key="action.key" class="p-3 text-center">
-                <!-- البحث عن الصلاحية المطابقة للمجموعة والإجراء -->
                 <template v-if="getPermissionFor(group, action.key)">
                   <input
                     type="checkbox"
                     :value="getPermissionFor(group, action.key).id"
                     v-model="selectedPermissions"
-                    class="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                    class="h-4 w-4 rounded border-surface-border bg-surface-ground text-primary focus:ring-primary/20 cursor-pointer"
                   />
                 </template>
                 <span v-else class="text-text-muted">-</span>
@@ -45,7 +53,7 @@
           </tbody>
         </table>
       </div>
-      <div class="mt-6 flex justify-end gap-3">
+      <div class="mt-6 flex justify-end gap-3 pt-3 border-t border-surface-border">
         <AppButton type="button" variant="secondary" @click="close">إلغاء</AppButton>
         <AppButton @click="handleSubmit" :disabled="isSubmitting">
           {{ isSubmitting ? 'جاري الحفظ...' : 'حفظ الصلاحيات' }}
@@ -75,18 +83,12 @@ const selectedPermissions = ref([])
 
 const dialogTitle = computed(() => `تعديل صلاحيات دور: ${props.role?.name || ''}`)
 
-// --- [بداية التعديلات الجوهرية] ---
-
-// جلب المجموعات والإجراءات من المخزن مباشرة
 const permissionGroups = computed(() => roleStore.permissions.groups || [])
 const permissionActions = computed(() => roleStore.permissions.actions || [])
 
-// دالة مساعدة للبحث عن صلاحية معينة داخل مجموعة
 function getPermissionFor(group, actionKey) {
   return group.permissions.find((p) => p.action === actionKey)
 }
-
-// --- [نهاية التعديلات الجوهرية] ---
 
 watch(
   () => props.role,
@@ -107,28 +109,23 @@ const close = () => {
 const handleSubmit = () => {
   if (!props.role) return
 
-  // 1. إنشاء خريطة (Map) للبحث السريع عن أسماء الصلاحيات باستخدام الـ ID
   const allPermissionsMap = new Map()
   roleStore.permissions.groups.forEach((group) => {
     group.permissions.forEach((p) => {
-      // اسم الصلاحية الكامل هو "group.action"
       const permissionName = `${group.key}.${p.action}`
       allPermissionsMap.set(p.id, permissionName)
     })
   })
 
-  // 2. تحويل مصفوفة الـ IDs المحددة إلى مصفوفة أسماء (strings)
   const permissionNames = selectedPermissions.value
     .map((id) => allPermissionsMap.get(id))
-    .filter((name) => name) // فلترة أي قيم غير صالحة
+    .filter((name) => name)
 
-  // 3. بناء الحمولة (payload) الكاملة التي يتوقعها الخادم
   const payload = {
-    name: props.role.name, // إرسال الاسم الحالي لتجاوز التحقق
-    permissions: permissionNames, // إرسال مصفوفة الأسماء
+    name: props.role.name,
+    permissions: permissionNames,
   }
 
-  // 4. إرسال الحمولة الكاملة إلى الحدث submit
   emit('submit', payload)
 }
 </script>

@@ -1,3 +1,4 @@
+<!--src/views/journal-entries/JournalEntryTable.vue-->
 <template>
   <AppCard>
     <AppTable
@@ -8,25 +9,18 @@
       @row-click="$emit('row-clicked', $event)"
     >
       <template #cell-id="{ item }">
-        <span
-          class="font-mono font-bold text-text-muted bg-surface-ground px-2 py-1 rounded border border-surface-border/50"
-        >
-          #{{ item.id }}
-        </span>
+        <AppBadge variant="neutral" size="sm"> #{{ item.id }} </AppBadge>
       </template>
 
       <template #cell-entry_info="{ item }">
-        <div class="flex flex-col gap-1 py-1">
+        <div class="flex flex-col gap-1 py-1 text-right" dir="rtl">
           <div class="flex items-center gap-2">
-            <span
-              :class="[
-                'px-2 py-0.5 text-[10px] font-black rounded border',
-                item.type === 'journal'
-                  ? 'bg-blue-50 text-blue-700 border-blue-200'
-                  : item.type === 'receipt'
-                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                    : 'bg-amber-50 text-amber-700 border-amber-200',
-              ]"
+            <AppBadge
+              :variant="
+                item.type === 'journal' ? 'info' : item.type === 'receipt' ? 'success' : 'warning'
+              "
+              size="xs"
+              pill
             >
               {{
                 item.type === 'journal'
@@ -35,26 +29,34 @@
                     ? 'سند قبض'
                     : 'سند صرف'
               }}
+            </AppBadge>
+            <span class="text-xs text-text-primary font-mono font-black">
+              {{ item.entry_number }}
             </span>
-            <span class="text-xs text-text-primary font-mono font-black">{{
-              item.entry_number
-            }}</span>
           </div>
           <span class="text-[11px] text-text-muted font-mono">{{ item.entry_date }}</span>
         </div>
       </template>
 
       <template #cell-notes="{ item }">
-        <span v-if="item.notes" class="text-xs text-text-secondary max-w-[300px] truncate block">
+        <span
+          v-if="item.notes"
+          class="text-xs text-text-secondary max-w-[300px] truncate block text-right"
+          dir="rtl"
+        >
           {{ item.notes }}
         </span>
-        <span v-else class="text-xs text-text-muted/60 font-medium italic"
-          >لا يوجد بيان عام...</span
+        <span
+          v-else
+          class="text-xs text-text-muted/60 font-medium italic text-right block"
+          dir="rtl"
         >
+          لا يوجد بيان عام...
+        </span>
       </template>
 
       <template #cell-user="{ item }">
-        <div class="flex flex-col justify-center">
+        <div class="flex flex-col justify-center text-right" dir="rtl">
           <span class="font-bold text-xs text-text-primary">
             {{ item.user?.name || 'النظام التلقائي' }}
           </span>
@@ -63,10 +65,10 @@
       </template>
 
       <template #cell-actions="{ item }">
-        <div class="flex items-center justify-end space-x-1 space-x-reverse">
+        <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <button
-            @click.stop="$emit('edit-journal-entry', item)"
-            class="p-1.5 text-sky-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
+            @click="$emit('edit-journal-entry', item)"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل السند المالي"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -80,8 +82,8 @@
           </button>
 
           <button
-            @click.stop="$emit('delete-journal-entry', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+            @click="$emit('delete-journal-entry', item)"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="إلغاء وحذف السند المالي"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -106,6 +108,7 @@ import { computed } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 
 defineProps({
   journalEntries: { type: Array, required: true },
@@ -115,7 +118,6 @@ defineProps({
 
 defineEmits(['page-change', 'edit-journal-entry', 'delete-journal-entry', 'row-clicked'])
 
-// بناء وترتيب أعمدة القيود المالية لتتوافق مع هيكل المحاسبة العام
 const tableHeaders = computed(() => [
   { key: 'id', label: 'المعرف الرقمي' },
   { key: 'entry_info', label: 'تفاصيل وطبيعة السند المالي' },

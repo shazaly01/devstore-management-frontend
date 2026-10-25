@@ -1,9 +1,11 @@
+<!--src/views/reports/financial/TrialBalanceReport.vue-->
 <template>
-  <div class="space-y-6 print:hidden">
-    <div class="flex justify-between items-center">
+  <div class="space-y-6 print:hidden text-right font-sans" dir="rtl">
+    <!-- الترويسة العلوية -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
-        <h1 class="text-3xl font-black text-white tracking-tight">ميزان المراجعة الشامل</h1>
-        <p class="text-sm text-gray-400 mt-1">
+        <h1 class="text-2xl font-black text-text-primary tracking-tight">ميزان المراجعة الشامل</h1>
+        <p class="text-xs text-text-muted mt-1">
           تجميع الحركات والأرصدة الافتتاحية والختامية لكافة مستويات دليل الحسابات
         </p>
       </div>
@@ -11,107 +13,100 @@
         <AppButton
           @click="handlePrint"
           :disabled="!trialBalanceSummary || trialBalanceList.length === 0"
-          class="bg-indigo-500 hover:bg-indigo-400 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)] disabled:opacity-50"
+          class="flex items-center gap-2"
         >
-          <PrinterIcon class="w-5 h-5 ml-2" />
+          <PrinterIcon class="w-4 h-4 ml-1" />
           طباعة الميزان الدفتري
         </AppButton>
       </div>
     </div>
 
-    <AppCard class="border border-gray-800 bg-surface-section/60 p-5 backdrop-blur-sm">
+    <!-- بطاقة الفلاتر -->
+    <AppCard>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
         <div>
-          <label class="block text-xs font-bold text-gray-400 uppercase mb-2"
-            >من تاريخ الحركة</label
-          >
+          <label class="block text-xs font-bold text-text-secondary uppercase mb-2">
+            من تاريخ الحركة
+          </label>
           <input
             type="date"
             v-model="filters.from_date"
-            class="w-full bg-surface-background border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 text-sm"
-            style="color-scheme: dark"
+            class="block w-full h-10 px-3 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-xs font-bold font-mono outline-none transition-all cursor-pointer shadow-sm"
           />
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-gray-400 uppercase mb-2"
-            >إلى تاريخ الحركة</label
-          >
+          <label class="block text-xs font-bold text-text-secondary uppercase mb-2">
+            إلى تاريخ الحركة
+          </label>
           <input
             type="date"
             v-model="filters.to_date"
-            class="w-full bg-surface-background border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 text-sm"
-            style="color-scheme: dark"
+            class="block w-full h-10 px-3 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-xs font-bold font-mono outline-none transition-all cursor-pointer shadow-sm"
           />
         </div>
 
         <div>
           <AppButton
             @click="handleFetch"
-            :loading="loading"
-            class="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold shadow-[0_0_15px_rgba(34,211,238,0.3)]"
+            :disabled="loading"
+            class="w-full h-10 flex items-center justify-center font-bold shadow-sm"
           >
-            <ArrowPathIcon class="w-5 h-5 ml-2" :class="{ 'animate-spin': loading }" />
+            <ArrowPathIcon class="w-4 h-4 ml-2" :class="{ 'animate-spin': loading }" />
             توليد ومطابقة الميزان
           </AppButton>
         </div>
       </div>
     </AppCard>
 
+    <!-- بطاقات مؤشرات ميزان المراجعة -->
     <div v-if="trialBalanceSummary" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <AppCard class="p-5 border-r-4 border-r-emerald-500 bg-surface-section/60 shadow-lg">
-        <div class="text-xs text-emerald-300/60 uppercase tracking-widest mb-2 font-bold">
-          إجمالي الحركات المدینة
+      <AppCard class="p-4 border-r-4 border-r-success bg-surface-section shadow-sm">
+        <div class="text-[10px] text-success uppercase tracking-widest mb-1 font-bold">
+          إجمالي الحركات المدينة
         </div>
-        <div class="text-2xl font-black text-emerald-400 font-mono">
+        <div class="text-xl font-black text-success font-mono">
           {{ formatCurrency(trialBalanceSummary.total_period_debit) }}
         </div>
       </AppCard>
 
-      <AppCard class="p-5 border-r-4 border-r-rose-500 bg-surface-section/60 shadow-lg">
-        <div class="text-xs text-rose-300/60 uppercase tracking-widest mb-2 font-bold">
+      <AppCard class="p-4 border-r-4 border-r-danger bg-surface-section shadow-sm">
+        <div class="text-[10px] text-danger uppercase tracking-widest mb-1 font-bold">
           إجمالي الحركات الدائنة
         </div>
-        <div class="text-2xl font-black text-rose-400 font-mono">
+        <div class="text-xl font-black text-danger font-mono">
           {{ formatCurrency(trialBalanceSummary.total_period_credit) }}
         </div>
       </AppCard>
 
       <AppCard
-        class="p-5 border-r-4 bg-surface-section/60 transition-all duration-300"
-        :class="
-          trialBalanceSummary.is_balanced
-            ? 'border-r-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.15)]'
-            : 'border-r-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.15)]'
-        "
+        class="p-4 border-r-4 bg-surface-section transition-all duration-300 shadow-sm"
+        :class="trialBalanceSummary.is_balanced ? 'border-r-success' : 'border-r-danger'"
       >
         <div
-          class="text-xs uppercase tracking-widest mb-2 font-bold"
-          :class="trialBalanceSummary.is_balanced ? 'text-emerald-300/60' : 'text-rose-300/60'"
+          class="text-[10px] uppercase tracking-widest mb-1 font-bold"
+          :class="trialBalanceSummary.is_balanced ? 'text-success' : 'text-danger'"
         >
           حالة اتزان الدفتري العام
         </div>
         <div
-          class="text-2xl font-black"
-          :class="
-            trialBalanceSummary.is_balanced
-              ? 'text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.6)]'
-              : 'text-rose-400 drop-shadow-[0_0_5px_rgba(251,113,133,0.6)]'
-          "
+          class="text-xl font-black"
+          :class="trialBalanceSummary.is_balanced ? 'text-success' : 'text-danger'"
         >
-          {{ trialBalanceSummary.is_balanced ? 'متزن تماماً' : 'غير متزن دفترياً' }}
+          {{ trialBalanceSummary.is_balanced ? 'متزن تماماً ✓' : 'غير متزن دفترياً' }}
         </div>
       </AppCard>
     </div>
 
-    <AppCard class="border border-gray-800 bg-surface-section/40 backdrop-blur-sm">
+    <!-- جدول ميزان المراجعة التفصيلي -->
+    <AppCard>
       <AppTable :headers="tableHeaders" :items="trialBalanceList" :is-loading="loading">
         <template #cell-code="{ item }">
           <span
             class="font-mono text-xs"
-            :class="item.is_parent ? 'text-indigo-300 font-black tracking-wider' : 'text-gray-400'"
+            :class="item.is_parent ? 'text-primary font-black tracking-wider' : 'text-text-muted'"
           >
-            {{ item.code }}
+            #{{ item.code }}
           </span>
         </template>
 
@@ -119,8 +114,8 @@
           <span
             :class="
               item.is_parent
-                ? 'text-white font-extrabold pr-0 text-sm'
-                : 'text-cyan-300/80 font-medium pr-4 text-xs border-r border-gray-800'
+                ? 'text-text-primary font-black pr-0 text-sm'
+                : 'text-text-secondary font-medium pr-4 text-xs border-r border-surface-border'
             "
           >
             {{ item.name }}
@@ -129,8 +124,8 @@
 
         <template #cell-nature="{ item }">
           <span
-            class="text-xs font-semibold"
-            :class="item.nature === 'مدين' ? 'text-emerald-500' : 'text-rose-500'"
+            class="text-xs font-bold"
+            :class="item.nature === 'مدين' ? 'text-success' : 'text-danger'"
           >
             {{ item.nature }}
           </span>
@@ -140,8 +135,8 @@
           <span
             class="font-mono text-xs font-bold"
             :class="[
-              item.is_parent ? 'text-gray-300' : 'text-gray-400',
-              item.opening_balance < 0 ? 'text-amber-400' : '',
+              item.is_parent ? 'text-text-primary' : 'text-text-muted',
+              item.opening_balance < 0 ? 'text-warning' : '',
             ]"
           >
             {{ formatCurrency(item.opening_balance) }}
@@ -151,7 +146,7 @@
         <template #cell-period_debit="{ item }">
           <span
             class="font-mono text-xs font-bold"
-            :class="item.is_parent ? 'text-emerald-300 font-extrabold' : 'text-emerald-400/80'"
+            :class="item.is_parent ? 'text-success font-black' : 'text-success/90'"
           >
             {{ item.period_debit > 0 ? formatCurrency(item.period_debit) : '-' }}
           </span>
@@ -160,7 +155,7 @@
         <template #cell-period_credit="{ item }">
           <span
             class="font-mono text-xs font-bold"
-            :class="item.is_parent ? 'text-rose-300 font-extrabold' : 'text-rose-400/80'"
+            :class="item.is_parent ? 'text-danger font-black' : 'text-danger/90'"
           >
             {{ item.period_credit > 0 ? formatCurrency(item.period_credit) : '-' }}
           </span>
@@ -168,11 +163,11 @@
 
         <template #cell-closing_balance="{ item }">
           <span
-            class="font-mono text-xs font-black rounded px-1.5 py-0.5"
+            class="font-mono text-xs font-bold rounded px-2 py-0.5"
             :class="
               item.is_parent
-                ? 'text-white bg-surface-background/60 border border-gray-800'
-                : 'text-cyan-300 bg-cyan-950/20'
+                ? 'text-text-primary bg-surface-ground border border-surface-border font-black'
+                : 'text-primary bg-primary/10'
             "
           >
             {{ formatCurrency(item.closing_balance) }}
@@ -206,7 +201,7 @@ const filters = ref({
 const { trialBalanceList, trialBalanceSummary, loading } = storeToRefs(reportStore)
 
 const tableHeaders = [
-  { key: 'code', label: 'كود الحساب دليلي' },
+  { key: 'code', label: 'كود الحساب' },
   { key: 'name', label: 'الحساب المالي والبيان الدفتري' },
   { key: 'nature', label: 'طبيعة الحساب' },
   { key: 'opening_balance', label: 'الرصيد الافتتاحي' },
@@ -216,7 +211,6 @@ const tableHeaders = [
 ]
 
 const handleFetch = () => {
-  // تنظيف وتأمين كائن الفلاتر لتفادي إرسال نصوص فارغة تسبب مشاكل بالباك إند
   const cleanFilters = {}
   if (filters.value.from_date) cleanFilters.from_date = filters.value.from_date
   if (filters.value.to_date) cleanFilters.to_date = filters.value.to_date
@@ -262,11 +256,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
-:deep(.AppTable th) {
-  @apply text-gray-400 font-bold uppercase tracking-wider text-xs border-b border-gray-800;
+:global(.dark input[type='date']::-webkit-calendar-picker-indicator) {
+  filter: invert(1);
 }
 
-:deep(.AppTable td) {
-  @apply py-3.5 border-b border-gray-800/40;
+input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
 }
 </style>

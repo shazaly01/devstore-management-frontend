@@ -1,11 +1,14 @@
 <!-- src/views/dashboard/components/DashboardFilters.vue -->
 <template>
   <div
-    class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 w-full lg:w-auto bg-surface-section/50 p-3 rounded-xl border border-surface-border/80 backdrop-blur-md shadow-inner"
+    class="flex flex-col sm:flex-row items-stretch sm:items-end gap-3 w-full lg:w-auto bg-surface-section p-3 rounded-xl border border-surface-border shadow-sm font-sans"
+    dir="rtl"
   >
     <!-- مدخل التاريخ: من تاريخ -->
     <div class="w-full sm:w-40 md:w-44">
-      <label class="block text-xs font-bold text-text-muted mb-1.5 pr-1 flex items-center gap-1.5">
+      <label
+        class="block text-xs font-bold text-text-secondary mb-1.5 pr-1 flex items-center gap-1.5"
+      >
         <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
         من تاريخ
       </label>
@@ -14,14 +17,16 @@
         type="date"
         v-model="filters.from_date"
         :disabled="loading"
-        class="w-full text-sm text-text-primary focus:border-primary/50 transition-colors"
+        class="w-full text-sm text-text-primary focus:border-primary transition-colors"
       />
     </div>
 
     <!-- مدخل التاريخ: إلى تاريخ -->
     <div class="w-full sm:w-40 md:w-44">
-      <label class="block text-xs font-bold text-text-muted mb-1.5 pr-1 flex items-center gap-1.5">
-        <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+      <label
+        class="block text-xs font-bold text-text-secondary mb-1.5 pr-1 flex items-center gap-1.5"
+      >
+        <span class="w-1.5 h-1.5 rounded-full bg-info"></span>
         إلى تاريخ
       </label>
       <AppInput
@@ -29,7 +34,7 @@
         type="date"
         v-model="filters.to_date"
         :disabled="loading"
-        class="w-full text-sm text-text-primary focus:border-primary/50 transition-colors"
+        class="w-full text-sm text-text-primary focus:border-primary transition-colors"
       />
     </div>
 
@@ -37,9 +42,9 @@
     <button
       @click="emitFilter"
       :disabled="loading"
-      class="w-full sm:w-auto px-5 py-2.5 bg-primary hover:bg-primary/90 text-white font-bold rounded-lg text-sm transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] shadow-lg shadow-primary/20 hover:shadow-primary/30 border border-primary/20 mt-2 sm:mt-0"
+      class="w-full sm:w-auto px-5 py-2.5 bg-primary hover:bg-primary-dark text-white font-bold rounded-lg text-sm transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] shadow-sm shadow-primary/20 border border-primary/20 mt-2 sm:mt-0 cursor-pointer"
     >
-      <!-- مؤشر التحميل الدوار اللطيف -->
+      <!-- مؤشر التحميل الدوار -->
       <svg v-if="loading" class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
         <circle
           class="opacity-25"
@@ -79,10 +84,9 @@
 </template>
 
 <script setup>
-import { ref, defineProps, defineEmits } from 'vue'
+import { ref } from 'vue'
 import AppInput from '@/components/ui/AppInput.vue'
 
-// استقبال حالة التحميل من الشاشة الأم لحظر المدخلات أثناء الطلب النشط
 defineProps({
   loading: {
     type: Boolean,
@@ -90,18 +94,13 @@ defineProps({
   },
 })
 
-// إعلان الحدث المخصص لرفع قيم التصفية للأم
 const emit = defineEmits(['filter'])
 
-// المتغيرات المحلية لمراقبة مدخلات التواريخ
 const filters = ref({
   from_date: '',
   to_date: '',
 })
 
-/**
- * تمرير الفلاتر المختارة ديناميكياً للـ Orchestrator لإعادة جلب البيانات
- */
 const emitFilter = () => {
   emit('filter', { ...filters.value })
 }

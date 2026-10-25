@@ -1,9 +1,11 @@
+<!--src/views/reports/AccountLedgerReport.vue-->
 <template>
-  <div class="space-y-6 print:hidden">
-    <div class="flex justify-between items-center">
+  <div class="space-y-6 print:hidden text-right font-sans" dir="rtl">
+    <!-- الترويسة العلوية -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
-        <h1 class="text-3xl font-black text-white tracking-tight">كشف الحساب التفصيلي</h1>
-        <p class="text-sm text-gray-400 mt-1">
+        <h1 class="text-2xl font-black text-text-primary tracking-tight">كشف الحساب التفصيلي</h1>
+        <p class="text-xs text-text-muted mt-1">
           عرض حركة الحسابات التفصيلية مع احتساب الأرصدة المتوالية والافتتاحية
         </p>
       </div>
@@ -11,20 +13,21 @@
         <AppButton
           @click="handlePrint"
           :disabled="!accountLedgerSummary || accountLedgerList.length === 0"
-          class="bg-indigo-500 hover:bg-indigo-400 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)] disabled:opacity-50"
+          class="flex items-center gap-2"
         >
-          <PrinterIcon class="w-5 h-5 ml-2" />
+          <PrinterIcon class="w-4 h-4 ml-1" />
           طباعة كشف الحساب
         </AppButton>
       </div>
     </div>
 
-    <AppCard class="border border-gray-800 bg-surface-section/60 p-5 backdrop-blur-sm">
+    <!-- بطاقة الفلاتر -->
+    <AppCard>
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
         <div>
-          <label class="block text-xs font-bold text-gray-400 uppercase mb-2"
-            >الحساب المالي (إجباري)</label
-          >
+          <label class="block text-xs font-bold text-text-secondary uppercase mb-2">
+            الحساب المالي (إجباري)
+          </label>
           <AppDropdown
             id="filter-account-id"
             v-model="filters.account_id"
@@ -36,124 +39,115 @@
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-gray-400 uppercase mb-2">من تاريخ</label>
+          <label class="block text-xs font-bold text-text-secondary uppercase mb-2">من تاريخ</label>
           <input
             type="date"
             v-model="filters.from_date"
-            class="w-full bg-surface-background border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 text-sm"
-            style="color-scheme: dark"
+            class="block w-full h-10 px-3 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-xs font-bold font-mono outline-none transition-all cursor-pointer shadow-sm"
           />
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-gray-400 uppercase mb-2">إلى تاريخ</label>
+          <label class="block text-xs font-bold text-text-secondary uppercase mb-2"
+            >إلى تاريخ</label
+          >
           <div class="flex gap-2">
             <input
               type="date"
               v-model="filters.to_date"
-              class="w-full bg-surface-background border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 text-sm"
-              style="color-scheme: dark"
+              class="block w-full h-10 px-3 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-xs font-bold font-mono outline-none transition-all cursor-pointer shadow-sm"
             />
             <AppButton
               @click="handleFetch"
               :loading="loading"
               :disabled="!filters.account_id"
-              class="bg-cyan-500 hover:bg-cyan-400 text-black font-bold px-6 shadow-[0_0_15px_rgba(34,211,238,0.3)] disabled:opacity-40"
+              class="h-10 px-5 flex items-center justify-center shrink-0"
             >
-              <ArrowPathIcon class="w-5 h-5" :class="{ 'animate-spin': loading }" />
+              <ArrowPathIcon class="w-4 h-4" :class="{ 'animate-spin': loading }" />
             </AppButton>
           </div>
         </div>
       </div>
     </AppCard>
 
+    <!-- بطاقات ملخص الأرصدة -->
     <div v-if="accountLedgerSummary" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-      <AppCard class="p-4 border-r-4 border-r-gray-500 bg-surface-section/60 shadow-lg">
-        <div class="text-[10px] text-gray-400 font-bold uppercase mb-1">
+      <AppCard class="p-4 border-r-4 border-r-surface-border bg-surface-section shadow-sm">
+        <div class="text-[10px] text-text-muted font-bold uppercase mb-1">
           الرصيد الافتتاحي الساكن
         </div>
-        <div class="text-xl font-black text-gray-300 font-mono">
+        <div class="text-xl font-black text-text-primary font-mono">
           {{ formatCurrency(accountLedgerSummary.opening_balance) }}
-          <span class="text-xs font-normal text-gray-500">
+          <span class="text-xs font-normal text-text-muted">
             ({{ accountLedgerSummary.nature_lbl }})
           </span>
         </div>
       </AppCard>
 
-      <AppCard class="p-4 border-r-4 border-r-emerald-500 bg-surface-section/60 shadow-lg">
-        <div class="text-[10px] text-emerald-300/60 font-bold uppercase mb-1">
-          إجمالي مدين للفترة (+)
-        </div>
-        <div class="text-xl font-black text-emerald-400 font-mono">
+      <AppCard class="p-4 border-r-4 border-r-success bg-surface-section shadow-sm">
+        <div class="text-[10px] text-success font-bold uppercase mb-1">إجمالي مدين للفترة (+)</div>
+        <div class="text-xl font-black text-success font-mono">
           {{ formatCurrency(accountLedgerSummary.total_period_debit) }}
         </div>
       </AppCard>
 
-      <AppCard class="p-4 border-r-4 border-r-rose-500 bg-surface-section/60 shadow-lg">
-        <div class="text-[10px] text-rose-300/60 font-bold uppercase mb-1">
-          إجمالي دائن للفترة (-)
-        </div>
-        <div class="text-xl font-black text-rose-400 font-mono">
+      <AppCard class="p-4 border-r-4 border-r-danger bg-surface-section shadow-sm">
+        <div class="text-[10px] text-danger font-bold uppercase mb-1">إجمالي دائن للفترة (-)</div>
+        <div class="text-xl font-black text-danger font-mono">
           {{ formatCurrency(accountLedgerSummary.total_period_credit) }}
         </div>
       </AppCard>
 
       <AppCard
-        class="p-4 border-r-4 bg-surface-section/60 shadow-lg"
-        :class="
-          accountLedgerSummary.closing_balance >= 0 ? 'border-r-cyan-400' : 'border-r-amber-500'
-        "
+        class="p-4 border-r-4 bg-surface-section shadow-sm"
+        :class="accountLedgerSummary.closing_balance >= 0 ? 'border-r-primary' : 'border-r-warning'"
       >
-        <div class="text-[10px] font-bold uppercase mb-1 text-gray-400">الرصيد الختامي الجاري</div>
+        <div class="text-[10px] font-bold uppercase mb-1 text-text-muted">
+          الرصيد الختامي الجاري
+        </div>
         <div
           class="text-xl font-black font-mono"
-          :class="
-            accountLedgerSummary.closing_balance >= 0
-              ? 'text-cyan-300 drop-shadow-[0_0_5px_rgba(34,211,238,0.4)]'
-              : 'text-amber-400 drop-shadow-[0_0_5px_rgba(251,191,36,0.4)]'
-          "
+          :class="accountLedgerSummary.closing_balance >= 0 ? 'text-primary' : 'text-warning'"
         >
           {{ formatCurrency(accountLedgerSummary.closing_balance) }}
         </div>
       </AppCard>
     </div>
 
-    <AppCard
-      v-if="accountLedgerList.length > 0 || loading"
-      class="border border-gray-800 bg-surface-section/40 backdrop-blur-sm"
-    >
+    <!-- جدول حركة الحساب -->
+    <AppCard v-if="accountLedgerList.length > 0 || loading">
       <AppTable :headers="tableHeaders" :items="accountLedgerList" :is-loading="loading">
         <template #cell-entry_date="{ item }">
-          <span class="text-xs text-gray-400 font-mono">{{ item.entry_date ?? '-' }}</span>
+          <span class="text-xs text-text-muted font-mono">{{ item.entry_date ?? '-' }}</span>
         </template>
 
         <template #cell-entry_number="{ item }">
-          <span class="font-mono text-cyan-400 text-xs font-bold">
+          <span class="font-mono text-primary text-xs font-bold">
             {{ item.entry_number ?? '-' }}
           </span>
         </template>
 
         <template #cell-line_notes="{ item }">
-          <span class="text-xs text-gray-300 font-medium">{{ item.line_notes ?? '-' }}</span>
+          <span class="text-xs text-text-primary font-medium">{{ item.line_notes ?? '-' }}</span>
         </template>
 
         <template #cell-debit="{ item }">
-          <span class="font-mono text-xs font-bold text-emerald-400" v-if="item.debit > 0">
+          <span class="font-mono text-xs font-bold text-success" v-if="item.debit > 0">
             {{ formatCurrency(item.debit) }}
           </span>
-          <span v-else class="text-gray-700 text-xs">-</span>
+          <span v-else class="text-text-muted text-xs">-</span>
         </template>
 
         <template #cell-credit="{ item }">
-          <span class="font-mono text-xs font-bold text-rose-400" v-if="item.credit > 0">
+          <span class="font-mono text-xs font-bold text-danger" v-if="item.credit > 0">
             {{ formatCurrency(item.credit) }}
           </span>
-          <span v-else class="text-gray-700 text-xs">-</span>
+          <span v-else class="text-text-muted text-xs">-</span>
         </template>
 
         <template #cell-running_balance="{ item }">
           <span
-            class="font-black text-xs text-white bg-surface-background/70 px-2 py-1 rounded border border-gray-800/60 font-mono"
+            class="font-black text-xs text-text-primary bg-surface-ground px-2 py-1 rounded border border-surface-border font-mono"
           >
             {{ formatCurrency(item.running_balance) }}
           </span>
@@ -200,7 +194,6 @@ const tableHeaders = [
 const handleFetch = () => {
   if (!filters.value.account_id) return
 
-  // تنظيف وتجهيز الفلاتر قبل التمرير للباك إند
   const cleanFilters = { account_id: filters.value.account_id }
   if (filters.value.from_date) cleanFilters.from_date = filters.value.from_date
   if (filters.value.to_date) cleanFilters.to_date = filters.value.to_date
@@ -248,11 +241,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
-:deep(.AppTable th) {
-  @apply text-gray-400 font-bold uppercase tracking-wider text-xs border-b border-gray-800;
+:global(.dark input[type='date']::-webkit-calendar-picker-indicator) {
+  filter: invert(1);
 }
 
-:deep(.AppTable td) {
-  @apply py-3 border-b border-gray-800/50;
+input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
 }
 </style>

@@ -1,7 +1,7 @@
 <!-- src/views/pricing/components/BulkRepriceFilter.vue -->
 <template>
   <AppCard class="mb-6">
-    <form @submit.prevent="handlePreviewSubmit" class="p-5 space-y-4">
+    <form @submit.prevent="handlePreviewSubmit" class="space-y-4 text-right" dir="rtl">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 items-start">
         <!-- 1. اختيار التصنيف المجموعي -->
         <div>
@@ -18,7 +18,7 @@
             <p
               v-for="(error, index) in validationErrors.category_id"
               :key="index"
-              class="text-rose-500 text-xs mt-1 font-bold"
+              class="text-danger text-xs mt-1 font-bold"
             >
               {{ error }}
             </p>
@@ -41,7 +41,7 @@
             <p
               v-for="(error, index) in validationErrors.criterion_type"
               :key="index"
-              class="text-rose-500 text-xs mt-1 font-bold"
+              class="text-danger text-xs mt-1 font-bold"
             >
               {{ error }}
             </p>
@@ -65,7 +65,7 @@
             <p
               v-for="(error, index) in validationErrors.currency_id"
               :key="index"
-              class="text-rose-500 text-xs mt-1 font-bold"
+              class="text-danger text-xs mt-1 font-bold"
             >
               {{ error }}
             </p>
@@ -87,7 +87,7 @@
             <p
               v-for="(error, index) in validationErrors.exchange_rate"
               :key="index"
-              class="text-rose-500 text-xs mt-1 font-bold"
+              class="text-danger text-xs mt-1 font-bold"
             >
               {{ error }}
             </p>
@@ -110,7 +110,7 @@
             <p
               v-for="(error, index) in validationErrors.percentage"
               :key="index"
-              class="text-rose-500 text-xs mt-1 font-bold"
+              class="text-danger text-xs mt-1 font-bold"
             >
               {{ error }}
             </p>
@@ -133,7 +133,7 @@
             <p
               v-for="(error, index) in validationErrors.profit_margin"
               :key="index"
-              class="text-rose-500 text-xs mt-1 font-bold"
+              class="text-danger text-xs mt-1 font-bold"
             >
               {{ error }}
             </p>
@@ -158,7 +158,7 @@
             <p
               v-for="(error, index) in validationErrors.target_margin"
               :key="index"
-              class="text-rose-500 text-xs mt-1 font-bold"
+              class="text-danger text-xs mt-1 font-bold"
             >
               {{ error }}
             </p>
@@ -181,7 +181,7 @@
             <p
               v-for="(error, index) in validationErrors.rounding_rule"
               :key="index"
-              class="text-rose-500 text-xs mt-1 font-bold"
+              class="text-danger text-xs mt-1 font-bold"
             >
               {{ error }}
             </p>
@@ -190,7 +190,7 @@
       </div>
 
       <!-- أزرار الإجراءات -->
-      <div class="flex justify-end items-center pt-2 border-t border-surface-border gap-3">
+      <div class="flex justify-end items-center pt-3 border-t border-surface-border gap-3">
         <AppButton type="button" variant="secondary" @click="resetFilters" :disabled="isLoading">
           إعادة ضبط
         </AppButton>
@@ -240,14 +240,12 @@ const props = defineProps({
 
 const emit = defineEmits(['preview', 'reset'])
 
-// خيارات معيار التسعير
 const criterionOptions = [
   { id: 'exchange_rate', name: 'تحديث بناءً على سعر الصرف' },
   { id: 'percentage', name: 'تعديل تكلفة بنسبة تضخم (+/-)' },
   { id: 'target_margin', name: 'تطبيق هامش ربح مستهدف (%)' },
 ]
 
-// خيارات قواعد التقريب
 const roundingOptions = [
   { id: 'none', name: 'بدون تقريب (القيمة الفعلية)' },
   { id: 'nearest_50', name: 'لأقرب 50 وحدة نقدية' },
@@ -270,7 +268,6 @@ const defaultForm = () => ({
 
 const form = ref(defaultForm())
 
-// خيارات التصنيفات
 const categoryOptions = computed(() => {
   return props.categories.map((c) => ({
     id: c.id,
@@ -278,7 +275,6 @@ const categoryOptions = computed(() => {
   }))
 })
 
-// خيارات العملات
 const currencyOptions = computed(() => {
   return props.currencies.map((curr) => ({
     id: curr.id,
@@ -286,7 +282,6 @@ const currencyOptions = computed(() => {
   }))
 })
 
-// التعامل مع تغيير العملة وتعبئة سعر الصرف الأخير تلقائياً
 const onCurrencySelected = (currencyId) => {
   clearBackendError('currency_id')
   const selected = props.currencies.find((c) => c.id === currencyId)
@@ -295,7 +290,6 @@ const onCurrencySelected = (currencyId) => {
   }
 }
 
-// التعامل مع تغيير نوع المعيار
 const handleCriterionChange = (newType) => {
   clearBackendError('criterion_type')
   if (newType === 'exchange_rate' && !form.value.currency_id && props.currencies.length > 0) {
@@ -307,14 +301,12 @@ const handleCriterionChange = (newType) => {
   }
 }
 
-// مسح الأخطاء عند التعديل
 const clearBackendError = (field) => {
   if (props.validationErrors && props.validationErrors[field]) {
     delete props.validationErrors[field]
   }
 }
 
-// إرسال الطلب
 const handlePreviewSubmit = () => {
   const payload = {
     category_id: form.value.category_id ? Number(form.value.category_id) : null,
@@ -346,7 +338,6 @@ const resetFilters = () => {
   emit('reset')
 }
 
-// التعيين الافتراضي للعملة عند تحميل قائمة العملات
 watch(
   () => props.currencies,
   (newCurrencies) => {

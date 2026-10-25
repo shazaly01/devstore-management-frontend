@@ -1,3 +1,4 @@
+<!--src/views/vouchers/VoucherModal.vue-->
 <template>
   <Transition
     enter-active-class="transition ease-out duration-200"
@@ -9,7 +10,7 @@
   >
     <div
       v-if="modelValue"
-      class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40 p-4"
+      class="fixed inset-0 bg-black/60 flex items-center justify-center z-40 p-4"
       @click.self="close"
     >
       <Transition
@@ -22,10 +23,11 @@
         leave-to-class="opacity-0 scale-95"
       >
         <div
-          class="bg-surface-section rounded-xl shadow-2xl p-6 w-full max-w-3xl transform overflow-y-auto max-h-[90vh] custom-scrollbar"
+          class="bg-surface-section border border-surface-border rounded-xl shadow-2xl p-6 w-full max-w-3xl transform overflow-y-auto max-h-[90vh] custom-scrollbar text-right font-sans"
           role="dialog"
           aria-modal="true"
           :aria-labelledby="modalTitle"
+          dir="rtl"
         >
           <div class="flex justify-between items-center border-b border-surface-border pb-3 mb-5">
             <h3
@@ -34,17 +36,17 @@
             >
               <span
                 class="w-2.5 h-2.5 rounded-full"
-                :class="voucher?.voucher_type === 'receipt' ? 'bg-emerald-500' : 'bg-rose-500'"
+                :class="voucher?.voucher_type === 'receipt' ? 'bg-success' : 'bg-danger'"
               ></span>
               {{ modalTitle }}
             </h3>
             <button
               @click="close"
-              class="text-text-muted hover:text-text-primary p-1.5 rounded-full hover:bg-surface-border transition-colors"
+              class="text-text-muted hover:text-text-primary p-1.5 rounded-lg hover:bg-surface-ground transition-colors cursor-pointer"
               aria-label="Close"
             >
               <svg
-                class="w-6 h-6"
+                class="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -100,7 +102,6 @@ const props = defineProps({
     type: Object,
     default: null,
   },
-  // الخاصية البنائية الجديدة لتمرير حالة قفل حقل النوع للتأكيد البصري
   isTypeDisabled: {
     type: Boolean,
     default: false,
@@ -109,7 +110,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'save'])
 
-// احتساب عنوان النافذة بشكل تفصيلي وموجه لاسم وصنف الشاشة المفتوحة حالياً
 const modalTitle = computed(() => {
   const isReceipt = props.voucher?.voucher_type === 'receipt'
 
@@ -138,10 +138,7 @@ const handleFormSubmit = (formData) => {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
+  background-color: var(--surface-border, #cbd5e1);
   border-radius: 10px;
-}
-:global(.dark) .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #4b5563;
 }
 </style>

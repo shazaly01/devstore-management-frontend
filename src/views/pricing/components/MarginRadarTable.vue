@@ -1,9 +1,9 @@
 <!-- src/views/pricing/components/MarginRadarTable.vue -->
 <template>
-  <div class="space-y-4">
+  <div class="space-y-4 text-right" dir="rtl">
     <!-- بطاقة الفلترة والملخص -->
     <AppCard>
-      <div class="p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div class="w-full md:w-72">
           <AppDropdown
             id="radar-category-filter"
@@ -16,16 +16,16 @@
           />
         </div>
 
-        <div class="flex items-center gap-2 self-end md:self-center">
+        <div class="flex items-center gap-2 self-end md:self-center flex-wrap">
           <div
-            class="px-3 py-1.5 rounded-lg border border-rose-200 dark:border-rose-900 bg-rose-50 dark:bg-rose-950/30 text-rose-700 dark:text-rose-400 text-xs font-bold flex items-center gap-1.5"
+            class="px-3 py-1.5 rounded-lg border border-danger/30 bg-danger/10 text-danger text-xs font-bold flex items-center gap-1.5 shadow-sm"
           >
-            <span class="w-2 h-2 rounded-full bg-rose-500 animate-pulse"></span>
+            <span class="w-2 h-2 rounded-full bg-danger animate-pulse"></span>
             أصناف بهامش سالب: {{ negativeMarginCount }}
           </div>
 
           <div
-            class="px-3 py-1.5 rounded-lg border border-amber-200 dark:border-amber-900 bg-amber-50 dark:bg-amber-950/30 text-amber-700 dark:text-amber-400 text-xs font-bold"
+            class="px-3 py-1.5 rounded-lg border border-warning/30 bg-warning/10 text-warning text-xs font-bold shadow-sm"
           >
             إجمالي الأصناف المهددة: {{ items.length }}
           </div>
@@ -53,15 +53,12 @@
       >
         <!-- اسم الصنف والتصنيف -->
         <template #cell-item_info="{ item }">
-          <div class="flex flex-col py-1">
+          <div class="flex flex-col py-1 text-right">
             <div class="flex items-center gap-2">
               <span class="font-bold text-text-primary text-sm">{{ item.item_name }}</span>
-              <span
-                v-if="item.is_negative_margin"
-                class="px-1.5 py-0.5 text-[10px] font-bold rounded bg-rose-500 text-white"
-              >
+              <AppBadge v-if="item.is_negative_margin" variant="danger" size="xs">
                 هامش سالب
-              </span>
+              </AppBadge>
             </div>
             <span class="text-xs text-text-muted">{{ item.category_name || 'عام' }}</span>
           </div>
@@ -70,7 +67,7 @@
         <!-- الوحدة -->
         <template #cell-unit_name="{ item }">
           <span
-            class="text-xs font-semibold px-2 py-0.5 rounded bg-surface-ground border border-surface-border"
+            class="text-xs font-semibold px-2 py-0.5 rounded bg-surface-ground border border-surface-border text-text-secondary"
           >
             {{ item.unit_name }}
           </span>
@@ -85,7 +82,7 @@
 
         <!-- التكلفة الحالية وتكلفة الاستبدال -->
         <template #cell-cost_details="{ item }">
-          <div class="flex flex-col text-xs font-mono">
+          <div class="flex flex-col text-xs font-mono text-right">
             <span class="font-semibold text-text-secondary">
               الحالية: {{ formatNumber(item.current_cost) }}
             </span>
@@ -99,10 +96,10 @@
         <template #cell-current_margin="{ item }">
           <span
             :class="[
-              'font-mono font-bold text-xs px-2 py-1 rounded',
+              'font-mono font-bold text-xs px-2 py-0.5 rounded border inline-block',
               item.current_margin_percentage <= 0
-                ? 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
-                : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300',
+                ? 'bg-danger/10 text-danger border-danger/30'
+                : 'bg-warning/10 text-warning border-warning/30',
             ]"
           >
             {{ formatNumber(item.current_margin_percentage) }}%
@@ -111,14 +108,14 @@
 
         <!-- الحد الأدنى المطلوب -->
         <template #cell-min_margin_percentage="{ item }">
-          <span class="font-mono text-xs text-text-secondary">
+          <span class="font-mono text-xs text-text-secondary font-semibold">
             {{ formatNumber(item.min_margin_percentage) }}%
           </span>
         </template>
 
         <!-- فجوة التآكل -->
         <template #cell-margin_gap_percentage="{ item }">
-          <span class="font-mono text-xs font-bold text-rose-600 dark:text-rose-400">
+          <span class="font-mono text-xs font-bold text-danger">
             -{{ formatNumber(item.margin_gap_percentage) }}%
           </span>
         </template>
@@ -140,6 +137,7 @@ import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppDropdown from '@/components/ui/AppDropdown.vue'
 import AppButton from '@/components/ui/AppButton.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 
 const props = defineProps({
   items: { type: Array, default: () => [] },

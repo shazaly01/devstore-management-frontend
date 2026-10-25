@@ -1,4 +1,4 @@
-<!--src\views\purchases\PurchaseTable.vue-->
+<!--src/views/purchases/PurchaseTable.vue-->
 <template>
   <AppCard>
     <AppTable
@@ -10,35 +10,17 @@
     >
       <!-- 1. بيانات الفاتورة والسند (المعرف + النوع + السداد + التاريخ والملاحظات) -->
       <template #cell-invoice_info="{ item }">
-        <div class="flex flex-col gap-1 py-1">
+        <div class="flex flex-col gap-1 py-1 text-right" dir="rtl">
           <div class="flex items-center gap-1.5 flex-wrap">
-            <span
-              class="font-mono font-bold text-xs text-primary bg-primary/10 px-1.5 py-0.5 rounded"
-            >
-              #{{ item.id }}
-            </span>
+            <AppBadge variant="primary" size="xs"> #{{ item.id }} </AppBadge>
 
-            <span
-              :class="[
-                'px-2 py-0.5 text-[10px] font-black rounded border',
-                item.invoice_type === 'purchase'
-                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-800'
-                  : 'bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/40 dark:text-rose-400 dark:border-rose-800',
-              ]"
-            >
+            <AppBadge :variant="item.invoice_type === 'purchase' ? 'success' : 'danger'" size="xs">
               {{ item.invoice_type === 'purchase' ? 'فاتورة شراء' : 'مرتجع مشتريات' }}
-            </span>
+            </AppBadge>
 
-            <span
-              :class="[
-                'px-2 py-0.5 text-[10px] font-bold rounded-full',
-                item.payment_type === 'cash'
-                  ? 'bg-blue-50 text-blue-700 border border-blue-100 dark:bg-blue-950/40 dark:text-blue-400 dark:border-blue-800'
-                  : 'bg-amber-50 text-amber-700 border border-amber-100 dark:bg-amber-950/40 dark:text-amber-400 dark:border-amber-800',
-              ]"
-            >
+            <AppBadge :variant="item.payment_type === 'cash' ? 'info' : 'warning'" size="xs" pill>
               {{ item.payment_type === 'cash' ? 'نقدي' : 'آجل' }}
-            </span>
+            </AppBadge>
           </div>
 
           <div class="flex items-center gap-2 text-xs text-text-muted">
@@ -52,7 +34,7 @@
 
       <!-- 2. المورد والمستودع -->
       <template #cell-entities="{ item }">
-        <div class="flex flex-col justify-center py-1">
+        <div class="flex flex-col justify-center py-1 text-right" dir="rtl">
           <span class="font-bold text-sm text-text-primary">
             {{ item.supplier_name || item.supplier?.name || '-' }}
           </span>
@@ -64,14 +46,11 @@
 
       <!-- 3. المبالغ المالية والخصومات -->
       <template #cell-financials="{ item }">
-        <div class="flex flex-col justify-center min-w-[110px] py-1">
+        <div class="flex flex-col justify-center min-w-[110px] py-1 text-right" dir="rtl">
           <span class="font-mono font-bold text-sm text-text-primary">
             {{ formatCurrency(item.grand_total || 0) }}
           </span>
-          <span
-            v-if="item.discount_amount"
-            class="text-[10px] font-mono text-rose-600 dark:text-rose-400 mt-0.5"
-          >
+          <span v-if="item.discount_amount" class="text-[10px] font-mono text-danger mt-0.5">
             خصم: {{ formatCurrency(item.discount_amount) }}
           </span>
         </div>
@@ -79,10 +58,10 @@
 
       <!-- 4. الإجراءات -->
       <template #cell-actions="{ item }">
-        <div class="flex items-center justify-end space-x-1 space-x-reverse">
+        <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <button
-            @click.stop="$emit('edit-purchase', item)"
-            class="p-1.5 text-sky-500 hover:text-sky-600 hover:bg-sky-50 dark:hover:bg-sky-950/40 rounded-lg transition-colors"
+            @click="$emit('edit-purchase', item)"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل الفاتورة بالكامل"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -96,8 +75,8 @@
           </button>
 
           <button
-            @click.stop="$emit('delete-purchase', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-lg transition-colors"
+            @click="$emit('delete-purchase', item)"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="حذف وإلغاء المستند ماليًا ومخزنيًا"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -121,6 +100,7 @@
 import { computed } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
 import { formatCurrency } from '@/utils/formatters'
 

@@ -1,14 +1,7 @@
-<!---src\components\ui\AppDropdown.vue-->
+<!--src/components/ui/AppDropdown.vue-->
 <template>
   <div class="relative w-full">
-    <label
-      v-if="label"
-      :for="id"
-      :class="[
-        'block text-sm font-medium mb-1',
-        props.variant === 'sales' ? 'text-gray-300' : 'text-gray-700 dark:text-text-secondary',
-      ]"
-    >
+    <label v-if="label" :for="id" class="block text-sm font-medium mb-1 text-text-secondary">
       {{ label }}
     </label>
 
@@ -32,97 +25,60 @@
           class: [
             'w-full inline-flex relative cursor-pointer select-none items-center h-full',
             props.variant === 'sales'
-              ? 'bg-transparent dark:bg-transparent border-0 shadow-none outline-none ring-0'
-              : 'bg-gray-50 border-2 transition-colors duration-200 rounded-md shadow-sm dark:bg-surface-ground border-gray-300 dark:border-surface-border hover:border-blue-500 dark:hover:border-primary',
+              ? 'bg-transparent border-0 shadow-none outline-none ring-0'
+              : 'bg-surface-section border border-surface-border transition-colors duration-200 rounded-md shadow-sm hover:border-primary',
             state.focused && props.variant !== 'sales'
-              ? 'border-blue-500 ring-2 ring-blue-500 dark:border-primary dark:ring-primary outline-none'
+              ? 'border-primary ring-2 ring-primary/20 outline-none'
               : '',
-            disabled
-              ? 'opacity-60 cursor-not-allowed pointer-events-none bg-gray-200 dark:bg-surface-ground'
-              : '',
+            disabled ? 'opacity-60 cursor-not-allowed pointer-events-none bg-surface-ground' : '',
           ],
         }),
         input: {
           class: [
-            'w-full bg-transparent border-0 focus:outline-none text-xs font-bold',
-            props.variant === 'sales'
-              ? 'text-white placeholder:text-gray-500 p-0 pr-1'
-              : 'text-gray-900 dark:text-text-primary p-2',
+            'w-full bg-transparent border-0 focus:outline-none text-xs font-bold text-text-primary placeholder:text-text-muted',
+            props.variant === 'sales' ? 'p-0 pr-1' : 'p-2',
           ],
         },
         trigger: {
           class: [
-            'flex items-center justify-center shrink-0 text-gray-500 dark:text-gray-400',
+            'flex items-center justify-center shrink-0 text-text-muted',
             props.variant === 'sales' ? 'w-6 h-full' : 'w-12',
           ],
         },
         clearIcon: {
           class: [
-            'mr-1 text-xs',
-            props.variant === 'sales'
-              ? 'text-gray-500 hover:text-gray-300'
-              : 'text-gray-500 dark:text-gray-400 mr-2',
+            'mr-1 text-xs text-text-muted hover:text-text-primary',
+            props.variant === 'sales' ? '' : 'mr-2',
           ],
         },
         panel: {
           class: [
-            props.variant === 'sales'
-              ? 'bg-[#1a1b20] border border-[#383b45]'
-              : 'bg-white dark:bg-[#1f2937] border border-gray-300 dark:border-gray-600',
-            'rounded-md shadow-2xl',
-            'mt-1',
-            'overflow-hidden',
+            'bg-surface-section border border-surface-border rounded-xl shadow-2xl mt-1 overflow-hidden z-50',
           ],
         },
         header: {
-          class: [
-            'p-2 border-b',
-            props.variant === 'sales'
-              ? 'border-[#383b45] bg-[#25272e]'
-              : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-800',
-          ],
+          class: ['p-2 border-b border-surface-border bg-surface-ground'],
         },
         filterInput: {
           class: [
-            'w-full p-2 border rounded-md focus:outline-none text-xs',
-            props.variant === 'sales'
-              ? 'bg-[#25272e] border-[#383b45] text-white focus:border-[#e05e2b]'
-              : 'border-gray-300 dark:bg-gray-700 dark:text-white dark:border-gray-500',
+            'w-full p-2 border border-surface-border rounded-md bg-surface-section text-text-primary placeholder:text-text-muted focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary text-xs font-medium',
           ],
         },
         list: {
-          class: [
-            'p-1 max-h-60 overflow-y-auto custom-scrollbar',
-            props.variant === 'sales' ? 'bg-[#1a1b20]' : 'bg-white dark:bg-[#1f2937]',
-            'relative z-10',
-          ],
+          class: ['p-1 max-h-60 overflow-y-auto custom-scrollbar bg-surface-section relative z-10'],
         },
         item: ({ context }) => ({
           class: [
-            'p-2 rounded-md cursor-pointer overflow-hidden whitespace-nowrap text-xs',
-            'transition-colors duration-150',
+            'p-2 rounded-lg cursor-pointer overflow-hidden whitespace-nowrap text-xs transition-colors duration-150',
             !context.focused && !context.selected
-              ? props.variant === 'sales'
-                ? 'text-gray-300 hover:bg-[#25272e] hover:text-white'
-                : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700'
+              ? 'text-text-primary hover:bg-surface-ground'
               : '',
-            context.focused && !context.selected
-              ? props.variant === 'sales'
-                ? 'bg-[#25272e] text-white'
-                : 'bg-gray-200 dark:bg-gray-600 text-gray-900 dark:text-white'
-              : '',
-            context.selected
-              ? props.variant === 'sales'
-                ? 'bg-[#e05e2b]/20 text-[#e05e2b] font-bold'
-                : 'bg-blue-50 dark:bg-primary/20 text-blue-700 dark:text-primary font-bold'
-              : '',
+            context.focused && !context.selected ? 'bg-surface-ground text-text-primary' : '',
+            context.selected ? 'bg-primary/10 text-primary font-bold' : '',
           ],
         }),
         itemGroup: {
-          class: [
-            'p-2 font-bold text-xs',
-            props.variant === 'sales' ? 'text-gray-400' : 'text-gray-500 dark:text-gray-400',
-          ],
+          class: ['p-2 font-bold text-xs text-text-muted'],
         },
       }"
     />
@@ -158,14 +114,10 @@ defineEmits(['update:modelValue'])
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
+  background-color: rgb(var(--color-surface-border));
   border-radius: 20px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background-color: #94a3b8;
-}
-
-:global(.dark) .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #4b5563;
+  background-color: rgb(var(--color-text-muted));
 }
 </style>

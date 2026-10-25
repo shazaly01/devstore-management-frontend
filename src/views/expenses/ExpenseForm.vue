@@ -1,7 +1,7 @@
-<!--src\views\expenses\ExpenseForm.vue---->
+<!--src/views/expenses/ExpenseForm.vue-->
 <template>
-  <form @submit.prevent="handleSubmit">
-    <div class="space-y-5">
+  <form @submit.prevent="handleSubmit" dir="rtl">
+    <div class="space-y-5 text-right">
       <div>
         <AppInput
           id="expense-name"
@@ -10,7 +10,7 @@
           placeholder="مثال: فواتير مياه، صيانة، إيجار..."
           required
         />
-        <p v-if="errors.name" class="text-rose-500 text-xs mt-1 font-bold">
+        <p v-if="errors.name" class="text-danger text-xs mt-1 font-bold">
           اسم بند المصروف (مثل: فواتير مياه، صيانة) مطلوب ولا يمكن تركه فارغاً.
         </p>
       </div>
@@ -29,7 +29,6 @@
 <script setup>
 import { ref, watch, reactive } from 'vue'
 
-// استيراد مكونات واجهة المستخدم القياسية للنظام
 import AppInput from '@/components/ui/AppInput.vue'
 import AppButton from '@/components/ui/AppButton.vue'
 
@@ -46,12 +45,10 @@ const props = defineProps({
 
 const emit = defineEmits(['submit', 'cancel'])
 
-// إدارة أخطاء التحقق محلياً لتتطابق تماماً مع رسائل الـ Request
 const errors = reactive({
   name: false,
 })
 
-// دالة تهيئة نموذج نظيف وجديد
 const createFreshForm = () => ({
   id: null,
   name: '',
@@ -59,7 +56,6 @@ const createFreshForm = () => ({
 
 const form = ref(createFreshForm())
 
-// مراقبة البيانات الابتدائية لتحديث الحقول في حالتي التعديل أو الإضافة
 watch(
   () => props.initialData,
   (newData) => {
@@ -75,7 +71,6 @@ watch(
   { immediate: true, deep: true },
 )
 
-// دالة الفحص اليدوي البسيط قبل الإرسال الفعلي للأب
 const handleSubmit = () => {
   errors.name = false
 

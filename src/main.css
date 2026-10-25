@@ -1,3 +1,69 @@
+/* src/main.css */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 1. الوضع الفاتح (Enterprise High-Depth & High-Contrast Theme) */
+:root {
+  color-scheme: light;
+
+  /* درجات اللون الأساسي (هوية البرتقالي المعتمدة) */
+  --color-primary-light: 251 146 60; /* Orange-400 */
+  --color-primary: 234 88 12; /* Orange-600 */
+  --color-primary-dark: 194 65 12; /* Orange-700 */
+
+  /* ألوان الحالات والوظائف الدلالية (Semantic Colors) */
+  --color-success: 16 185 129; /* Emerald-500 */
+  --color-danger: 239 68 68; /* Red-500 / Rose-500 */
+  --color-warning: 245 158 11; /* Amber-500 */
+  --color-info: 14 165 233; /* Sky-500 */
+  --color-secondary: 100 116 139; /* Slate-500 */
+
+  /* الأسطح والحدود: تباين عالي لفصل الأقسام وإبراز الكروت بوضوح تام */
+  --color-surface-ground: 226 232 240; /* Slate-200: أرضية صريحة لفصل البطاقات وحقول الإدخال */
+  --color-surface-section: 255 255 255; /* White: أبيض ناصع تطفو عليه البيانات */
+  --color-surface-card: 255 255 255; /* White */
+  --color-surface-border: 203 213 225; /* Slate-300: حدود صريحة ونظيفة لكسر التسطح */
+
+  /* ألوان النصوص بتدرج مريح وواضح */
+  --color-text-primary: 15 23 42; /* Slate-900: أسود كحلي عميق للعناوين */
+  --color-text-secondary: 51 65 85; /* Slate-700: رمادي داكن للنصوص المساعدة */
+  --color-text-muted: 100 116 139; /* Slate-500: رمادي معتدل للنصوص البديلة */
+}
+
+/* 2. الوضع المظلم (Deep Charcoal Dark Theme) */
+html.dark,
+:root.dark,
+.dark {
+  color-scheme: dark;
+
+  /* درجات اللون الأساسي في الوضع الليلي */
+  --color-primary-light: 253 186 116 !important; /* Orange-300 */
+  --color-primary: 249 115 22 !important; /* Orange-500 */
+  --color-primary-dark: 234 88 12 !important; /* Orange-600 */
+
+  /* ألوان الحالات للوضع الليلي بلمعان مريح للعين */
+  --color-success: 52 211 153 !important; /* Emerald-400 */
+  --color-danger: 248 113 113 !important; /* Rose-400 */
+  --color-warning: 251 191 36 !important; /* Amber-400 */
+  --color-info: 56 189 248 !important; /* Sky-400 */
+  --color-secondary: 148 163 184 !important; /* Slate-400 */
+
+  /* درجات السواد الفحمي العميق لمنع البهتان */
+  --color-surface-ground: 22 23 27 !important; /* #16171b: أرضية داكنة عميقة */
+  --color-surface-section: 35 37 46 !important; /* #23252e: رمادي فحمي للبطاقات والأسطح */
+  --color-surface-card: 35 37 46 !important; /* #23252e */
+  --color-surface-border: 56 59 69 !important; /* #383b45: إطارات محددة بدقة */
+
+  /* ألوان النصوص في الوضع الليلي */
+  --color-text-primary: 249 250 251 !important; /* أبيض ناصع وحاد */
+  --color-text-secondary: 209 213 219 !important; /* رمادي فاتح مقروء */
+  --color-text-muted: 156 163 175 !important; /* رمادي متزن */
+}
+
+/* تطبيق الألوان على جسم الصفحة مباشرة لمنع تسرب بياض الـ Canvas */
+body {
+  background-color: rgb(var(--color-surface-ground));
+  color: rgb(var(--color-text-primary));
+  min-height: 100vh;
+}

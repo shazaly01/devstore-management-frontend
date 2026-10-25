@@ -1,9 +1,11 @@
+<!--src/views/reports/financial/IncomeStatementReport.vue-->
 <template>
-  <div class="space-y-6 print:hidden">
-    <div class="flex justify-between items-center">
+  <div class="space-y-6 print:hidden text-right font-sans" dir="rtl">
+    <!-- الترويسة العلوية -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
-        <h1 class="text-3xl font-black text-white tracking-tight">قائمة الدخل الشاملة</h1>
-        <p class="text-sm text-gray-400 mt-1">
+        <h1 class="text-2xl font-black text-text-primary tracking-tight">قائمة الدخل الشاملة</h1>
+        <p class="text-xs text-text-muted mt-1">
           تحليل النشاط المالي وقياس كفاءة الأداء التشغيلي والأرباح والخسائر للشركة
         </p>
       </div>
@@ -11,103 +13,99 @@
         <AppButton
           @click="handlePrint"
           :disabled="!incomeStatementSummary"
-          class="bg-indigo-500 hover:bg-indigo-400 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)] disabled:opacity-50"
+          class="flex items-center gap-2"
         >
-          <PrinterIcon class="w-5 h-5 ml-2" />
+          <PrinterIcon class="w-4 h-4 ml-1" />
           طباعة قائمة الدخل
         </AppButton>
       </div>
     </div>
 
-    <AppCard class="border border-gray-800 bg-surface-section/60 p-5 backdrop-blur-sm">
+    <!-- بطاقة الفلاتر -->
+    <AppCard>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
         <div>
-          <label class="block text-xs font-bold text-gray-400 uppercase mb-2">من تاريخ</label>
+          <label class="block text-xs font-bold text-text-secondary uppercase mb-2">من تاريخ</label>
           <input
             type="date"
             v-model="filters.from_date"
-            class="w-full bg-surface-background border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 text-sm"
-            style="color-scheme: dark"
+            class="block w-full h-10 px-3 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-xs font-bold font-mono outline-none transition-all cursor-pointer shadow-sm"
           />
         </div>
 
         <div>
-          <label class="block text-xs font-bold text-gray-400 uppercase mb-2">إلى تاريخ</label>
+          <label class="block text-xs font-bold text-text-secondary uppercase mb-2"
+            >إلى تاريخ</label
+          >
           <input
             type="date"
             v-model="filters.to_date"
-            class="w-full bg-surface-background border border-gray-700 rounded px-3 py-2 text-white focus:outline-none focus:border-cyan-500 text-sm"
-            style="color-scheme: dark"
+            class="block w-full h-10 px-3 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-xs font-bold font-mono outline-none transition-all cursor-pointer shadow-sm"
           />
         </div>
 
         <div>
           <AppButton
             @click="handleFetch"
-            :loading="loading"
-            class="w-full bg-cyan-500 hover:bg-cyan-400 text-black font-bold shadow-[0_0_15px_rgba(34,211,238,0.3)]"
+            :disabled="loading"
+            class="w-full h-10 flex items-center justify-center font-bold shadow-sm"
           >
-            <ArrowPathIcon class="w-5 h-5 ml-2" :class="{ 'animate-spin': loading }" />
+            <ArrowPathIcon class="w-4 h-4 ml-2" :class="{ 'animate-spin': loading }" />
             تحليل وقراءة المورد المالي
           </AppButton>
         </div>
       </div>
     </AppCard>
 
+    <!-- بطاقات مؤشرات قائمة الدخل -->
     <div v-if="incomeStatementSummary" class="grid grid-cols-1 md:grid-cols-3 gap-6">
-      <AppCard class="p-5 border-r-4 border-r-emerald-500 bg-surface-section/60 shadow-lg">
-        <div class="text-xs text-emerald-300/60 uppercase tracking-widest mb-2 font-bold">
+      <AppCard class="p-4 border-r-4 border-r-success bg-surface-section shadow-sm">
+        <div class="text-[10px] text-success uppercase tracking-widest mb-1 font-bold">
           إجمالي الإيرادات والمبيعات (+)
         </div>
-        <div class="text-2xl font-black text-emerald-400 font-mono">
+        <div class="text-xl font-black text-success font-mono">
           {{ formatCurrency(incomeStatementSummary.total_revenues) }}
         </div>
       </AppCard>
 
-      <AppCard class="p-5 border-r-4 border-r-rose-500 bg-surface-section/60 shadow-lg">
-        <div class="text-xs text-rose-300/60 uppercase tracking-widest mb-2 font-bold">
+      <AppCard class="p-4 border-r-4 border-r-danger bg-surface-section shadow-sm">
+        <div class="text-[10px] text-danger uppercase tracking-widest mb-1 font-bold">
           إجمالي المصروفات والتكاليف (-)
         </div>
-        <div class="text-2xl font-black text-rose-400 font-mono">
+        <div class="text-xl font-black text-danger font-mono">
           {{ formatCurrency(incomeStatementSummary.total_expenses) }}
         </div>
       </AppCard>
 
       <AppCard
-        class="p-5 border-r-4 transition-all duration-300 bg-surface-section/60"
+        class="p-4 border-r-4 transition-all duration-300 bg-surface-section shadow-sm"
         :class="
-          incomeStatementSummary.outcome_type === 'profit'
-            ? 'border-r-emerald-400 shadow-[0_0_15px_rgba(52,211,153,0.2)]'
-            : 'border-r-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.2)]'
+          incomeStatementSummary.outcome_type === 'profit' ? 'border-r-success' : 'border-r-danger'
         "
       >
         <div
-          class="text-xs uppercase tracking-widest mb-2 font-bold"
-          :class="
-            incomeStatementSummary.outcome_type === 'profit'
-              ? 'text-emerald-300/60'
-              : 'text-rose-300/60'
-          "
+          class="text-[10px] uppercase tracking-widest mb-1 font-bold"
+          :class="incomeStatementSummary.outcome_type === 'profit' ? 'text-success' : 'text-danger'"
         >
           {{ incomeStatementSummary.outcome_lbl }}
         </div>
         <div
-          class="text-2xl font-black font-mono"
-          :class="
-            incomeStatementSummary.outcome_type === 'profit'
-              ? 'text-emerald-400 drop-shadow-[0_0_5px_rgba(52,211,153,0.6)]'
-              : 'text-rose-400 drop-shadow-[0_0_5px_rgba(251,113,133,0.6)]'
-          "
+          class="text-xl font-black font-mono"
+          :class="incomeStatementSummary.outcome_type === 'profit' ? 'text-success' : 'text-danger'"
         >
           {{ formatCurrency(incomeStatementSummary.net_profit) }}
         </div>
       </AppCard>
     </div>
 
+    <!-- جداول بنود الإيرادات والمصروفات -->
     <div v-if="incomeStatementData" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <AppCard class="border border-gray-800 bg-surface-section/40 backdrop-blur-sm p-4">
-        <h3 class="text-sm font-bold text-emerald-400 mb-3 flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+      <!-- بنود الإيرادات -->
+      <AppCard class="p-4">
+        <h3
+          class="text-sm font-bold text-success mb-3 flex items-center gap-2 border-b border-surface-border pb-2"
+        >
+          <span class="w-2 h-2 rounded-full bg-success animate-pulse"></span>
           بـنـود الإيــرادات (الحسابات الدائنة)
         </h3>
         <AppTable
@@ -116,22 +114,25 @@
           :is-loading="loading"
         >
           <template #cell-code="{ item }">
-            <span class="font-mono text-xs text-gray-500">{{ item.code }}</span>
+            <span class="font-mono text-xs text-text-muted">#{{ item.code }}</span>
           </template>
           <template #cell-name="{ item }">
-            <span class="font-medium text-gray-200 text-xs">{{ item.name }}</span>
+            <span class="font-bold text-text-primary text-xs">{{ item.name }}</span>
           </template>
           <template #cell-balance="{ item }">
-            <span class="font-mono text-xs font-bold text-emerald-400">
+            <span class="font-mono text-xs font-bold text-success">
               {{ formatCurrency(item.balance) }}
             </span>
           </template>
         </AppTable>
       </AppCard>
 
-      <AppCard class="border border-gray-800 bg-surface-section/40 backdrop-blur-sm p-4">
-        <h3 class="text-sm font-bold text-rose-400 mb-3 flex items-center gap-2">
-          <span class="w-2 h-2 rounded-full bg-rose-400 animate-pulse"></span>
+      <!-- بنود المصروفات -->
+      <AppCard class="p-4">
+        <h3
+          class="text-sm font-bold text-danger mb-3 flex items-center gap-2 border-b border-surface-border pb-2"
+        >
+          <span class="w-2 h-2 rounded-full bg-danger animate-pulse"></span>
           بـنـود الـمـصـروفـات (الحسابات المدينة)
         </h3>
         <AppTable
@@ -140,13 +141,13 @@
           :is-loading="loading"
         >
           <template #cell-code="{ item }">
-            <span class="font-mono text-xs text-gray-500">{{ item.code }}</span>
+            <span class="font-mono text-xs text-text-muted">#{{ item.code }}</span>
           </template>
           <template #cell-name="{ item }">
-            <span class="font-medium text-gray-200 text-xs">{{ item.name }}</span>
+            <span class="font-bold text-text-primary text-xs">{{ item.name }}</span>
           </template>
           <template #cell-balance="{ item }">
-            <span class="font-mono text-xs font-bold text-rose-400">
+            <span class="font-mono text-xs font-bold text-danger">
               {{ formatCurrency(item.balance) }}
             </span>
           </template>
@@ -185,7 +186,6 @@ const tableHeaders = [
 ]
 
 const handleFetch = () => {
-  // تنظيف وتجهيز الفلاتر قبل التمرير للباك إند لمنع المشاكل البرمجية
   const cleanFilters = {}
   if (filters.value.from_date) cleanFilters.from_date = filters.value.from_date
   if (filters.value.to_date) cleanFilters.to_date = filters.value.to_date
@@ -254,11 +254,12 @@ onMounted(() => {
 </script>
 
 <style scoped>
-:deep(.AppTable th) {
-  @apply text-gray-400 font-bold uppercase tracking-wider text-xs border-b border-gray-800;
+:global(.dark input[type='date']::-webkit-calendar-picker-indicator) {
+  filter: invert(1);
 }
 
-:deep(.AppTable td) {
-  @apply py-3 border-b border-gray-800/40;
+input[type='date']::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.6;
 }
 </style>

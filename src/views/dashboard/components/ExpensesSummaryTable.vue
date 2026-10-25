@@ -1,12 +1,11 @@
+<!-- src/views/dashboard/components/ExpensesSummaryTable.vue -->
 <template>
-  <AppCard class="flex flex-col h-full">
+  <AppCard class="flex flex-col h-full font-sans" dir="rtl">
     <!-- رأس الكرت: العنوان والمؤشرات العلوية -->
     <div class="flex items-center justify-between mb-5">
       <div class="flex items-center gap-3">
         <!-- أيقونة تعبر عن المصروفات وتدفق الأموال للخارج -->
-        <div
-          class="p-2.5 bg-rose-500/10 text-rose-400 rounded-xl border border-rose-500/20 shadow-lg shadow-rose-500/5"
-        >
+        <div class="p-2.5 bg-danger/10 text-danger rounded-xl border border-danger/20 shadow-sm">
           <svg
             class="w-5 h-5"
             fill="none"
@@ -30,33 +29,33 @@
 
       <!-- شارة توضح عدد البنود المسجلة -->
       <div
-        class="text-[11px] font-bold text-rose-400 bg-rose-500/10 px-3 py-1.5 rounded-lg border border-rose-500/20"
+        class="text-[11px] font-bold text-danger bg-danger/10 px-3 py-1.5 rounded-lg border border-danger/20"
       >
         {{ expenses.list?.length || 0 }} بنود
       </div>
     </div>
 
-    <!-- حاوية الجدول: متجاوبة مع الجوال عبر التمرير الأفقي المخفي -->
+    <!-- حاوية الجدول: متجاوبة مع الجوال عبر التمرير الأفقي -->
     <div
-      class="flex-1 overflow-x-auto rounded-xl border border-surface-border/60 bg-surface-section/30 mb-5 scrollbar-thin scrollbar-thumb-surface-border scrollbar-track-transparent"
+      class="flex-1 overflow-x-auto rounded-xl border border-surface-border bg-surface-ground mb-5"
     >
       <table class="w-full text-right whitespace-nowrap">
-        <thead class="bg-surface-section/50 text-xs text-text-muted sticky top-0 z-10">
+        <thead class="bg-surface-section text-xs text-text-secondary sticky top-0 z-10">
           <tr>
-            <th class="px-5 py-3.5 font-bold border-b border-surface-border/50">بند المصروف</th>
-            <th class="px-5 py-3.5 font-bold border-b border-surface-border/50 w-32">
+            <th class="px-5 py-3.5 font-bold border-b border-surface-border">بند المصروف</th>
+            <th class="px-5 py-3.5 font-bold border-b border-surface-border w-32 text-left">
               المبلغ المستهلك
             </th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-surface-border/40 text-sm">
+        <tbody class="divide-y divide-surface-border text-sm bg-surface-section">
           <!-- حالة عدم وجود بيانات (Empty State) بتصميم هادئ -->
           <tr v-if="!expenses.list || expenses.list.length === 0">
             <td colspan="2" class="px-5 py-10 text-center text-text-muted">
               <div class="flex flex-col items-center gap-3">
-                <div class="p-3 rounded-full bg-surface-section/50">
+                <div class="p-3 rounded-full bg-surface-ground">
                   <svg
-                    class="w-6 h-6 opacity-40"
+                    class="w-6 h-6 opacity-40 text-text-muted"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -74,19 +73,19 @@
             </td>
           </tr>
 
-          <!-- تكرار البيانات الواردة مع تأثيرات حركية خفيفة -->
+          <!-- تكرار البيانات الواردة -->
           <tr
             v-for="expense in expenses.list"
             :key="expense.expense_id"
-            class="hover:bg-surface-section/40 transition-colors duration-200 group"
+            class="hover:bg-surface-ground transition-colors duration-150 group"
           >
             <td class="px-5 py-3.5 text-text-primary font-medium flex items-center gap-2.5">
               <span
-                class="w-1.5 h-1.5 rounded-full bg-rose-500/40 group-hover:bg-rose-500 duration-200 shadow-[0_0_5px_rgba(244,63,94,0.4)]"
+                class="w-1.5 h-1.5 rounded-full bg-danger/60 group-hover:bg-danger transition-colors duration-150"
               ></span>
               {{ expense.expense_name }}
             </td>
-            <td class="px-5 py-3.5 font-bold text-rose-400 font-mono tracking-tight">
+            <td class="px-5 py-3.5 font-bold text-danger font-mono tracking-tight text-left">
               {{ formatCurrency(expense.total_spent) }}
             </td>
           </tr>
@@ -96,10 +95,10 @@
 
     <!-- التذييل: الإجمالي العام (Footer) مثبت في الأسفل -->
     <div
-      class="mt-auto pt-4 border-t border-surface-border/60 flex items-center justify-between bg-gradient-to-r from-transparent to-rose-500/5 rounded-lg px-2"
+      class="mt-auto pt-4 border-t border-surface-border flex items-center justify-between bg-danger/5 rounded-lg px-3 py-2"
     >
       <span class="text-sm font-bold text-text-secondary flex items-center gap-2">
-        <svg class="w-4 h-4 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <svg class="w-4 h-4 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path
             stroke-linecap="round"
             stroke-linejoin="round"
@@ -109,7 +108,7 @@
         </svg>
         إجمالي المصروفات:
       </span>
-      <span class="text-xl md:text-2xl font-black text-rose-500 tracking-tight drop-shadow-md">
+      <span class="text-xl md:text-2xl font-black text-danger tracking-tight font-mono">
         {{ formatCurrency(expenses.grand_total) }}
       </span>
     </div>
@@ -117,10 +116,8 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
 
-// استقبال كائن المصروفات القادم من الـ Backend عبر الشاشة الأم
 defineProps({
   expenses: {
     type: Object,
@@ -129,9 +126,6 @@ defineProps({
   },
 })
 
-/**
- * دالة تنسيق المبالغ الماليّة بالشكل القياسي للمنظومة
- */
 const formatCurrency = (value) => {
   if (value === undefined || value === null) return '0.00'
   return new Intl.NumberFormat('en-US', {

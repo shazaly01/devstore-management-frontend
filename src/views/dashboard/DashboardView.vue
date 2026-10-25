@@ -1,27 +1,26 @@
 <!-- src/views/dashboard/DashboardView.vue -->
 <template>
   <div
-    class="p-4 md:p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto text-text-primary relative overflow-hidden min-h-screen selection:bg-primary/30"
+    class="p-4 md:p-6 lg:p-8 space-y-6 max-w-[1600px] mx-auto text-text-primary relative overflow-hidden min-h-screen selection:bg-primary/30 font-sans"
   >
-    <!-- هالات توهج خلفية لتعزيز جمالية الواجهة الداكنة -->
+    <!-- هالات توهج خلفية: مفعلة بالكامل للوضع الليلي وناعمة جداً نهاراً لضمان نقاء الشاشة -->
     <div
-      class="absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none"
+      class="absolute -top-40 -right-40 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none opacity-40 dark:opacity-100 transition-opacity"
     ></div>
     <div
-      class="absolute top-1/3 -left-40 w-96 h-96 bg-purple-500/5 rounded-full blur-[120px] pointer-events-none"
+      class="absolute top-1/3 -left-40 w-96 h-96 bg-info/10 rounded-full blur-[120px] pointer-events-none opacity-30 dark:opacity-80 transition-opacity"
     ></div>
 
     <!-- شريط القيادة العلوي: العنوان وفلاتر التحكم اللحظية -->
     <div
       class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-surface-border pb-6 relative z-10"
+      dir="rtl"
     >
       <div>
         <h1
           class="text-2xl md:text-3xl font-black text-text-primary tracking-tight flex items-center gap-3"
         >
-          <span
-            class="w-2.5 h-7 bg-primary rounded-full shadow-[0_0_15px_rgba(var(--color-primary),0.6)]"
-          ></span>
+          <span class="w-2.5 h-7 bg-primary rounded-full shadow-lg shadow-primary/50"></span>
           لوحة الإشراف والمؤشرات الإدارية
         </h1>
         <p class="text-sm text-text-muted mt-1">
@@ -39,15 +38,15 @@
         <div
           v-for="i in 4"
           :key="i"
-          class="h-32 bg-surface-section rounded-xl border border-surface-border/60"
+          class="h-32 bg-surface-section rounded-xl border border-surface-border"
         ></div>
       </div>
       <div class="grid grid-cols-1 xl:grid-cols-12 gap-6">
         <div
-          class="xl:col-span-7 h-[500px] bg-surface-section rounded-xl border border-surface-border/60"
+          class="xl:col-span-7 h-[500px] bg-surface-section rounded-xl border border-surface-border"
         ></div>
         <div
-          class="xl:col-span-5 h-[500px] bg-surface-section rounded-xl border border-surface-border/60"
+          class="xl:col-span-5 h-[500px] bg-surface-section rounded-xl border border-surface-border"
         ></div>
       </div>
     </div>
@@ -82,7 +81,8 @@
     <!-- واجهة حجب وحماية تظهر للمستخدم العادي بدلاً من الأرقام الحساسة -->
     <div
       v-else
-      class="text-center py-24 relative z-10 border border-surface-border/40 rounded-2xl bg-surface-section/30 backdrop-blur-md"
+      class="text-center py-24 relative z-10 border border-surface-border rounded-2xl bg-surface-section/60 backdrop-blur-md shadow-sm"
+      dir="rtl"
     >
       <div class="max-w-md mx-auto space-y-3 p-6">
         <h2 class="text-xl font-bold text-text-primary">مرحباً بك في النظام</h2>

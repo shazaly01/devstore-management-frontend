@@ -1,25 +1,28 @@
-<!--src\views\vouchers\VoucherPrint.vue--->
+<!--src/views/vouchers/VoucherPrint.vue-->
 <template>
-  <div class="print-container bg-white text-slate-900 font-sans r2l" dir="rtl">
+  <div
+    class="print-container min-h-screen bg-surface-ground py-4 text-slate-900 font-sans"
+    dir="rtl"
+  >
     <!-- حالة التحميل قبل جلب البيانات -->
     <div v-if="loading" class="flex flex-col items-center justify-center min-h-[10cm] no-print">
-      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-slate-900"></div>
-      <p class="text-xs text-slate-500 mt-2 font-bold">جاري رندرة السند المالي الرسمي...</p>
+      <div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
+      <p class="text-xs text-text-muted mt-2 font-bold">جاري رندرة السند المالي الرسمي...</p>
     </div>
 
     <!-- حالة وجود خطأ في النظام -->
-    <div v-else-if="error || !currentVoucher" class="p-6 text-center text-rose-600 no-print">
+    <div v-else-if="error || !currentVoucher" class="p-6 text-center text-danger no-print">
       <p class="font-black text-sm">{{ error || 'لم يتم العثور على بيانات المستند.' }}</p>
       <button
         @click="window.close()"
-        class="mt-4 px-4 py-2 bg-slate-200 text-slate-700 rounded text-xs font-bold"
+        class="mt-4 px-4 py-2 bg-surface-section border border-surface-border text-text-primary hover:bg-surface-ground rounded-lg text-xs font-bold transition-colors cursor-pointer"
       >
         إغلاق النافذة
       </button>
     </div>
 
     <!-- السند المالي الاحترافي بهيكل الدفاتر المحاسبية الرسمية المعزولة -->
-    <div v-else class="voucher-master-frame">
+    <div v-else class="voucher-master-frame shadow-md">
       <!-- أولاً: الترويسة العلوية المتوازنة -->
       <table class="w-full header-table mb-4">
         <tr>
@@ -75,7 +78,7 @@
         </tr>
       </table>
 
-      <!-- ثانياً: المصفوفة الجدزلية المصمتة (Ledger Matrix Table) - التصميم العالمي الصارم -->
+      <!-- ثانياً: المصفوفة الجدولية المصمتة (Ledger Matrix Table) -->
       <table class="w-full ledger-table mb-4">
         <!-- السطر الأول: المستفيد الفعلي / الحساب المساعد -->
         <tr>
@@ -108,7 +111,7 @@
           </td>
         </tr>
 
-        <!-- Sلشطر الثالث: التوجيه المحاسبي (قيداً على حساب شجرة الأستاذ العام) -->
+        <!-- السطر الثالث: التوجيه المحاسبي -->
         <tr>
           <td class="cell-label">قيداً على حساب الموازنة:</td>
           <td class="cell-value font-bold text-slate-800">
@@ -119,12 +122,12 @@
           </td>
         </tr>
 
-        <!-- السطر الرابع: الخزينة الفرعية أو البنك المحرك للسيولة بالتفصيل المالي والقانوني -->
+        <!-- السطر الرابع: الخزينة الفرعية أو البنك المحرك للسيولة -->
         <tr>
           <td class="cell-label">طريقة وقناة النقدية:</td>
           <td class="cell-value text-xs font-medium">
             مستند مالي
-            <span class="font-bold text-indigo-700">[{{ currentVoucher.payment_method_lbl }}]</span>
+            <span class="font-bold text-slate-800">[{{ currentVoucher.payment_method_lbl }}]</span>
             <span class="text-slate-300 mx-3">|</span>
             <span class="text-slate-600 font-bold">المستقر والخزينة الفرعية:</span>
             <span class="text-slate-900 font-black mr-1">
@@ -138,7 +141,7 @@
           </td>
         </tr>
 
-        <!-- السطر الخامس: البيان والشرح المالي بالتفصيل المريح للعين -->
+        <!-- السطر الخامس: البيان والشرح المالي -->
         <tr>
           <td class="cell-label align-top pt-2">وذلك مقابل / البيان:</td>
           <td
@@ -149,7 +152,7 @@
         </tr>
       </table>
 
-      <!-- ثالثاً: خط وطبقة التواقيع الكلاسيكية الراسخة أفقياً في سطر واحد دون تدمير للهيكل -->
+      <!-- ثالثاً: خط وطبقة التواقيع الكلاسيكية الأفقية -->
       <table class="w-full signatures-table mt-8">
         <tr>
           <td class="w-1/4 text-center">
@@ -220,19 +223,19 @@ watch(currentVoucher, async (newVal) => {
 </script>
 
 <style scoped>
-/* التنسيق الصارم والكامل المخصص للمستندات والجدولة المحاسبية الفخمة للشركات */
 .voucher-master-frame {
   max-width: 19.5cm;
   margin: 0 auto;
   background-color: #ffffff;
   padding: 0.4cm;
-  border: 1px solid #94a3b8; /* إطار مالي خارجي خفيف للحماية بصرية */
+  border: 1px solid #94a3b8;
+  border-radius: 6px;
 }
 
-/* ترويسة السند وعزل الشعار */
 .header-table {
   border-collapse: collapse;
 }
+
 .logo-wrapper {
   width: 65px;
   height: 65px;
@@ -243,13 +246,13 @@ watch(currentVoucher, async (newVal) => {
   background-color: #f8fafc;
   border-radius: 6px;
 }
+
 .main-logo {
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
 }
 
-/* صندوق تفاصيل السند العلوية على اليسار */
 .voucher-meta-box {
   border: 2px solid #0f172a;
   border-radius: 4px;
@@ -257,60 +260,64 @@ watch(currentVoucher, async (newVal) => {
   background-color: #f8fafc;
   min-width: 210px;
 }
+
 .voucher-title {
   font-size: 14px;
   font-weight: 900;
   color: #0f172a;
   text-align: center;
-  border-b: 2px solid #0f172a;
+  border-bottom: 2px solid #0f172a;
   padding-bottom: 4px;
   margin-bottom: 4px;
 }
 
-/* هندسة المصفوفة الجدولية المصمتة (Ledger Matrix Table) */
 .ledger-table {
   border-collapse: collapse;
   width: 100%;
-  border: 2px solid #0f172a; /* خط خارجي سميك للسند المحاسبي */
+  border: 2px solid #0f172a;
 }
+
 .ledger-table td {
-  border: 1px solid #1e293b; /* خطوط داخلية حاسمة تفصل الحقول تماماً */
+  border: 1px solid #1e293b;
   padding: 6px 10px;
 }
+
 .cell-label {
-  background-color: #f1f5f9; /* خلفية رمادية هادئة ومحترفة للعناوين كالمستندات العالمية */
+  background-color: #f1f5f9;
   font-weight: 800;
   font-size: 11px;
   color: #334155;
   text-align: right;
 }
+
 .cell-value {
   background-color: #ffffff;
   text-align: right;
 }
 
-/* خطوط وتوزيع التواقيع الكلاسيكية الأفقية */
 .signatures-table {
   border-collapse: collapse;
   table-layout: fixed;
 }
+
 .sig-title {
   font-size: 11px;
   font-weight: 800;
   color: #1e293b;
 }
+
 .sig-meta {
   font-size: 9px;
   color: #64748b;
   margin-top: 1px;
 }
+
 .sig-line {
   margin: 18px auto 0 auto;
   width: 80%;
-  border-bottom: 1px dotted #475569; /* السطر المنقط الأنيق للكتابة المحترفة */
+  border-bottom: 1px dotted #475569;
 }
 
-/* إعدادات محرك الطباعة الصارم للـ المتصفح لمنع التفكك والتقسيم نهائياً */
 @media print {
   .no-print {
     display: none !important;
@@ -334,14 +341,14 @@ watch(currentVoucher, async (newVal) => {
   .voucher-master-frame {
     max-width: 100% !important;
     width: 100% !important;
-    border: 2px solid #000000 !important; /* فرض خط الإطار الحاسم عند خروج الورقة */
+    border: 2px solid #000000 !important;
+    border-radius: 0 !important;
     padding: 0.3cm !important;
     box-shadow: none !important;
     page-break-inside: avoid !important;
     break-inside: avoid !important;
   }
 
-  /* إجبار المتصفحات على إظهار وتلوين خلفيات العناوين الرمادية المصمتة بدقة */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;

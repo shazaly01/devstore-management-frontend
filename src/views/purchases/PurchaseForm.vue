@@ -1,4 +1,4 @@
-<!--src\views\purchases\PurchaseForm.vue-->
+<!--src/views/purchases/PurchaseForm.vue-->
 <template>
   <div class="space-y-4 text-right font-sans pb-24" dir="rtl">
     <div class="flex justify-between items-center py-1 border-b border-surface-border/60">
@@ -12,7 +12,7 @@
 
     <div
       v-if="purchaseStore.error"
-      class="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-lg text-xs font-bold shadow-sm"
+      class="p-3 bg-danger/10 border border-danger/30 text-danger rounded-lg text-xs font-bold shadow-sm"
     >
       {{ purchaseStore.error }}
     </div>
@@ -20,11 +20,11 @@
     <PurchaseHeader v-model="form" :validation-errors="purchaseStore.validationErrors" />
 
     <AppCard>
-      <div ref="tableWrapperRef" class="p-3 space-y-3">
+      <div ref="tableWrapperRef" class="space-y-4">
         <!-- شريط البحث مدمج مع حقل نسبة الربح العامة في نفس السطر -->
         <div class="flex flex-col md:flex-row items-center gap-3">
           <div
-            class="flex-1 w-full text-xs bg-[#e05e2b] p-1 rounded-lg shadow-[0_0_15px_rgba(224,94,43,0.25)] border border-[#e05e2b]"
+            class="flex-1 w-full text-xs bg-primary p-1 rounded-xl shadow-md shadow-primary/20 border border-primary transition-all duration-200"
           >
             <SmartSearchGrid
               ref="searchGridRef"
@@ -43,9 +43,9 @@
 
           <!-- أداة نسبة الربح العامة المدمجة -->
           <div
-            class="w-full md:w-auto flex items-center justify-between md:justify-start gap-2 bg-[#16171b] border border-[#3e414c] hover:border-[#e05e2b] focus-within:border-[#e05e2b] px-3 py-1.5 rounded-lg shadow-md transition-all duration-200"
+            class="w-full md:w-auto flex items-center justify-between md:justify-start gap-2 bg-surface-ground border border-surface-border hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 px-3 py-1.5 rounded-xl shadow-sm transition-all duration-200"
           >
-            <div class="flex items-center gap-1.5 text-[#e05e2b]">
+            <div class="flex items-center gap-1.5 text-primary">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                   stroke-linecap="round"
@@ -54,9 +54,9 @@
                   d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
                 />
               </svg>
-              <span class="text-xs font-bold text-gray-200 whitespace-nowrap"
-                >نسبة الربح العامة:</span
-              >
+              <span class="text-xs font-bold text-text-secondary whitespace-nowrap">
+                نسبة الربح العامة:
+              </span>
             </div>
 
             <div class="relative flex items-center">
@@ -67,15 +67,15 @@
                 placeholder="0"
                 min="0"
                 step="0.5"
-                class="w-16 p-1 bg-[#23252e] text-white border border-[#3e414c] focus:border-[#e05e2b] rounded-md text-xs font-bold text-center outline-none transition-all"
+                class="w-16 p-1 bg-surface-section text-text-primary border border-surface-border focus:border-primary rounded-lg text-xs font-bold text-center font-mono outline-none transition-all"
               />
-              <span class="mr-1 text-xs font-bold text-gray-400">%</span>
+              <span class="mr-1 text-xs font-bold text-text-muted">%</span>
             </div>
 
             <button
               type="button"
               @click="applyGlobalProfitMargin"
-              class="px-2.5 py-1 bg-[#e05e2b] hover:bg-[#c94e1f] active:scale-95 text-white text-xs font-bold rounded-md shadow transition-all whitespace-nowrap"
+              class="px-2.5 py-1 bg-primary hover:bg-primary-dark active:scale-95 text-white text-xs font-bold rounded-lg shadow-sm transition-all whitespace-nowrap cursor-pointer"
               title="تطبيق النسبة على كل الأصناف الحالية"
             >
               تطبيق
@@ -85,7 +85,7 @@
 
         <p
           v-if="getValidationError('items')"
-          class="p-2 bg-rose-950/40 text-rose-400 rounded-lg text-xs font-bold border border-rose-900/50"
+          class="p-2.5 bg-danger/10 text-danger rounded-lg text-xs font-bold border border-danger/30 shadow-sm"
         >
           {{ getValidationError('items') }}
         </p>
@@ -98,7 +98,7 @@
         >
           <template #cell-item_name="{ row }">
             <div class="w-full px-1 overflow-hidden" :title="row.item_name">
-              <span class="block truncate text-xs font-bold text-gray-300 cursor-default">
+              <span class="block truncate text-xs font-bold text-text-primary cursor-default">
                 {{ row.item_name || '-' }}
               </span>
             </div>
@@ -110,22 +110,21 @@
                 v-model="row.item_unit_id"
                 @change="syncUnitCostPrice(row)"
                 :disabled="!row.available_units || row.available_units.length === 0"
-                style="color-scheme: dark"
-                class="w-full p-1 bg-transparent text-white border border-transparent hover:border-gray-500 focus:border-[#e05e2b] rounded-md text-xs font-bold outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed text-right appearance-none"
+                class="w-full p-1 bg-transparent text-text-primary border border-transparent hover:border-surface-border focus:border-primary focus:bg-surface-ground rounded-md text-xs font-bold outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed text-right appearance-none"
               >
-                <option value="" class="bg-[#16171b] text-gray-400">اختر الوحدة...</option>
+                <option value="" class="bg-surface-section text-text-muted">اختر الوحدة...</option>
                 <option
                   v-for="u in row.available_units"
                   :key="u.id"
                   :value="u.id"
-                  class="bg-[#16171b] text-white"
+                  class="bg-surface-section text-text-primary"
                 >
                   {{ u.unit_name || 'وحدة مجهولة' }}
                 </option>
               </select>
               <p
                 v-if="getValidationError(`items.${index}.item_unit_id`)"
-                class="text-rose-500 text-[9px] font-bold mt-0.5"
+                class="text-danger text-[9px] font-bold mt-0.5"
               >
                 الوحدة مطلوبة أو مكررة للسطر
               </p>
@@ -141,7 +140,7 @@
                 :data-col="col.key"
                 @keydown.enter.prevent="onQuantityEnter"
                 @keydown.arrow-left.prevent="onQuantityArrowLeft(index)"
-                class="w-full p-1 bg-transparent border-none text-white font-bold text-xs focus:outline-none text-center font-mono transition-all focus:bg-[#16171b]/40 focus:rounded"
+                class="w-full p-1 bg-transparent border-none text-text-primary font-bold text-xs focus:outline-none text-center font-mono transition-all focus:bg-surface-ground focus:rounded"
                 placeholder="0"
               />
             </div>
@@ -159,7 +158,7 @@
                 @keydown.enter.prevent="onFieldEnter"
                 @keydown.arrow-left.prevent="focusField(index, 'unit_cost')"
                 @keydown.arrow-right.prevent="focusQuantity(index)"
-                class="w-full p-1 bg-[#16171b] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded transition-all text-xs text-center font-mono text-white font-bold outline-none focus:ring-1 focus:ring-[#e05e2b]/30"
+                class="w-full p-1 bg-surface-ground border border-surface-border hover:border-primary/50 focus:border-primary focus:bg-surface-section rounded transition-all text-xs text-center font-mono text-text-primary font-bold outline-none focus:ring-1 focus:ring-primary/20"
                 placeholder="0"
               />
             </div>
@@ -179,7 +178,7 @@
                 @keydown.arrow-right.prevent="
                   focusField(index, form.currency_id ? 'foreign_unit_cost' : 'quantity')
                 "
-                class="w-full p-1 bg-[#16171b] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded transition-all text-xs text-center font-mono text-white font-bold outline-none focus:ring-1 focus:ring-[#e05e2b]/30"
+                class="w-full p-1 bg-surface-ground border border-surface-border hover:border-primary/50 focus:border-primary focus:bg-surface-section rounded transition-all text-xs text-center font-mono text-text-primary font-bold outline-none focus:ring-1 focus:ring-primary/20"
                 placeholder="0"
               />
             </div>
@@ -196,7 +195,7 @@
                 @input="handleSellingPriceInput(row, $event.target.value)"
                 @keydown.enter.prevent="onFieldEnter"
                 @keydown.arrow-right.prevent="focusField(index, 'unit_cost')"
-                class="w-full p-1 bg-[#16171b] border border-[#3e414c] hover:border-gray-500 focus:border-[#e05e2b] rounded transition-all text-xs text-center font-mono text-white font-bold outline-none focus:ring-1 focus:ring-[#e05e2b]/30"
+                class="w-full p-1 bg-surface-ground border border-surface-border hover:border-primary/50 focus:border-primary focus:bg-surface-section rounded transition-all text-xs text-center font-mono text-text-primary font-bold outline-none focus:ring-1 focus:ring-primary/20"
                 placeholder="0"
               />
             </div>
@@ -208,7 +207,7 @@
                 type="text"
                 readonly
                 :value="formatNumber(row.grand_total)"
-                class="w-full p-1 bg-[#16171b] border border-[#3e414c] rounded text-xs text-center font-mono text-white font-bold opacity-90 cursor-default"
+                class="w-full p-1 bg-surface-ground border border-surface-border rounded text-xs text-center font-mono text-primary font-black cursor-default"
                 placeholder="0"
               />
             </div>
@@ -279,13 +278,9 @@ const tableWrapperRef = ref(null)
 const isEdit = computed(() => !!route.params.id)
 const isHydrating = ref(false)
 
-// متغير نسبة الربح العامة
 const globalProfitMargin = ref(null)
-
-// قفل برمجي لمنع الحلقة المفرغة أثناء الحسابات التلقائية
 let isRecalculating = false
 
-// دوال تنسيق الأرقام والعملة والتجريد المتوافقة مع شاشة المبيعات
 const formatNumber = (value) => {
   if (value === null || value === undefined || value === '') return ''
   const num = Number(value)
@@ -305,7 +300,6 @@ const unformatNumber = (text) => {
   return isNaN(num) ? 0 : num
 }
 
-// معالجات الإدخال المالي للأسطر
 const handleForeignUnitCostInput = (row, value) => {
   if (!value || String(value).trim() === '') {
     row.foreign_unit_cost = null
@@ -322,7 +316,6 @@ const handleSellingPriceInput = (row, value) => {
   row.selling_price = unformatNumber(value)
 }
 
-// كائن البيانات مع الحسابات المالية والعملات
 const form = ref({
   invoice_type: 'purchase',
   parent_id: null,
@@ -341,7 +334,6 @@ const form = ref({
 
 const items = ref([])
 
-// مصفوفة التكوين الحسابي لجدول الأصناف مع التوزيع المحدث لنسب العرض
 const detailSchema = [
   {
     key: 'item_id_display',
@@ -492,7 +484,6 @@ const detailSchema = [
   },
 ]
 
-// دالة تطبيق نسبة الربح العامة على جميع الأصناف في الجدول
 const applyGlobalProfitMargin = () => {
   const margin = parseFloat(globalProfitMargin.value)
   if (isNaN(margin) || margin < 0) {
@@ -522,7 +513,6 @@ const applyGlobalProfitMargin = () => {
   toast.success(`تم تطبيق نسبة ربح ${margin}% على جميع الأصناف بنجاح.`)
 }
 
-// مراقبة طريقة الدفع
 watch(
   () => form.value.payment_type,
   (newType) => {
@@ -545,7 +535,6 @@ watch(
   },
 )
 
-// مراقبة تغير سعر الصرف وتحديث التكلفة المحلية للأصناف المسعرة بالعملة الأجنبية
 watch(
   () => form.value.exchange_rate,
   (newRate) => {
@@ -572,7 +561,6 @@ watch(
   },
 )
 
-// محرك الحساب التلقائي ثنائي الاتجاه الدقيق والمحمي من التكرار الدائري
 watch(
   () =>
     items.value.map((row) => ({
@@ -597,7 +585,6 @@ watch(
       const exchangeRate = parseFloat(form.value.exchange_rate) || 1
       const hasForeignCurrency = !!form.value.currency_id && exchangeRate > 0
 
-      // 0. إذا تم إدخال أو تعديل التكلفة بالعملة الأجنبية -> تحديث التكلفة المحلية
       if (foreignChanged) {
         isRecalculating = true
         if (
@@ -618,7 +605,6 @@ watch(
         return
       }
 
-      // 1. إذا تغيرت التكلفة المحلية يدوياً -> تحديث التكلفة الأجنبية وسعر البيع
       if (costChanged) {
         isRecalculating = true
         if (hasForeignCurrency) {
@@ -641,7 +627,6 @@ watch(
       const margin = parseFloat(row.profit_margin) || 0
       const price = parseFloat(row.selling_price) || 0
 
-      // 2. إذا قام المستخدم بتعديل سعر البيع يدوياً -> نحسب نسبة الربح
       if (priceChanged && !marginChanged) {
         if (cost > 0) {
           isRecalculating = true
@@ -651,9 +636,7 @@ watch(
             isRecalculating = false
           }, 50)
         }
-      }
-      // 3. إذا قام المستخدم بتعديل نسبة الربح -> نحدث سعر البيع
-      else if (marginChanged && !priceChanged) {
+      } else if (marginChanged && !priceChanged) {
         if (cost > 0) {
           isRecalculating = true
           const calculatedPrice = cost * (1 + margin / 100)
@@ -689,9 +672,7 @@ const searchableItems = computed(() => {
       ...item,
       id_display: `PRD-${item.id}`,
       name: item.name || '',
-      price_display: item.units?.[0]
-        ? `${parseFloat(item.units[0].price).toFixed(2)} د.ل`
-        : '0.00 د.ل',
+      price_display: item.units?.[0] ? `${parseFloat(item.units[0].price).toFixed(2)}` : '0.00',
       stock_display:
         item.current_stock !== undefined
           ? `${item.current_stock}`
@@ -710,7 +691,6 @@ const { createEmptyRow, handleItemSelected, removeRow } = useDynamicDetails(item
   mergeQtyKey: 'quantity',
 })
 
-// مراقب تغيير مستودع الاستلام
 watch(
   () => form.value.store_id,
   async (newStoreId) => {
@@ -742,7 +722,6 @@ watch(
   },
 )
 
-// توجيه التركيز لحقل الكمية مع التظليل
 const focusQuantity = (rowIndex) => {
   nextTick(() => {
     const selector = `input[data-row="${rowIndex}"][data-col="quantity"]`
@@ -757,7 +736,6 @@ const focusQuantity = (rowIndex) => {
   })
 }
 
-// توجيه التركيز لأي حقل آخر مع التظليل
 const focusField = (rowIndex, colKey) => {
   nextTick(() => {
     const selector = `input[data-row="${rowIndex}"][data-col="${colKey}"]`
@@ -772,18 +750,15 @@ const focusField = (rowIndex, colKey) => {
   })
 }
 
-// العودة الفورية لحقل البحث عند ضغط Enter في الكمية
 const onQuantityEnter = () => {
   searchGridRef.value?.focus()
 }
 
-// التنقل بالسهم الأيسر من الكمية إلى التكلفة المناسبة
 const onQuantityArrowLeft = (rowIndex) => {
   const targetCol = form.value.currency_id ? 'foreign_unit_cost' : 'unit_cost'
   focusField(rowIndex, targetCol)
 }
 
-// العودة الفورية للبحث من أي حقل مالي عند ضغط Enter
 const onFieldEnter = () => {
   searchGridRef.value?.focus()
 }
@@ -900,7 +875,6 @@ onMounted(async () => {
     if (purchaseStore.currentPurchase) {
       const cur = purchaseStore.currentPurchase
 
-      // 1. شحن سطور مستند المشتريات
       items.value = cur.items.map((it) => {
         const cost = parseFloat(it.unit_cost) || 0
         const price =
@@ -939,7 +913,6 @@ onMounted(async () => {
         }
       })
 
-      // 2. ترطيب بيانات رأس الفاتورة
       form.value = {
         invoice_type: cur.invoice_type,
         parent_id: cur.parent_id,
@@ -956,7 +929,6 @@ onMounted(async () => {
         notes: cur.notes || '',
       }
 
-      // 3. شحن لوحة البحث
       if (cur.store_id) {
         await itemStore.fetchItems(1, { is_active: 1, store_id: cur.store_id, all: true })
       }
@@ -1025,10 +997,5 @@ const handleCancel = () => {
 :deep(.smart-search-dropdown .text-right),
 :deep(table td:nth-child(2)) {
   text-align: right !important;
-}
-
-select option {
-  background-color: #1e293b !important;
-  color: #f8fafc !important;
 }
 </style>

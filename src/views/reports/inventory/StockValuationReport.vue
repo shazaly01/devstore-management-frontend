@@ -1,9 +1,13 @@
+<!--src/views/reports/inventory/StockValuationReport.vue-->
 <template>
-  <div class="space-y-6 print:hidden">
-    <div class="flex justify-between items-center">
+  <div class="space-y-6 print:hidden text-right font-sans" dir="rtl">
+    <!-- الترويسة العلوية -->
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
-        <h1 class="text-3xl font-black text-white tracking-tight">تقرير تقييم المخزون المالي</h1>
-        <p class="text-sm text-gray-400 mt-1">
+        <h1 class="text-2xl font-black text-text-primary tracking-tight">
+          تقرير تقييم المخزون المالي
+        </h1>
+        <p class="text-xs text-text-muted mt-1">
           احتساب القيمة الرأسمالية الحالية للبضاعة المخزنة بناءً على التكلفة
         </p>
       </div>
@@ -11,18 +15,19 @@
         <AppButton
           @click="handlePrint"
           :disabled="!stockValuationSummary || stockValuationList.length === 0"
-          class="bg-indigo-500 hover:bg-indigo-400 text-white shadow-[0_0_15px_rgba(99,102,241,0.4)] disabled:opacity-50"
+          class="flex items-center gap-2"
         >
-          <PrinterIcon class="w-5 h-5 ml-2" />
+          <PrinterIcon class="w-4 h-4 ml-1" />
           طباعة التقييم المالي
         </AppButton>
       </div>
     </div>
 
-    <AppCard class="border border-gray-800 bg-surface-section/60 p-5 backdrop-blur-sm">
+    <!-- بطاقة الفلاتر والإجراءات -->
+    <AppCard>
       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
         <div class="md:col-span-2">
-          <label class="block text-xs font-bold text-gray-400 uppercase mb-2">
+          <label class="block text-xs font-bold text-text-secondary uppercase mb-2">
             تصفية حسب المستودع
           </label>
           <AppDropdown
@@ -39,77 +44,72 @@
         <div>
           <AppButton
             @click="handleFetch"
-            :loading="loading"
-            class="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-bold shadow-[0_0_15px_rgba(52,211,153,0.3)]"
+            :disabled="loading"
+            class="w-full h-10 flex items-center justify-center font-bold shadow-sm"
           >
-            <ArrowPathIcon class="w-5 h-5 ml-2" :class="{ 'animate-spin': loading }" />
+            <ArrowPathIcon class="w-4 h-4 ml-2" :class="{ 'animate-spin': loading }" />
             تحديث وتوليد القيمة
           </AppButton>
         </div>
       </div>
     </AppCard>
 
+    <!-- بطاقات مؤشرات التقييم الرأسمالي -->
     <div v-if="stockValuationSummary" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <AppCard
-        class="relative overflow-hidden p-5 border-r-4 border-r-gray-600 bg-surface-section/60 shadow-lg"
-      >
-        <div class="text-xs text-gray-400/60 uppercase tracking-widest mb-2 font-bold">
+      <AppCard class="p-4 border-r-4 border-r-surface-border bg-surface-section shadow-sm">
+        <div class="text-[10px] text-text-muted uppercase tracking-widest mb-1 font-bold">
           عدد الأصناف المقيّمة مخزنياً
         </div>
-        <div class="text-2xl font-black text-gray-300">
-          {{ stockValuationSummary.total_items }} <span class="text-sm font-normal">صنف مسجل</span>
+        <div class="text-xl font-black text-text-primary font-mono">
+          {{ stockValuationSummary.total_items }}
+          <span class="text-xs font-normal text-text-muted">صنف مسجل</span>
         </div>
       </AppCard>
 
-      <AppCard
-        class="relative overflow-hidden p-5 border-r-4 border-r-emerald-500 bg-surface-section/60 shadow-[0_4_20px_rgba(0,0,0,0.3)]"
-      >
-        <div class="text-xs text-emerald-200/60 uppercase tracking-widest mb-2 font-bold">
+      <AppCard class="p-4 border-r-4 border-r-success bg-surface-section shadow-sm">
+        <div class="text-[10px] text-success uppercase tracking-widest mb-1 font-bold">
           إجمالي القيمة الرأسمالية النقدية (تكلفة)
         </div>
-        <div
-          class="text-2xl font-black text-emerald-400 drop-shadow-[0_0_8px_rgba(52,211,153,0.8)]"
-        >
+        <div class="text-xl font-black text-success font-mono">
           {{ formatCurrency(stockValuationSummary.grand_total_inventory_value) }}
         </div>
       </AppCard>
     </div>
 
-    <AppCard class="border border-gray-800 bg-surface-section/40 backdrop-blur-sm">
+    <!-- جدول التقييم المالي للمخزون -->
+    <AppCard>
       <AppTable :headers="tableHeaders" :items="stockValuationList" :is-loading="loading">
         <template #cell-item_id="{ item }">
-          <span class="font-mono text-xs text-gray-500">#{{ item.item_id }}</span>
+          <span class="font-mono text-xs text-text-muted">#{{ item.item_id }}</span>
         </template>
 
         <template #cell-item_name="{ item }">
-          <span class="font-bold text-gray-200 hover:text-cyan-300 transition-colors duration-200">
+          <span class="font-bold text-text-primary text-xs">
             {{ item.item_name }}
           </span>
         </template>
 
         <template #cell-store_name="{ item }">
-          <span class="text-xs text-gray-400 font-medium">
+          <span class="text-xs text-text-secondary font-medium">
             {{ item.store_name ?? 'المركز الرئيسي' }}
           </span>
         </template>
 
         <template #cell-current_quantity="{ item }">
-          <span class="font-bold text-gray-300">
+          <span class="font-bold text-text-primary font-mono text-xs">
             {{ item.current_quantity }}
-            <span class="text-xs text-gray-500 font-normal"> {{ item.unit_name }}</span>
+            <span class="text-[10px] text-text-muted font-normal"> {{ item.unit_name }}</span>
           </span>
         </template>
 
         <template #cell-unit_cost="{ item }">
-          <span class="text-gray-400 font-medium font-mono">
+          <span class="font-mono text-text-secondary text-xs font-medium">
             {{ formatCurrency(item.unit_cost) }}
           </span>
         </template>
 
         <template #cell-total_value="{ item }">
-          <span
-            class="font-black text-emerald-400 drop-shadow-[0_0_4px_rgba(52,211,153,0.2)] font-mono"
-          >
+          <span class="font-mono font-black text-success text-xs">
             {{ formatCurrency(item.total_value) }}
           </span>
         </template>
@@ -129,7 +129,7 @@ import { PrinterIcon, ArrowPathIcon } from '@heroicons/vue/24/outline'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppButton from '@/components/ui/AppButton.vue'
-import AppDropdown from '@/components/ui/AppDropdown.vue' // استيراد المكون الموحد
+import AppDropdown from '@/components/ui/AppDropdown.vue'
 
 const router = useRouter()
 const reportStore = useReportStore()
@@ -143,7 +143,7 @@ const tableHeaders = [
   { key: 'item_name', label: 'الاسم والبيان المخزني' },
   { key: 'store_name', label: 'المستودع الجاري' },
   { key: 'current_quantity', label: 'الكمية المتوفرة' },
-  { key: 'unit_cost', label: 'تكلفة الوحدة 単' },
+  { key: 'unit_cost', label: 'تكلفة الوحدة' },
   { key: 'total_value', label: 'القيمة الرأسمالية الكلية' },
 ]
 
@@ -187,13 +187,3 @@ onMounted(() => {
   handleFetch()
 })
 </script>
-
-<style scoped>
-:deep(.AppTable th) {
-  @apply text-gray-400 font-bold uppercase tracking-wider text-xs border-b border-gray-800;
-}
-
-:deep(.AppTable td) {
-  @apply py-4 border-b border-gray-800/50;
-}
-</style>

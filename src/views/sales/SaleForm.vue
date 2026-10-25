@@ -1,4 +1,3 @@
-<!--src\views\sales\SaleForm.vue--->
 <script setup>
 import { useSaleFormLogic } from '@/composables/useSaleFormLogic'
 
@@ -71,6 +70,11 @@ const {
       v-model:discountAmount="form.discount_amount"
       v-model:taxAmount="form.tax_amount"
       v-model:designerId="form.designer_id"
+      v-model:cashAmount="form.cash_amount"
+      v-model:bankAmount="form.bank_amount"
+      v-model:paymentType="form.payment_type"
+      v-model:paymentMode="form.payment_mode"
+      :invoice-type="form.invoice_type"
       :subtotal="headerSubtotal"
       :grand-total="headerGrandTotal"
       :validation-errors="saleStore.validationErrors"

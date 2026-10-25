@@ -1,3 +1,4 @@
+<!--src/views/expenses/ExpensesTable.vue-->
 <template>
   <AppCard>
     <AppTable
@@ -8,7 +9,7 @@
       @row-click="$emit('row-clicked', $event)"
     >
       <template #cell-expense_info="{ item }">
-        <div class="flex flex-col gap-1 py-1">
+        <div class="flex flex-col gap-1 py-1 text-right" dir="rtl">
           <span class="font-bold text-text-primary text-base leading-tight">
             {{ item.name }}
           </span>
@@ -17,7 +18,7 @@
       </template>
 
       <template #cell-accounting_info="{ item }">
-        <div class="flex flex-col justify-center">
+        <div class="flex flex-col justify-center text-right" dir="rtl">
           <span class="font-medium text-sm text-text-primary">
             {{ item.account?.name || '-' }}
           </span>
@@ -28,9 +29,9 @@
       </template>
 
       <template #cell-financials="{ item }">
-        <div class="flex flex-col justify-center min-w-[120px]">
+        <div class="flex flex-col justify-center min-w-[120px] text-right" dir="rtl">
           <span class="text-xs text-text-muted mb-0.5">إجمالي المصروفات:</span>
-          <span class="font-bold text-sm text-rose-600">
+          <span class="font-bold text-sm font-mono text-danger">
             {{ formatCurrency(item.current_balance || 0) }}
           </span>
         </div>
@@ -38,31 +39,18 @@
 
       <template #cell-status="{ item }">
         <div class="flex items-center">
-          <span
-            :class="[
-              'px-2 py-0.5 text-[11px] font-bold rounded-full border flex items-center gap-1',
-              item.is_active
-                ? 'bg-emerald-50 text-emerald-700 border-emerald-100'
-                : 'bg-gray-50 text-gray-600 border-gray-200',
-            ]"
-          >
-            <span
-              :class="[
-                'w-1.5 h-1.5 rounded-full',
-                item.is_active ? 'bg-emerald-500' : 'bg-gray-400',
-              ]"
-            ></span>
+          <AppBadge :variant="item.is_active ? 'success' : 'neutral'" size="xs" pill dot>
             {{ item.is_active ? 'نشط' : 'غير نشط' }}
-          </span>
+          </AppBadge>
         </div>
       </template>
 
       <template #cell-actions="{ item }">
-        <div class="flex items-center justify-end space-x-1 space-x-reverse">
+        <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
           <button
             v-if="authStore.can('expense.update')"
-            @click.stop="$emit('edit-expense', item)"
-            class="p-1.5 text-sky-500 hover:text-sky-600 hover:bg-sky-50 rounded-lg transition-colors"
+            @click="$emit('edit-expense', item)"
+            class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
             title="تعديل البند"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -77,8 +65,8 @@
 
           <button
             v-if="authStore.can('expense.delete')"
-            @click.stop="$emit('delete-expense', item)"
-            class="p-1.5 text-rose-500 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+            @click="$emit('delete-expense', item)"
+            class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
             title="حذف البند"
           >
             <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -104,6 +92,7 @@ import { useAuthStore } from '@/stores/authStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import AppTable from '@/components/ui/AppTable.vue'
 import AppPagination from '@/components/ui/AppPagination.vue'
+import AppBadge from '@/components/ui/AppBadge.vue'
 import { formatCurrency } from '@/utils/formatters'
 
 defineProps({
@@ -116,7 +105,6 @@ defineEmits(['page-change', 'edit-expense', 'delete-expense', 'row-clicked'])
 
 const authStore = useAuthStore()
 
-// ربط وبناء مصفوفة رؤوس الأعمدة لجدول بنود المصروفات
 const tableHeaders = computed(() => {
   const headers = [
     { key: 'id', label: '#' },

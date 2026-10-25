@@ -10,7 +10,7 @@
   >
     <div
       v-if="modelValue"
-      class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-50 p-4"
+      class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4"
       @click.self="close"
     >
       <Transition
@@ -23,15 +23,16 @@
         leave-to-class="opacity-0 scale-95"
       >
         <div
-          class="bg-surface-section rounded-xl shadow-2xl p-6 w-full max-w-lg border border-surface-border transform"
+          class="bg-surface-section rounded-xl shadow-2xl p-6 w-full max-w-lg border border-surface-border transform text-right font-sans"
           role="dialog"
           aria-modal="true"
+          dir="rtl"
         >
           <!-- رأس النافذة -->
           <div class="flex justify-between items-center border-b border-surface-border pb-3 mb-5">
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-2.5">
               <div
-                class="w-8 h-8 rounded-lg bg-emerald-100 dark:bg-emerald-950/50 text-emerald-600 flex items-center justify-center"
+                class="w-9 h-9 rounded-lg bg-success/10 text-success flex items-center justify-center shrink-0 border border-success/20"
               >
                 <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path
@@ -44,7 +45,7 @@
               </div>
               <div>
                 <h3 class="text-base font-bold text-text-primary">تحديث سعر صرف العملة</h3>
-                <p class="text-xs text-text-muted">
+                <p class="text-xs text-text-muted mt-0.5">
                   تسجيل سعر الصرف اليومي المرجعي لعمليات التسعير والتكاليف
                 </p>
               </div>
@@ -53,7 +54,7 @@
             <button
               type="button"
               @click="close"
-              class="text-text-muted hover:text-text-primary p-1 rounded-full hover:bg-surface-ground transition-colors"
+              class="text-text-muted hover:text-text-primary p-1.5 rounded-lg hover:bg-surface-ground transition-colors cursor-pointer"
               aria-label="إغلاق"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -83,7 +84,7 @@
                 <p
                   v-for="(error, index) in validationErrors.currency_id"
                   :key="index"
-                  class="text-rose-500 text-xs mt-1 font-bold"
+                  class="text-danger text-xs mt-1 font-bold"
                 >
                   {{ error }}
                 </p>
@@ -104,7 +105,7 @@
                   <p
                     v-for="(error, index) in validationErrors.rate"
                     :key="index"
-                    class="text-rose-500 text-xs mt-1 font-bold"
+                    class="text-danger text-xs mt-1 font-bold"
                   >
                     {{ error }}
                   </p>
@@ -123,7 +124,7 @@
                   <p
                     v-for="(error, index) in validationErrors.rate_date"
                     :key="index"
-                    class="text-rose-500 text-xs mt-1 font-bold"
+                    class="text-danger text-xs mt-1 font-bold"
                   >
                     {{ error }}
                   </p>
@@ -142,7 +143,7 @@
                 <p
                   v-for="(error, index) in validationErrors.notes"
                   :key="index"
-                  class="text-rose-500 text-xs mt-1 font-bold"
+                  class="text-danger text-xs mt-1 font-bold"
                 >
                   {{ error }}
                 </p>

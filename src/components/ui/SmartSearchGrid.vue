@@ -1,11 +1,11 @@
-<!--src\components\ui\SmartSearchGrid.vue-->
+<!--src/components/ui/SmartSearchGrid.vue-->
 <template>
   <div class="relative w-full" ref="containerRef">
     <div class="relative">
       <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
         <svg
           aria-hidden="true"
-          class="w-5 h-5 text-gray-500 dark:text-gray-400"
+          class="w-5 h-5 text-text-muted"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -27,48 +27,50 @@
         @keydown="handleKeydown"
         @focus="openDropdown"
         :placeholder="placeholder"
-        class="block w-full p-3 pr-10 text-sm border rounded-lg transition-all shadow-sm outline-none bg-slate-900 border-primary/40 text-white placeholder-gray-500 focus:border-primary focus:ring-1 focus:ring-primary/20"
+        class="block w-full p-3 pr-10 text-sm border rounded-lg transition-all shadow-sm outline-none bg-surface-section border-surface-border text-text-primary placeholder:text-text-muted focus:border-primary focus:ring-2 focus:ring-primary/20"
         autocomplete="off"
       />
     </div>
 
+    <!-- قائمة النتائج المنسدلة -->
     <div
       v-if="isOpen && filteredData.length > 0"
-      class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-2xl max-h-80 overflow-y-auto"
+      class="absolute z-50 w-full mt-1 bg-surface-section border border-surface-border rounded-xl shadow-2xl max-h-80 overflow-y-auto"
     >
       <table class="w-full text-sm text-right">
         <thead
-          class="text-xs text-gray-700 uppercase bg-gray-100 dark:bg-gray-900 dark:text-gray-300 sticky top-0 z-10 shadow-sm"
+          class="text-xs uppercase bg-surface-ground border-b border-surface-border text-text-secondary sticky top-0 z-10 shadow-sm"
         >
           <tr>
             <th
               v-for="col in columns"
               :key="col.key"
               scope="col"
-              class="px-4 py-3"
+              class="px-4 py-3 font-bold"
               :class="col.widthClass || ''"
             >
               {{ col.label }}
             </th>
           </tr>
         </thead>
-        <tbody>
+        <tbody class="divide-y divide-surface-border/60">
           <tr
             v-for="(item, index) in filteredData"
-            :key="index"
+            :key="item.id ?? index"
             @click="selectItem(item)"
             @mouseover="highlightedIndex = index"
             :class="[
-              'cursor-pointer border-b dark:border-gray-700 transition-colors',
+              'cursor-pointer transition-colors',
               highlightedIndex === index
-                ? 'bg-blue-100 dark:bg-blue-900/40'
-                : 'hover:bg-gray-50 dark:hover:bg-gray-700/50',
+                ? 'bg-primary/10 text-primary font-bold'
+                : 'hover:bg-surface-ground text-text-primary',
             ]"
           >
             <td
               v-for="col in columns"
               :key="col.key"
-              class="px-4 py-2 font-medium text-gray-800 dark:text-gray-200"
+              class="px-4 py-2.5 font-medium"
+              :class="highlightedIndex === index ? 'text-primary' : 'text-text-primary'"
             >
               {{ getDisplayValue(item, col.key) }}
             </td>
@@ -77,11 +79,53 @@
       </table>
     </div>
 
+    <!-- حالة التحميل في البحث الخادمي -->
     <div
-      v-if="isOpen && searchQuery && filteredData.length === 0"
-      class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-4 text-center text-gray-500 dark:text-gray-400"
+      v-if="isOpen && serverSearch && loading"
+      class="absolute z-50 w-full mt-1 bg-surface-section border border-surface-border rounded-xl shadow-xl p-4 text-center text-text-muted text-xs font-semibold"
+      role="status"
     >
-      لا توجد نتائج مطابقة لـ "<span class="font-bold">{{ searchQuery }}</span
+      جارٍ البحث عن الأصناف...
+    </div>
+
+    <!-- التحقق من الحد الأدنى لطول البحث الخادمي -->
+    <div
+      v-if="
+        isOpen &&
+        serverSearch &&
+        searchQuery.trim().length > 0 &&
+        searchQuery.trim().length < minSearchLength &&
+        !loading
+      "
+      class="absolute z-50 w-full mt-1 bg-surface-section border border-surface-border rounded-xl shadow-xl p-4 text-center text-text-muted text-xs font-semibold"
+    >
+      أدخل {{ minSearchLength }} أحرف على الأقل لبدء البحث.
+    </div>
+
+    <!-- رسالة خطأ البحث الخادمي -->
+    <div
+      v-if="
+        isOpen && serverSearch && error && !loading && searchQuery.trim().length >= minSearchLength
+      "
+      class="absolute z-50 w-full mt-1 bg-surface-section border border-surface-border rounded-xl shadow-xl p-4 text-center text-danger text-xs font-semibold"
+      role="alert"
+    >
+      {{ error }}
+    </div>
+
+    <!-- رسالة عدم وجود نتائج -->
+    <div
+      v-if="
+        isOpen &&
+        searchQuery &&
+        filteredData.length === 0 &&
+        !loading &&
+        !error &&
+        (!serverSearch || searchQuery.trim().length >= minSearchLength)
+      "
+      class="absolute z-50 w-full mt-1 bg-surface-section border border-surface-border rounded-xl shadow-xl p-4 text-center text-text-muted text-xs font-semibold"
+    >
+      لا توجد نتائج مطابقة لـ "<span class="font-bold text-text-primary">{{ searchQuery }}</span
       >"
     </div>
   </div>
@@ -95,15 +139,22 @@ const props = defineProps({
   columns: { type: Array, required: true },
   searchKeys: { type: Array, required: true },
   placeholder: { type: String, default: 'ابحث بالاسم أو الباركود...' },
+  serverSearch: { type: Boolean, default: false },
+  loading: { type: Boolean, default: false },
+  error: { type: String, default: null },
+  minSearchLength: { type: Number, default: 2 },
+  debounceMs: { type: Number, default: 300 },
+  displayKey: { type: String, default: 'name' },
 })
 
-const emit = defineEmits(['select'])
+const emit = defineEmits(['select', 'search', 'clear'])
 
 const inputRef = ref(null)
 const containerRef = ref(null)
 const searchQuery = ref('')
 const isOpen = ref(false)
 const highlightedIndex = ref(0)
+let searchDebounceTimer = null
 
 const getNestedValue = (obj, path) => {
   if (!obj || !path) return null
@@ -166,6 +217,11 @@ const findExactMatch = (query) => {
 }
 
 const filteredData = computed(() => {
+  if (props.serverSearch) {
+    if (searchQuery.value.trim().length < props.minSearchLength) return []
+    return props.data.slice(0, 50)
+  }
+
   if (!searchQuery.value.trim()) return []
 
   const query = searchQuery.value.toLowerCase().trim()
@@ -191,6 +247,31 @@ const filteredData = computed(() => {
 
 const handleInput = () => {
   const query = searchQuery.value.trim()
+  highlightedIndex.value = 0
+
+  if (props.serverSearch) {
+    if (searchDebounceTimer) {
+      clearTimeout(searchDebounceTimer)
+      searchDebounceTimer = null
+    }
+
+    emit('clear')
+    emit('search', '')
+
+    if (!query) {
+      isOpen.value = false
+      return
+    }
+
+    isOpen.value = true
+    if (query.length < props.minSearchLength) return
+
+    searchDebounceTimer = setTimeout(() => {
+      emit('search', query)
+      searchDebounceTimer = null
+    }, props.debounceMs)
+    return
+  }
 
   if (!query) {
     isOpen.value = false
@@ -198,7 +279,6 @@ const handleInput = () => {
   }
 
   isOpen.value = true
-  highlightedIndex.value = 0
 }
 
 const openDropdown = () => {
@@ -247,8 +327,7 @@ const selectItem = (item) => {
   if (!item) return
 
   emit('select', item)
-
-  searchQuery.value = ''
+  searchQuery.value = props.serverSearch ? String(getNestedValue(item, props.displayKey) ?? '') : ''
   isOpen.value = false
   highlightedIndex.value = 0
 }
@@ -271,6 +350,9 @@ onMounted(() => {
 
 onUnmounted(() => {
   document.removeEventListener('mousedown', handleClickOutside)
+  if (searchDebounceTimer) {
+    clearTimeout(searchDebounceTimer)
+  }
 })
 
 defineExpose({

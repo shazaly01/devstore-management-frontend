@@ -30,6 +30,11 @@ export const useReportStore = defineStore('report', () => {
     closing_balance: 0,
   })
 
+  const stockCardItemSearchResults = ref([])
+  const stockCardItemSearchLoading = ref(false)
+  const stockCardItemSearchError = ref(null)
+  let stockCardItemSearchRequestId = 0
+
   const stockValuationList = ref([])
   const stockValuationSummary = ref({
     total_items: 0,
@@ -308,6 +313,53 @@ export const useReportStore = defineStore('report', () => {
   // ==========================================
   // 8. إجراءات جلب الفلاتر المساعدة عبر الـ Service
   // ==========================================
+  async function searchStockCardItems(search) {
+    const requestId = ++stockCardItemSearchRequestId
+    const normalizedSearch = String(search ?? '').trim()
+
+    if (normalizedSearch.length < 2) {
+      stockCardItemSearchResults.value = []
+      stockCardItemSearchError.value = null
+      stockCardItemSearchLoading.value = false
+      return []
+    }
+
+    stockCardItemSearchLoading.value = true
+    stockCardItemSearchError.value = null
+
+    try {
+      const response = await reportsService.searchStockCardItems(normalizedSearch)
+
+      if (requestId !== stockCardItemSearchRequestId) {
+        return []
+      }
+
+      const results = response.data?.data
+      stockCardItemSearchResults.value = Array.isArray(results) ? results : []
+      return stockCardItemSearchResults.value
+    } catch (err) {
+      if (requestId === stockCardItemSearchRequestId) {
+        stockCardItemSearchError.value = 'فشل في البحث عن الأصناف.'
+        stockCardItemSearchResults.value = []
+      }
+      console.error(err)
+      return []
+    } finally {
+      if (requestId === stockCardItemSearchRequestId) {
+        stockCardItemSearchLoading.value = false
+      }
+    }
+  }
+
+  async function fetchStockCardLookups() {
+    try {
+      const storesRes = await reportsService.getStores()
+      storesList.value = storesRes.data.data || storesRes.data || []
+    } catch (err) {
+      console.error('Error fetching stock card lookups:', err)
+    }
+  }
+
   async function fetchLookups() {
     try {
       const [itemsRes, storesRes] = await Promise.all([
@@ -336,7 +388,7 @@ export const useReportStore = defineStore('report', () => {
       lookupsBanks.value = banksRes.data.data || banksRes.data || []
       storesList.value = storesRes.data.data || storesRes.data || []
     } catch (err) {
-      console.error('Error fetching financial lookups:', err)
+      console.error(err)
     }
   }
 
@@ -347,6 +399,9 @@ export const useReportStore = defineStore('report', () => {
     currentStockSummary,
     stockCardList,
     stockCardSummary,
+    stockCardItemSearchResults,
+    stockCardItemSearchLoading,
+    stockCardItemSearchError,
     stockValuationList,
     stockValuationSummary,
     adjustmentsList,
@@ -369,6 +424,8 @@ export const useReportStore = defineStore('report', () => {
     lookupsBanks,
     fetchCurrentStock,
     fetchStockCard,
+    searchStockCardItems,
+    fetchStockCardLookups,
     fetchStockValuation,
     fetchAdjustmentsSummary,
     fetchAccountLedger,

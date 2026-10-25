@@ -1,4 +1,4 @@
-<!--src\views\banks\BankModal.vue--->
+<!--src/views/banks/BankModal.vue-->
 <template>
   <Transition
     enter-active-class="transition ease-out duration-200"
@@ -10,7 +10,7 @@
   >
     <div
       v-if="modelValue"
-      class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-40"
+      class="fixed inset-0 bg-black/60 flex items-center justify-center z-40 p-4"
       @click.self="close"
     >
       <Transition
@@ -23,22 +23,23 @@
         leave-to-class="opacity-0 scale-95"
       >
         <div
-          class="bg-surface-section rounded-lg shadow-xl p-6 w-full max-w-2xl transform"
+          class="bg-surface-section border border-surface-border rounded-xl shadow-2xl p-6 w-full max-w-2xl transform text-right font-sans"
           role="dialog"
           aria-modal="true"
           :aria-labelledby="title"
+          dir="rtl"
         >
           <div class="flex justify-between items-center border-b border-surface-border pb-3 mb-5">
-            <h3 id="modal-title" class="text-lg font-semibold text-text-primary">
+            <h3 id="modal-title" class="text-lg font-bold text-text-primary">
               {{ title }}
             </h3>
             <button
               @click="close"
-              class="text-text-muted hover:text-text-primary p-1 rounded-full hover:bg-surface-border"
+              class="text-text-muted hover:text-text-primary p-1.5 rounded-lg hover:bg-surface-ground transition-colors cursor-pointer"
               aria-label="Close"
             >
               <svg
-                class="w-6 h-6"
+                class="w-5 h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -87,7 +88,6 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'save'])
 
-// تحديد عنوان المودال ديناميكياً بناءً على وجود معرف البنك (ID)
 const title = computed(() =>
   props.bank && props.bank.id ? 'تعديل بيانات البنك' : 'إضافة بنك جديد',
 )

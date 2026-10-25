@@ -1,0 +1,354 @@
+============ [ CONFIG & ROOT FILES ] ============
+├── package.json
+├── tailwind.config.js
+├── vite.config.js
+├── index.html
+
+============ [ SRC FOLDER ] ============
+├── App.vue
+├── [DIR] assets
+│   ├── base.css
+│   ├── logo.svg
+├── [DIR] components
+│   ├── [DIR] forms
+│   │   ├── BanksDropdown.vue
+│   │   ├── CategoriesDropdown.vue
+│   │   ├── CustomersDropdown.vue
+│   │   ├── DesignersDropdown.vue
+│   │   ├── ExpensesDropdown.vue
+│   │   ├── ItemsDropdown.vue
+│   │   ├── PermissionsChecklist.vue
+│   │   ├── RolesDropdown.vue
+│   │   ├── StoresDropdown.vue
+│   │   ├── SuppliersDropdown.vue
+│   │   ├── TreasuriesDropdown.vue
+│   │   ├── VoucherSubLedgerDropdown.vue
+│   ├── HelloWorld.vue
+│   ├── [DIR] icons
+│   │   ├── IconCommunity.vue
+│   │   ├── IconDocumentation.vue
+│   │   ├── IconEcosystem.vue
+│   │   ├── IconSupport.vue
+│   │   ├── IconTooling.vue
+│   ├── [DIR] layout
+│   │   ├── AppLayout.vue
+│   │   ├── AuthLayout.vue
+│   │   ├── TheHeader.vue
+│   │   ├── TheSidebar.vue
+│   ├── TheWelcome.vue
+│   ├── [DIR] ui
+│   │   ├── ActionItem.vue
+│   │   ├── ActivationModal.vue
+│   │   ├── ActivityItem.vue
+│   │   ├── AppButton.vue
+│   │   ├── AppCalendar.vue
+│   │   ├── AppCard.vue
+│   │   ├── AppConfirmDialog.vue
+│   │   ├── AppCurrencyInput.vue
+│   │   ├── AppDialog.vue
+│   │   ├── AppDropdown.vue
+│   │   ├── AppImageUpload.vue
+│   │   ├── AppInput.vue
+│   │   ├── AppPagination.vue
+│   │   ├── AppTable.vue
+│   │   ├── AppTextarea.vue
+│   │   ├── [DIR] dynamic-invoice
+│   │   │   ├── InvoiceDetailTable.vue
+│   │   │   ├── InvoiceHeaderForm.vue
+│   │   │   ├── InvoiceMainTable.vue
+│   │   │   ├── InvoiceSummaryFooter.vue
+│   │   ├── DynamicCrudPage.vue
+│   │   ├── FullScreenLoader.vue
+│   │   ├── ImagePreviewModal.vue
+│   │   ├── LoadingProgress.vue
+│   │   ├── QuantityInput.vue
+│   │   ├── RiskOpportunityZone.vue
+│   │   ├── SkeletonCard.vue
+│   │   ├── SmartSearchGrid.vue
+│   │   ├── SparklineChart.vue
+│   │   ├── StatCard.vue
+│   ├── WelcomeItem.vue
+├── [DIR] composables
+│   ├── useCrud.js
+│   ├── useDynamicDetails.js
+│   ├── useSaleFormLogic.js
+├── [DIR] config
+│   ├── navigation.js
+├── main.css
+├── main.js
+├── [DIR] router
+│   ├── index.js
+├── [DIR] services
+│   ├── accountService.js
+│   ├── apiClient.js
+│   ├── authService.js
+│   ├── backupService.js
+│   ├── bankService.js
+│   ├── categoryService.js
+│   ├── currencyService.js
+│   ├── customerService.js
+│   ├── dashboardService.js
+│   ├── documentService.js
+│   ├── exchangeRateService.js
+│   ├── expenseService.js
+│   ├── itemService.js
+│   ├── journalEntryService.js
+│   ├── materialConsumptionService.js
+│   ├── openingStockService.js
+│   ├── priceListService.js
+│   ├── pricingService.js
+│   ├── projectService.js
+│   ├── purchaseService.js
+│   ├── reportsService.js
+│   ├── roleService.js
+│   ├── saleService.js
+│   ├── stockAdjustmentService.js
+│   ├── storeService.js
+│   ├── supplierService.js
+│   ├── technicianSaleService.js
+│   ├── treasuryService.js
+│   ├── unitService.js
+│   ├── userService.js
+│   ├── voucherService.js
+├── [DIR] stores
+│   ├── accountStore.js
+│   ├── authStore.js
+│   ├── backupStore.js
+│   ├── bankStore.js
+│   ├── categoryStore.js
+│   ├── currencyStore.js
+│   ├── customerStore.js
+│   ├── dashboardStore.js
+│   ├── documentStore.js
+│   ├── exchangeRateStore.js
+│   ├── expenseStore.js
+│   ├── itemStore.js
+│   ├── journalEntryStore.js
+│   ├── materialConsumptionStore.js
+│   ├── openingStockStore.js
+│   ├── pricingStore.js
+│   ├── projectStore.js
+│   ├── purchaseStore.js
+│   ├── reportStore.js
+│   ├── roleStore.js
+│   ├── saleStore.js
+│   ├── stockAdjustmentStore.js
+│   ├── storeStore.js
+│   ├── supplierStore.js
+│   ├── technicianSaleStore.js
+│   ├── themeStore.js
+│   ├── treasuryStore.js
+│   ├── unitStore.js
+│   ├── userStore.js
+│   ├── voucherStore.js
+├── [DIR] templates
+│   ├── [DIR] complex-screen
+│   │   ├── ItemFilter.vue
+│   │   ├── ItemForm.vue
+│   │   ├── ItemList.vue
+│   │   ├── ItemTable.vue
+│   ├── [DIR] simple-screen
+│   │   ├── DynamicView.vue
+├── [DIR] utils
+│   ├── excelExport.js
+│   ├── formatters.js
+├── [DIR] views
+│   ├── AboutView.vue
+│   ├── [DIR] accounts
+│   │   ├── AccountForm.vue
+│   │   ├── AccountModal.vue
+│   │   ├── AccountNode.vue
+│   │   ├── AccountsList.vue
+│   │   ├── AccountsTree.vue
+│   ├── [DIR] banks
+│   │   ├── BankForm.vue
+│   │   ├── BankModal.vue
+│   │   ├── BanksFilter.vue
+│   │   ├── BanksList.vue
+│   │   ├── BanksTable.vue
+│   ├── [DIR] categories
+│   │   ├── CategoriesFilter.vue
+│   │   ├── CategoriesList.vue
+│   │   ├── CategoriesTable.vue
+│   │   ├── CategoryForm.vue
+│   │   ├── CategoryModal.vue
+│   ├── [DIR] customers
+│   │   ├── CustomerForm.vue
+│   │   ├── CustomerModal.vue
+│   │   ├── CustomersFilter.vue
+│   │   ├── CustomersList.vue
+│   │   ├── CustomersTable.vue
+│   ├── [DIR] dashboard
+│   │   ├── [DIR] components
+│   │   │   ├── CustomerDebtsTable.vue
+│   │   │   ├── DashboardFilters.vue
+│   │   │   ├── DesignerLedgerTable.vue
+│   │   │   ├── ExpensesSummaryTable.vue
+│   │   │   ├── LogisticKpiCards.vue
+│   │   │   ├── MaterialConsumptionTable.vue
+│   │   │   ├── ReorderAlertsTable.vue
+│   │   ├── DashboardView.vue
+│   ├── [DIR] documents
+│   │   ├── DocumentForm.vue
+│   │   ├── DocumentsList.vue
+│   │   ├── DocumentsManagerModal.vue
+│   ├── [DIR] expenses
+│   │   ├── ExpenseForm.vue
+│   │   ├── ExpenseModal.vue
+│   │   ├── ExpensesFilter.vue
+│   │   ├── ExpensesList.vue
+│   │   ├── ExpensesTable.vue
+│   ├── HomeView.vue
+│   ├── [DIR] items
+│   │   ├── [DIR] components
+│   │   │   ├── ItemBaseInfo.vue
+│   │   │   ├── ItemComponentsSection.vue
+│   │   │   ├── ItemUnitBarcodes.vue
+│   │   │   ├── ItemUnitPricesGrid.vue
+│   │   │   ├── ItemUnitsMasterTable.vue
+│   │   │   ├── ItemUnitsSplitLayout.vue
+│   │   ├── ItemForm.vue
+│   │   ├── ItemPricesDrawer.vue
+│   │   ├── ItemsFilter.vue
+│   │   ├── ItemsList.vue
+│   │   ├── ItemsTable.vue
+│   ├── [DIR] journal-entries
+│   │   ├── [DIR] components
+│   │   │   ├── JournalEntryFilters.vue
+│   │   │   ├── JournalEntryFooter.vue
+│   │   │   ├── JournalEntryHeader.vue
+│   │   │   ├── JournalEntryTable.vue
+│   │   ├── JournalEntriesList.vue
+│   │   ├── JournalEntryForm.vue
+│   ├── LoginView.vue
+│   ├── [DIR] opening-stocks
+│   │   ├── OpeningStocksList.vue
+│   ├── PlaceholderView.vue
+│   ├── [DIR] pricing
+│   │   ├── [DIR] components
+│   │   │   ├── BulkRepriceFilter.vue
+│   │   │   ├── BulkRepriceTable.vue
+│   │   │   ├── ExchangeRateModal.vue
+│   │   │   ├── ForeignCostFilter.vue
+│   │   │   ├── ForeignCostTable.vue
+│   │   │   ├── MarginRadarTable.vue
+│   │   │   ├── PriceHistoryTable.vue
+│   │   │   ├── RollbackModal.vue
+│   │   ├── PricingView.vue
+│   ├── [DIR] projects
+│   │   ├── ProjectForm.vue
+│   │   ├── ProjectModal.vue
+│   │   ├── ProjectsFilter.vue
+│   │   ├── ProjectsList.vue
+│   │   ├── ProjectsTable.vue
+│   ├── [DIR] purchases
+│   │   ├── [DIR] components
+│   │   │   ├── PurchaseFooter.vue
+│   │   │   ├── PurchaseHeader.vue
+│   │   │   ├── purchaseSchema.js
+│   │   ├── PurchaseFilters.vue
+│   │   ├── PurchaseForm.vue
+│   │   ├── PurchasesList.vue
+│   │   ├── PurchaseTable.vue
+│   ├── [DIR] reports
+│   │   ├── AccountLedgerReport.vue
+│   │   ├── AdjustmentsSummaryReport.vue
+│   │   ├── BalanceSheetReport.vue
+│   │   ├── CompaniesSummaryReport.vue
+│   │   ├── CompanyStatementPrint.vue
+│   │   ├── CompanyStatementReport.vue
+│   │   ├── CurrentStockReport.vue
+│   │   ├── DriverReport.vue
+│   │   ├── [DIR] financial
+│   │   │   ├── AccountLedgerReport.vue
+│   │   │   ├── BalanceSheetReport.vue
+│   │   │   ├── [DIR] components
+│   │   │   │   ├── SourceDocumentModal.vue
+│   │   │   │   ├── SubLedgerFilterCard.vue
+│   │   │   │   ├── SubLedgerSummaryCards.vue
+│   │   │   │   ├── useSubLedgerInfrastructure.js
+│   │   │   ├── IncomeStatementReport.vue
+│   │   │   ├── SubLedgerPrint.vue
+│   │   │   ├── SubLedgerReport.vue
+│   │   │   ├── TrialBalanceReport.vue
+│   │   ├── IncomeStatementReport.vue
+│   │   ├── [DIR] inventory
+│   │   │   ├── CurrentStockReport.vue
+│   │   │   ├── StockAdjustmentsReport.vue
+│   │   │   ├── StockCardReport.vue
+│   │   │   ├── StockValuationReport.vue
+│   │   ├── OrderReport.vue
+│   │   ├── OrderReportFilters.vue
+│   │   ├── PrintSummary.vue
+│   │   ├── StationReport.vue
+│   │   ├── StockCardReport.vue
+│   │   ├── StockValuationReport.vue
+│   │   ├── SubLedgerReport.vue
+│   │   ├── TrialBalanceReport.vue
+│   ├── [DIR] roles
+│   │   ├── PermissionsModal.vue
+│   │   ├── RoleForm.vue
+│   │   ├── RoleModal.vue
+│   │   ├── RolePermissionsDialog.vue
+│   │   ├── RolesList.vue
+│   ├── [DIR] sales
+│   │   ├── [DIR] components
+│   │   │   ├── SaleFooter.vue
+│   │   │   ├── SaleHeader.vue
+│   │   │   ├── SaleItemsTable.vue
+│   │   ├── SaleFilters.vue
+│   │   ├── SaleForm.vue
+│   │   ├── SaleFormOld.vue
+│   │   ├── SalePrint.vue
+│   │   ├── SalesList.vue
+│   │   ├── SaleTable.vue
+│   │   ├── TechnicianSaleForm.vue
+│   ├── [DIR] settings
+│   │   ├── BackupsList.vue
+│   ├── [DIR] stock-adjustments
+│   │   ├── [DIR] components
+│   │   │   ├── StockAdjustmentFooter.vue
+│   │   │   ├── StockAdjustmentHeader.vue
+│   │   ├── StockAdjustmentFilters.vue
+│   │   ├── StockAdjustmentForm.vue
+│   │   ├── StockAdjustmentsList.vue
+│   │   ├── StockAdjustmentTable.vue
+│   ├── [DIR] stores
+│   │   ├── StoreForm.vue
+│   │   ├── StoreModal.vue
+│   │   ├── StoresFilter.vue
+│   │   ├── StoresList.vue
+│   │   ├── StoresTable.vue
+│   ├── [DIR] suppliers
+│   │   ├── SupplierForm.vue
+│   │   ├── SupplierModal.vue
+│   │   ├── SuppliersFilter.vue
+│   │   ├── SuppliersList.vue
+│   │   ├── SuppliersTable.vue
+│   ├── [DIR] technician
+│   │   ├── MaterialConsumptionList.vue
+│   │   ├── TechnicianSaleForm.vue
+│   │   ├── TechnicianSalesList.vue
+│   ├── [DIR] treasuries
+│   │   ├── TreasuriesFilter.vue
+│   │   ├── TreasuriesList.vue
+│   │   ├── TreasuriesTable.vue
+│   │   ├── TreasuryForm.vue
+│   │   ├── TreasuryModal.vue
+│   ├── [DIR] units
+│   │   ├── UnitForm.vue
+│   │   ├── UnitModal.vue
+│   │   ├── UnitsFilter.vue
+│   │   ├── UnitsList.vue
+│   │   ├── UnitsTable.vue
+│   ├── [DIR] users
+│   │   ├── UserForm.vue
+│   │   ├── UserModal.vue
+│   │   ├── UsersList.vue
+│   ├── [DIR] vouchers
+│   │   ├── VoucherFilters.vue
+│   │   ├── VoucherForm.vue
+│   │   ├── VoucherModal.vue
+│   │   ├── VoucherPrint.vue
+│   │   ├── VouchersList.vue
+│   │   ├── VoucherTable.vue

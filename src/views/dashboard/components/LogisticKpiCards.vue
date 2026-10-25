@@ -1,41 +1,36 @@
 <!-- src/views/dashboard/components/LogisticKpiCards.vue -->
 <template>
-  <div class="w-full">
+  <div class="w-full font-sans" dir="rtl">
     <!-- كرت صافي الإيرادات المالية -->
     <AppCard
-      class="w-full group relative overflow-hidden p-6 transition-all duration-500 hover:-translate-y-1 border border-emerald-500/20 bg-gradient-to-br from-surface-card via-surface-card to-emerald-950/10 shadow-[0_20px_50px_rgba(16,185,129,0.05)] hover:shadow-[0_20px_50px_rgba(16,185,129,0.15)]"
+      class="w-full group relative overflow-hidden p-6 transition-all duration-300 hover:-translate-y-0.5 border border-surface-border bg-surface-section shadow-sm"
     >
-      <!-- تأثير النيون المتوهج في الخلفية -->
+      <!-- هالة خلفية ناعمة منسجمة مع المتغير المركزي -->
       <div
-        class="absolute -top-20 -left-20 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/15 duration-700"
-      ></div>
-      <div
-        class="absolute -right-10 -bottom-10 w-36 h-36 bg-gradient-to-tr from-emerald-500/5 to-transparent rounded-full blur-2xl"
+        class="absolute -top-20 -left-20 w-48 h-48 bg-success/10 rounded-full blur-3xl pointer-events-none opacity-40 dark:opacity-80"
       ></div>
 
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 relative z-10">
-        <div class="space-y-1.5">
+        <div class="space-y-1.5 text-right">
           <span
-            class="text-xs font-black text-emerald-400/80 uppercase tracking-widest block bg-emerald-500/5 border border-emerald-500/10 px-2.5 py-1 rounded-md w-max"
+            class="text-xs font-black text-success uppercase tracking-wider inline-block bg-success/10 border border-success/20 px-2.5 py-1 rounded-md"
           >
             التقرير المالي الحي
           </span>
-          <h4 class="text-base font-bold text-text-muted/90 pt-1">صافي إيرادات الفترة الحالية</h4>
-          <p class="text-[11px] text-text-muted/60 font-medium flex items-center gap-1.5 pt-1">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+          <h4 class="text-base font-bold text-text-primary pt-1">صافي إيرادات الفترة الحالية</h4>
+          <p class="text-[11px] text-text-muted font-medium flex items-center gap-1.5 pt-0.5">
+            <span class="w-2 h-2 rounded-full bg-success animate-ping"></span>
             محتسب تلقائياً بعد استبعاد كافة مرتجعات المبيعات
           </p>
         </div>
 
         <div class="flex items-center justify-between md:justify-end gap-6">
-          <div
-            class="text-3xl md:text-4xl font-black text-emerald-400 tracking-tight font-mono drop-shadow-[0_2px_10px_rgba(52,211,153,0.2)]"
-          >
+          <div class="text-3xl md:text-4xl font-black text-success tracking-tight font-mono">
             {{ formatCurrency(stats.net_sales_amount) }}
           </div>
 
           <div
-            class="p-3.5 bg-gradient-to-br from-emerald-500/15 to-emerald-600/5 text-emerald-400 rounded-2xl border border-emerald-500/30 group-hover:scale-110 group-hover:shadow-[0_0_20px_rgba(16,185,129,0.2)] transition-all duration-300"
+            class="p-3.5 bg-success/10 text-success rounded-2xl border border-success/20 transition-all duration-300"
           >
             <svg
               class="w-7 h-7"
@@ -59,7 +54,6 @@
 </template>
 
 <script setup>
-import { defineProps } from 'vue'
 import AppCard from '@/components/ui/AppCard.vue'
 
 defineProps({
