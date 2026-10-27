@@ -9,16 +9,6 @@
           تحليل النشاط المالي وقياس كفاءة الأداء التشغيلي والأرباح والخسائر للشركة
         </p>
       </div>
-      <div class="flex gap-3">
-        <AppButton
-          @click="handlePrint"
-          :disabled="!incomeStatementSummary"
-          class="flex items-center gap-2"
-        >
-          <PrinterIcon class="w-4 h-4 ml-1" />
-          طباعة قائمة الدخل
-        </AppButton>
-      </div>
     </div>
 
     <!-- بطاقة الفلاتر -->
@@ -64,7 +54,7 @@
           إجمالي الإيرادات والمبيعات (+)
         </div>
         <div class="text-xl font-black text-success font-mono">
-          {{ formatCurrency(incomeStatementSummary.total_revenues) }}
+          {{ formatCurrency(incomeStatementSummary.total_revenues || 0) }}
         </div>
       </AppCard>
 
@@ -73,7 +63,7 @@
           إجمالي المصروفات والتكاليف (-)
         </div>
         <div class="text-xl font-black text-danger font-mono">
-          {{ formatCurrency(incomeStatementSummary.total_expenses) }}
+          {{ formatCurrency(incomeStatementSummary.total_expenses || 0) }}
         </div>
       </AppCard>
 
@@ -93,7 +83,7 @@
           class="text-xl font-black font-mono"
           :class="incomeStatementSummary.outcome_type === 'profit' ? 'text-success' : 'text-danger'"
         >
-          {{ formatCurrency(incomeStatementSummary.net_profit) }}
+          {{ formatCurrency(incomeStatementSummary.net_profit || 0) }}
         </div>
       </AppCard>
     </div>
@@ -110,7 +100,7 @@
         </h3>
         <AppTable
           :headers="tableHeaders"
-          :items="incomeStatementData.revenues"
+          :items="incomeStatementData.revenues || []"
           :is-loading="loading"
         >
           <template #cell-code="{ item }">
@@ -137,7 +127,7 @@
         </h3>
         <AppTable
           :headers="tableHeaders"
-          :items="incomeStatementData.expenses"
+          :items="incomeStatementData.expenses || []"
           :is-loading="loading"
         >
           <template #cell-code="{ item }">
@@ -198,7 +188,7 @@ const handlePrint = () => {
 
   const printItems = []
 
-  if (incomeStatementData.value?.revenues) {
+  if (Array.isArray(incomeStatementData.value?.revenues)) {
     incomeStatementData.value.revenues.forEach((rev) => {
       printItems.push({
         id: rev.code,
@@ -213,7 +203,7 @@ const handlePrint = () => {
     })
   }
 
-  if (incomeStatementData.value?.expenses) {
+  if (Array.isArray(incomeStatementData.value?.expenses)) {
     incomeStatementData.value.expenses.forEach((exp) => {
       printItems.push({
         id: exp.code,
@@ -232,13 +222,13 @@ const handlePrint = () => {
     'printData',
     JSON.stringify({
       grandSummary: {
-        grand_total_contract_value: incomeStatementSummary.value.total_revenues,
-        grand_total_due_value: incomeStatementSummary.value.total_expenses,
-        grand_total_paid: incomeStatementSummary.value.net_profit,
+        grand_total_contract_value: incomeStatementSummary.value.total_revenues || 0,
+        grand_total_due_value: incomeStatementSummary.value.total_expenses || 0,
+        grand_total_paid: incomeStatementSummary.value.net_profit || 0,
         grand_total_remaining: 0,
         total_companies: printItems.length,
         total_projects: 0,
-        title_override: `تقرير قائمة الدخل الشاملة من تاريخ (${incomeStatementSummary.value.from_date}) إلى (${incomeStatementSummary.value.to_date})`,
+        title_override: `تقرير قائمة الدخل الشاملة من تاريخ (${incomeStatementSummary.value.from_date || 'تأسيس المنظومة'}) إلى (${incomeStatementSummary.value.to_date || 'اللحظة الحالية'})`,
       },
       companiesSummary: printItems,
     }),

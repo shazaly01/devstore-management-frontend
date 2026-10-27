@@ -11,7 +11,8 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --fix",
-    "format": "prettier --write src/"
+    "format": "prettier --write src/",
+    "build:offline": "vite build --mode offline && node copy-to-backend.js"
   },
   "dependencies": {
     "@headlessui/vue": "^1.7.23",

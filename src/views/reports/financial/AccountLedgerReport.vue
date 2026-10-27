@@ -12,7 +12,7 @@
       <div class="flex gap-3">
         <AppButton
           @click="handlePrint"
-          :disabled="!accountLedgerSummary || accountLedgerList.length === 0"
+          :disabled="!accountLedgerSummary?.account_id || accountLedgerList.length === 0"
           class="flex items-center gap-2"
         >
           <PrinterIcon class="w-4 h-4 ml-1" />
@@ -31,10 +31,11 @@
           <AppDropdown
             id="filter-account-id"
             v-model="filters.account_id"
-            :options="accountsList"
-            option-label="name"
+            :options="formattedAccounts"
+            option-label="displayName"
             option-value="id"
             placeholder="اختر الحساب المحاسبي..."
+            :show-clear="true"
           />
         </div>
 
@@ -51,33 +52,37 @@
           <label class="block text-xs font-bold text-text-secondary uppercase mb-2"
             >إلى تاريخ</label
           >
-          <div class="flex gap-2">
-            <input
-              type="date"
-              v-model="filters.to_date"
-              class="block w-full h-10 px-3 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-xs font-bold font-mono outline-none transition-all cursor-pointer shadow-sm"
-            />
-            <AppButton
-              @click="handleFetch"
-              :loading="loading"
-              :disabled="!filters.account_id"
-              class="h-10 px-5 flex items-center justify-center shrink-0"
-            >
-              <ArrowPathIcon class="w-4 h-4" :class="{ 'animate-spin': loading }" />
-            </AppButton>
-          </div>
+          <input
+            type="date"
+            v-model="filters.to_date"
+            class="block w-full h-10 px-3 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-xs font-bold font-mono outline-none transition-all cursor-pointer shadow-sm"
+          />
+        </div>
+
+        <div>
+          <AppButton
+            @click="handleFetch"
+            :disabled="loading || !filters.account_id"
+            class="w-full h-10 flex items-center justify-center font-bold shadow-sm"
+          >
+            <ArrowPathIcon class="w-4 h-4 ml-2" :class="{ 'animate-spin': loading }" />
+            تحليل وقراءة كشف الحساب
+          </AppButton>
         </div>
       </div>
     </AppCard>
 
     <!-- بطاقات ملخص الأرصدة -->
-    <div v-if="accountLedgerSummary" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div
+      v-if="accountLedgerSummary && accountLedgerSummary.account_id"
+      class="grid grid-cols-1 md:grid-cols-4 gap-4"
+    >
       <AppCard class="p-4 border-r-4 border-r-surface-border bg-surface-section shadow-sm">
         <div class="text-[10px] text-text-muted font-bold uppercase mb-1">
           الرصيد الافتتاحي الساكن
         </div>
         <div class="text-xl font-black text-text-primary font-mono">
-          {{ formatCurrency(accountLedgerSummary.opening_balance) }}
+          {{ formatCurrency(accountLedgerSummary.opening_balance || 0) }}
           <span class="text-xs font-normal text-text-muted">
             ({{ accountLedgerSummary.nature_lbl }})
           </span>
@@ -87,14 +92,14 @@
       <AppCard class="p-4 border-r-4 border-r-success bg-surface-section shadow-sm">
         <div class="text-[10px] text-success font-bold uppercase mb-1">إجمالي مدين للفترة (+)</div>
         <div class="text-xl font-black text-success font-mono">
-          {{ formatCurrency(accountLedgerSummary.total_period_debit) }}
+          {{ formatCurrency(accountLedgerSummary.total_period_debit || 0) }}
         </div>
       </AppCard>
 
       <AppCard class="p-4 border-r-4 border-r-danger bg-surface-section shadow-sm">
         <div class="text-[10px] text-danger font-bold uppercase mb-1">إجمالي دائن للفترة (-)</div>
         <div class="text-xl font-black text-danger font-mono">
-          {{ formatCurrency(accountLedgerSummary.total_period_credit) }}
+          {{ formatCurrency(accountLedgerSummary.total_period_credit || 0) }}
         </div>
       </AppCard>
 
@@ -109,7 +114,7 @@
           class="text-xl font-black font-mono"
           :class="accountLedgerSummary.closing_balance >= 0 ? 'text-primary' : 'text-warning'"
         >
-          {{ formatCurrency(accountLedgerSummary.closing_balance) }}
+          {{ formatCurrency(accountLedgerSummary.closing_balance || 0) }}
         </div>
       </AppCard>
     </div>
@@ -154,11 +159,26 @@
         </template>
       </AppTable>
     </AppCard>
+
+    <!-- تنبيه عند عدم وجود حركات للحساب المختار -->
+    <AppCard
+      v-else-if="
+        accountLedgerSummary &&
+        accountLedgerSummary.account_id &&
+        !loading &&
+        accountLedgerList.length === 0
+      "
+      class="p-8 text-center"
+    >
+      <div class="text-text-muted text-sm font-bold">
+        لا توجد أي حركات مالية مسجلة لهذا الحساب خلال النطاق الزمني المحدد.
+      </div>
+    </AppCard>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useReportStore } from '@/stores/reportStore'
 import { storeToRefs } from 'pinia'
@@ -181,6 +201,14 @@ const filters = ref({
 
 const { accountLedgerList, accountLedgerSummary, accountsList, loading } = storeToRefs(reportStore)
 
+const formattedAccounts = computed(() => {
+  if (!Array.isArray(accountsList.value)) return []
+  return accountsList.value.map((acc) => ({
+    ...acc,
+    displayName: acc.code ? `[${acc.code}] ${acc.name}` : acc.name,
+  }))
+})
+
 const tableHeaders = [
   { key: 'id', label: 'المعرف الرقمي' },
   { key: 'entry_date', label: 'تاريخ القيد' },
@@ -202,30 +230,37 @@ const handleFetch = () => {
 }
 
 const handlePrint = () => {
-  if (!accountLedgerSummary.value || accountLedgerList.value.length === 0) return
+  if (!accountLedgerSummary.value?.account_id || accountLedgerList.value.length === 0) return
+
+  const isCredit = accountLedgerSummary.value.nature === 'credit'
+  const fromLbl = filters.value.from_date || 'بداية النشاط'
+  const toLbl = filters.value.to_date || 'اللحظة الحالية'
 
   sessionStorage.setItem(
     'printData',
     JSON.stringify({
       grandSummary: {
-        grand_total_contract_value: accountLedgerSummary.value.opening_balance,
-        grand_total_due_value: accountLedgerSummary.value.total_period_debit,
-        grand_total_paid: accountLedgerSummary.value.total_period_credit,
-        grand_total_remaining: accountLedgerSummary.value.closing_balance,
+        grand_total_contract_value: accountLedgerSummary.value.opening_balance || 0,
+        grand_total_due_value: accountLedgerSummary.value.total_period_debit || 0,
+        grand_total_paid: accountLedgerSummary.value.total_period_credit || 0,
+        grand_total_remaining: accountLedgerSummary.value.closing_balance || 0,
         total_companies: 1,
         total_projects: accountLedgerList.value.length,
-        title_override: `كشف حساب تفصيلي للحساب: [ ${accountLedgerSummary.value.account_code} ] - ${accountLedgerSummary.value.account_name}`,
+        title_override: `كشف حساب تفصيلي للحساب: [ ${accountLedgerSummary.value.account_code} ] - ${accountLedgerSummary.value.account_name} للفترة من (${fromLbl}) إلى (${toLbl})`,
       },
-      companiesSummary: accountLedgerList.value.map((line) => ({
-        id: line.id,
-        name: line.line_notes ?? 'قيد محاسبي عمومي',
-        license_number: line.entry_date,
-        projects_count: `سند رقم: ${line.entry_number ?? '-'}`,
-        total_contract_value: line.debit,
-        total_due_value: line.credit,
-        total_paid: line.debit - line.credit,
-        total_remaining: line.running_balance,
-      })),
+      companiesSummary: accountLedgerList.value.map((line) => {
+        const netChange = isCredit ? line.credit - line.debit : line.debit - line.credit
+        return {
+          id: line.id,
+          name: line.line_notes ?? 'قيد محاسبي عمومي',
+          license_number: line.entry_date ?? '-',
+          projects_count: line.entry_number ? `سند رقم: ${line.entry_number}` : 'قيد تسوية',
+          total_contract_value: line.debit,
+          total_due_value: line.credit,
+          total_paid: netChange,
+          total_remaining: line.running_balance,
+        }
+      }),
     }),
   )
 

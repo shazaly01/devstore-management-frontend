@@ -1,7 +1,7 @@
-//src\stores\reportStore.js
+// src/stores/reportStore.js
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import reportsService from '@/services/reportsService' // تأكد من مطابقة المسار لمجلد الخدمات عندك
+import reportsService from '@/services/reportsService'
 
 export const useReportStore = defineStore('report', () => {
   // ==========================================
@@ -223,7 +223,7 @@ export const useReportStore = defineStore('report', () => {
       const response = await reportsService.getAccountLedger(cleaned)
       if (response.data && response.data.success) {
         accountLedgerList.value = response.data.data || []
-        accountLedgerSummary.value = response.data.grandSummary || null
+        accountLedgerSummary.value = response.data.grandSummary || response.data.meta || null
       }
     } catch (err) {
       error.value = 'فشل في جلب دفتر الأستاذ العام التفصيلي.'
@@ -242,7 +242,7 @@ export const useReportStore = defineStore('report', () => {
       const response = await reportsService.getSubLedger(cleaned)
       if (response.data && response.data.success) {
         subLedgerList.value = response.data.data || []
-        subLedgerSummary.value = response.data.grandSummary || null
+        subLedgerSummary.value = response.data.grandSummary || response.data.meta || null
       }
     } catch (err) {
       error.value = 'فشل في جلب كشف الحساب المساعد.'
@@ -261,7 +261,7 @@ export const useReportStore = defineStore('report', () => {
       const response = await reportsService.getTrialBalance(cleaned)
       if (response.data && response.data.success) {
         trialBalanceList.value = response.data.data || []
-        trialBalanceSummary.value = response.data.grandSummary || null
+        trialBalanceSummary.value = response.data.grandSummary || response.data.totals || null
       }
     } catch (err) {
       error.value = 'فشل في توليد ميزان المراجعة.'
@@ -279,8 +279,24 @@ export const useReportStore = defineStore('report', () => {
     try {
       const response = await reportsService.getIncomeStatement(cleaned)
       if (response.data && response.data.success) {
-        incomeStatementData.value = response.data.data || { revenues: [], expenses: [] }
-        incomeStatementSummary.value = response.data.grandSummary || null
+        const rawData = response.data.data || {}
+        const revenues = rawData.revenues || response.data.revenues || []
+        const expenses = rawData.expenses || response.data.expenses || []
+
+        incomeStatementData.value = {
+          revenues: Array.isArray(revenues) ? revenues : [],
+          expenses: Array.isArray(expenses) ? expenses : [],
+        }
+
+        incomeStatementSummary.value = response.data.grandSummary || {
+          from_date: response.data.meta?.from || '',
+          to_date: response.data.meta?.to || '',
+          total_revenues: response.data.total_revenues || 0,
+          total_expenses: response.data.total_expenses || 0,
+          net_profit: response.data.net_profit || 0,
+          outcome_type: response.data.outcome_type || 'profit',
+          outcome_lbl: response.data.outcome_lbl || '',
+        }
       }
     } catch (err) {
       error.value = 'فشل في جلب قائمة الدخل الختامية.'
@@ -298,8 +314,28 @@ export const useReportStore = defineStore('report', () => {
     try {
       const response = await reportsService.getBalanceSheet(cleaned)
       if (response.data && response.data.success) {
-        balanceSheetData.value = response.data.data || { assets: [], liabilities_and_equity: [] }
-        balanceSheetSummary.value = response.data.grandSummary || null
+        const rawData = response.data.data || {}
+        const assets = rawData.assets || response.data.assets?.items || response.data.assets || []
+        const liabilities =
+          rawData.liabilities_and_equity ||
+          response.data.liabilities_and_equity?.items ||
+          response.data.liabilities_and_equity ||
+          []
+
+        balanceSheetData.value = {
+          assets: Array.isArray(assets) ? assets : [],
+          liabilities_and_equity: Array.isArray(liabilities) ? liabilities : [],
+        }
+
+        balanceSheetSummary.value = response.data.grandSummary || {
+          as_of_date: response.data.as_of_date || '',
+          total_assets: response.data.assets?.total_assets || 0,
+          current_period_net_profit:
+            response.data.liabilities_and_equity?.current_period_net_profit || 0,
+          total_liabilities_and_equity:
+            response.data.liabilities_and_equity?.total_liabilities_and_equity || 0,
+          is_perfectly_balanced: response.data.is_perfectly_balanced ?? true,
+        }
       }
     } catch (err) {
       error.value = 'فشل في جلب تقرير الميزانية العمومية.'

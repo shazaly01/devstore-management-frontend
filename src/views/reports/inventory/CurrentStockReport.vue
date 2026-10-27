@@ -227,24 +227,24 @@ const handlePrint = () => {
   sessionStorage.setItem(
     'printData',
     JSON.stringify({
-      grandSummary: {
-        grand_total_contract_value: displaySummary.value.grand_total_cost_value,
-        grand_total_due_value: displaySummary.value.grand_total_quantity,
-        grand_total_paid: displaySummary.value.total_items,
-        grand_total_remaining: 0,
-        total_companies: displaySummary.value.total_items,
-        total_projects: 0,
-        title_override: 'تقرير جرد الأرصدة وتقييم المخزون اللحظي',
+      reportTitle: 'تقرير جرد الأرصدة وتقييم المخزون اللحظي',
+      summary: {
+        total_items: displaySummary.value.total_items,
+        grand_total_quantity: displaySummary.value.grand_total_quantity,
+        grand_total_cost_value: displaySummary.value.grand_total_cost_value,
+        grand_total_sale_value: displaySummary.value.grand_total_sale_value,
       },
-      companiesSummary: currentStockList.value.map((stock) => ({
-        id: stock.stock_id,
-        name: stock.item_name,
-        license_number: stock.store_name,
-        projects_count: stock.current_quantity_base + ' ' + (stock.unit1_name || ''),
-        total_contract_value: stock.unit_cost,
-        total_due_value: stock.total_cost_value,
-        total_paid: 0,
-        total_remaining: 0,
+      items: currentStockList.value.map((stock) => ({
+        stock_id: stock.stock_id,
+        item_id: stock.item_id,
+        item_name: stock.item_name,
+        store_name: stock.store_name ?? 'غير محدد',
+        current_quantity_base: stock.current_quantity_base,
+        unit1_name: stock.unit1_name || '',
+        unit_cost: stock.unit_cost,
+        profit_margin_percentage: stock.profit_margin_percentage,
+        unit_price: stock.unit_price,
+        total_cost_value: stock.total_cost_value,
       })),
     }),
   )

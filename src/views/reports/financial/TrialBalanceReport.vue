@@ -9,16 +9,6 @@
           تجميع الحركات والأرصدة الافتتاحية والختامية لكافة مستويات دليل الحسابات
         </p>
       </div>
-      <div class="flex gap-3">
-        <AppButton
-          @click="handlePrint"
-          :disabled="!trialBalanceSummary || trialBalanceList.length === 0"
-          class="flex items-center gap-2"
-        >
-          <PrinterIcon class="w-4 h-4 ml-1" />
-          طباعة الميزان الدفتري
-        </AppButton>
-      </div>
     </div>
 
     <!-- بطاقة الفلاتر -->

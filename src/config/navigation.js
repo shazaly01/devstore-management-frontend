@@ -182,11 +182,11 @@ export const navigationConfig = [
         type: 'header',
         name: 'التقارير المالية والختامية',
       },
-      {
-        name: 'دفتر الأستاذ العام',
-        routeName: 'AccountLedgerReport',
-        permission: 'report.financial',
-      },
+      // {
+      //   name: 'دفتر الأستاذ العام',
+      //   routeName: 'AccountLedgerReport',
+      //   permission: 'report.financial',
+      // },
       {
         name: 'ميزان المراجعة',
         routeName: 'TrialBalanceReport',

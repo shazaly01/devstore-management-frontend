@@ -11,16 +11,6 @@
           عرض الموقف المالي للمنشأة وتقييم الأصول مقابل الخصوم وحقوق الملكية
         </p>
       </div>
-      <div class="flex gap-3">
-        <AppButton
-          @click="handlePrint"
-          :disabled="!balanceSheetSummary"
-          class="flex items-center gap-2"
-        >
-          <PrinterIcon class="w-4 h-4 ml-1" />
-          طباعة المركز المالي
-        </AppButton>
-      </div>
     </div>
 
     <!-- بطاقة الفلاتر -->
@@ -57,7 +47,7 @@
           إجمالي الأصول والجرود (+)
         </div>
         <div class="text-xl font-black text-primary font-mono">
-          {{ formatCurrency(balanceSheetSummary.total_assets) }}
+          {{ formatCurrency(balanceSheetSummary.total_assets || 0) }}
         </div>
       </AppCard>
 
@@ -66,7 +56,7 @@
           أرباح النشاط للفترة الحالية
         </div>
         <div class="text-xl font-black text-info font-mono">
-          {{ formatCurrency(balanceSheetSummary.current_period_net_profit) }}
+          {{ formatCurrency(balanceSheetSummary.current_period_net_profit || 0) }}
         </div>
       </AppCard>
 
@@ -75,7 +65,7 @@
           إجمالي الخصوم وحقوق الملكية
         </div>
         <div class="text-xl font-black text-warning font-mono">
-          {{ formatCurrency(balanceSheetSummary.total_liabilities_and_equity) }}
+          {{ formatCurrency(balanceSheetSummary.total_liabilities_and_equity || 0) }}
         </div>
       </AppCard>
 
@@ -108,10 +98,14 @@
             الأصــــول / الـمـوجــودات (1)
           </h3>
           <span class="text-xs font-mono font-bold text-text-muted" v-if="balanceSheetSummary">
-            الكامل: {{ formatCurrency(balanceSheetSummary.total_assets) }}
+            الكامل: {{ formatCurrency(balanceSheetSummary.total_assets || 0) }}
           </span>
         </div>
-        <AppTable :headers="tableHeaders" :items="balanceSheetData.assets" :is-loading="loading">
+        <AppTable
+          :headers="tableHeaders"
+          :items="balanceSheetData.assets || []"
+          :is-loading="loading"
+        >
           <template #cell-code="{ item }">
             <span class="font-mono text-xs text-text-muted">#{{ item.code }}</span>
           </template>
@@ -134,12 +128,12 @@
             الخصوم والالتزامات ورأس المال (2)
           </h3>
           <span class="text-xs font-mono font-bold text-text-muted" v-if="balanceSheetSummary">
-            الكامل: {{ formatCurrency(balanceSheetSummary.total_liabilities_and_equity) }}
+            الكامل: {{ formatCurrency(balanceSheetSummary.total_liabilities_and_equity || 0) }}
           </span>
         </div>
         <AppTable
           :headers="tableHeaders"
-          :items="balanceSheetData.liabilities_and_equity"
+          :items="balanceSheetData.liabilities_and_equity || []"
           :is-loading="loading"
         >
           <template #cell-code="{ item }">
@@ -161,7 +155,7 @@
         >
           <span class="text-info font-bold"> (+) صافي أرباح النشاط الدورية المحتجزة للخصوم: </span>
           <span class="font-mono font-bold text-info">
-            {{ formatCurrency(balanceSheetSummary.current_period_net_profit) }}
+            {{ formatCurrency(balanceSheetSummary.current_period_net_profit || 0) }}
           </span>
         </div>
       </AppCard>
@@ -205,7 +199,7 @@ const handlePrint = () => {
 
   const printItems = []
 
-  if (balanceSheetData.value?.assets) {
+  if (Array.isArray(balanceSheetData.value?.assets)) {
     balanceSheetData.value.assets.forEach((asset) => {
       printItems.push({
         id: asset.code,
@@ -220,7 +214,7 @@ const handlePrint = () => {
     })
   }
 
-  if (balanceSheetData.value?.liabilities_and_equity) {
+  if (Array.isArray(balanceSheetData.value?.liabilities_and_equity)) {
     balanceSheetData.value.liabilities_and_equity.forEach((liab) => {
       printItems.push({
         id: liab.code,
@@ -241,22 +235,22 @@ const handlePrint = () => {
     license_number: 'حقوق ملكية محتجزة',
     projects_count: 'جانب (2)',
     total_contract_value: 0,
-    total_due_value: balanceSheetSummary.value.current_period_net_profit,
+    total_due_value: balanceSheetSummary.value.current_period_net_profit || 0,
     total_paid: 0,
-    total_remaining: balanceSheetSummary.value.current_period_net_profit,
+    total_remaining: balanceSheetSummary.value.current_period_net_profit || 0,
   })
 
   sessionStorage.setItem(
     'printData',
     JSON.stringify({
       grandSummary: {
-        grand_total_contract_value: balanceSheetSummary.value.total_assets,
-        grand_total_due_value: balanceSheetSummary.value.total_liabilities_and_equity,
+        grand_total_contract_value: balanceSheetSummary.value.total_assets || 0,
+        grand_total_due_value: balanceSheetSummary.value.total_liabilities_and_equity || 0,
         grand_total_paid: balanceSheetSummary.value.is_perfectly_balanced ? 1 : 0,
-        grand_total_remaining: balanceSheetSummary.value.current_period_net_profit,
+        grand_total_remaining: balanceSheetSummary.value.current_period_net_profit || 0,
         total_companies: printItems.length,
         total_projects: 0,
-        title_override: `تقرير الميزانية العمومية والمركز المالي موقوفاً حتى تاريخ: (${balanceSheetSummary.value.as_of_date})`,
+        title_override: `تقرير الميزانية العمومية والمركز المالي موقوفاً حتى تاريخ: (${balanceSheetSummary.value.as_of_date || 'اللحظة الحالية'})`,
       },
       companiesSummary: printItems,
     }),
