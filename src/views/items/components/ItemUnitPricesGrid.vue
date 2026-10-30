@@ -1,30 +1,43 @@
 <!--src\views\items\components\ItemUnitPricesGrid.vue--->
 <template>
   <div class="space-y-3">
-    <h4 class="text-xs font-bold text-text-secondary">مصفوفة أسعار فئات البيع والخصومات المدرجة</h4>
+    <!-- ترويسة مصفوفة الأسعار -->
+    <div class="flex items-center justify-between border-b border-surface-border pb-2.5">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-primary"></span>
+        <h4 class="text-xs font-black text-text-primary">مصفوفة أسعار فئات البيع والخصومات</h4>
+      </div>
+      <span
+        class="text-[10px] text-text-muted font-bold font-mono bg-surface-section px-2.5 py-1 rounded-md border border-surface-border"
+      >
+        العملة: {{ DEFAULT_CURRENCY }}
+      </span>
+    </div>
 
-    <div class="space-y-3 max-h-[420px] overflow-y-auto pr-1 custom-scrollbar">
+    <!-- قائمة فئات الأسعار التفاعلية -->
+    <div class="space-y-2.5 max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
       <div
         v-for="(priceRow, pIdx) in props.prices"
         :key="priceRow.price_list_id"
-        class="p-3 bg-surface-ground rounded-xl border border-surface-border space-y-2.5 transition-all hover:border-surface-border/80 shadow-sm"
+        class="p-3 bg-surface-section rounded-xl border border-surface-border space-y-2.5 shadow-xs transition-colors hover:border-surface-border/90"
       >
-        <!-- ترويسة الفئة السعرية -->
-        <div class="flex justify-between items-center border-b border-surface-border/40 pb-1.5">
+        <!-- اسم الفئة السعرية -->
+        <div class="flex justify-between items-center border-b border-surface-border/60 pb-1.5">
           <span class="text-xs font-black text-primary">
             {{ priceRow.price_list_name || 'فئة غير معرّفة' }}
           </span>
-          <span class="text-[10px] text-text-muted font-medium font-mono">
-            العملة الافتراضية: {{ DEFAULT_CURRENCY }}
-          </span>
+          <span class="text-[10px] font-bold text-text-muted"> احتساب تلقائي متبادل </span>
         </div>
 
-        <!-- شبكة الحقول الحسابية -->
+        <!-- شبكة حقلي الخصم والسعر النهائي -->
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
           <!-- 1. نسبة الخصم الفئوية -->
           <div>
-            <label class="block text-[10px] text-text-muted mb-1 text-center font-bold">
-              الخصم (%)
+            <label
+              :for="'discount-input-' + pIdx"
+              class="block text-xs font-bold text-text-secondary mb-1.5 text-center"
+            >
+              نسبة الخصم (%)
             </label>
             <input
               :id="'discount-input-' + pIdx"
@@ -36,19 +49,19 @@
               min="0"
               max="100"
               step="0.01"
-              class="block w-full px-2 py-1.5 border border-surface-border rounded-lg bg-surface-section text-text-primary text-xs font-mono text-center outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+              class="block w-full h-10 px-2 border border-surface-border rounded-lg bg-surface-ground text-text-primary text-xs font-mono font-bold text-center outline-none focus:bg-surface-section focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
             />
           </div>
 
-          <!-- 2. السعر النهائي للبيع باستخدام AppCurrencyInput -->
+          <!-- 2. السعر النهائي للبيع للفئة -->
           <div>
             <AppCurrencyInput
               :id="'category-price-input-' + pIdx"
-              label="السعر النهائي"
+              label="سعر البيع النهائي"
               :model-value="priceRow.price"
               :precision="2"
-              label-class="!text-[10px] !text-text-muted !mb-1 text-center !font-bold"
-              input-class="!px-2 !py-1.5 !text-xs !font-mono !text-center !bg-surface-section !border-surface-border"
+              label-class="!text-xs !font-bold !text-text-secondary !mb-1.5 text-center"
+              input-class="!h-10 !px-2 !text-xs !font-mono !font-bold !text-center !bg-surface-ground focus:!bg-surface-section !border-surface-border focus:!border-primary"
               @update:model-value="
                 (val) => handlePriceInput(pIdx, val !== null && val !== undefined ? Number(val) : 0)
               "
@@ -159,19 +172,10 @@ const handlePriceInput = (index, priceValue) => {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
+  background-color: rgb(var(--color-surface-border));
   border-radius: 10px;
 }
 :global(.dark) .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #4b5563;
-}
-
-input::-webkit-outer-spin-button,
-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-input[type='number'] {
-  -moz-appearance: textfield;
+  background-color: rgb(var(--color-surface-border));
 }
 </style>

@@ -1,57 +1,82 @@
 <!--src\views\items\ItemForm.vue---->
 <template>
-  <div class="max-w-7xl mx-auto pb-12">
-    <div class="mb-5">
+  <div class="max-w-5xl mx-auto pb-24 px-4 sm:px-6">
+    <!-- ترويسة الصفحة -->
+    <div class="mb-5 border-b border-surface-border pb-3">
       <h1 class="text-xl font-black text-text-primary">
         {{ isEditMode ? 'تعديل بيانات الصنف ومصفوفته السعرية' : 'إضافة صنف جديد' }}
       </h1>
-      <p class="text-[11px] text-text-muted mt-0.5">
-        نافذة الإدخال الفوري المتكامل للأصناف والباركودات المتعددة وسياسات التسعير
+      <p class="text-xs text-text-muted mt-1">
+        نافذة الإدخال الفوري المتكامل للأصناف والباركودات وسياسات التسعير
       </p>
     </div>
 
-    <div class="space-y-4">
-      <!-- 1. كرت البيانات الأساسية للصنف وسياسات التسعير -->
+    <div class="space-y-5">
+      <!-- 1. كرت البيانات الأساسية للصنف وقسم التسعير القابل للطي -->
       <ItemBaseInfo
         :form-state="form"
         @update:form-state="handleFormStateUpdate"
         @clear-error="clearBackendError"
       />
 
-      <!-- مكون بناء وإدارة أسطر المكونات والمواد الخام للأصناف التجميعية -->
+      <!-- 2. مكون بناء وإدارة أسطر المكونات للأصناف التجميعية (يظهر عند تفعيل تجميعي فقط) -->
       <ItemComponentsSection
         :form-state="form"
         @update:form-state="handleFormStateUpdate"
         @clear-error="clearBackendError"
       />
 
-      <!-- 2. كرت التوزيع المنقسم للأسعار والوحدات والباركودات -->
+      <!-- 3. كرت وحدات القياس ومصفوفة الأسعار والباركودات -->
       <ItemUnitsSplitLayout
         :form-state="form"
         @update:form-state="handleFormStateUpdate"
         @clear-error="clearBackendError"
       />
 
-      <!-- أزرار التحكم والإجراءات النهائية للملف -->
-      <div class="flex justify-end space-x-3 space-x-reverse pt-2">
-        <AppButton variant="secondary" size="sm" @click="goBack">إلغاء التدوين</AppButton>
-        <AppButton :disabled="loading" size="sm" @click="submitForm">
-          {{ loading ? 'جاري التثبيت والتدوين الآن...' : 'حفظ الصنف والمصفوفة كاملة' }}
-        </AppButton>
+      <!-- 4. شريط الإجراءات والحفظ المثبت (Sticky Action Bar) لضمان ظهوره الدائم للمستخدم -->
+      <div
+        class="sticky bottom-4 z-20 mt-6 bg-surface-section/95 backdrop-blur-md border border-surface-border rounded-xl p-3.5 shadow-xl flex flex-wrap items-center justify-between gap-3"
+      >
+        <div class="flex items-center gap-2 text-xs">
+          <span
+            class="w-2.5 h-2.5 rounded-full"
+            :class="isEditMode ? 'bg-warning' : 'bg-primary'"
+          ></span>
+          <span class="font-bold text-text-secondary">
+            {{ isEditMode ? 'وضع تعديل الصنف الحالي' : 'إضافة صنف جديد للمنظومة' }}
+          </span>
+          <span class="text-text-muted hidden sm:inline">
+            | تأكد من مراجعة الوحدات والأسعار قبل الحفظ
+          </span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <AppButton type="button" variant="secondary" size="sm" @click="goBack">
+            إلغاء التدوين
+          </AppButton>
+          <AppButton type="button" :disabled="loading" size="sm" @click="submitForm">
+            {{
+              loading
+                ? 'جاري التثبيت والتدوين...'
+                : isEditMode
+                  ? 'تحديث وحفظ التعديلات'
+                  : 'حفظ الصنف والمصفوفة كاملة'
+            }}
+          </AppButton>
+        </div>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted, computed } from 'vue'
+import { reactive, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useItemStore } from '@/stores/itemStore'
 import { useUnitStore } from '@/stores/unitStore'
 import { useCategoryStore } from '@/stores/categoryStore'
 import { useToast } from 'vue-toastification'
 
-// استيراد المكونات المشتركة ومكونات موديول الأصناف
 import AppButton from '@/components/ui/AppButton.vue'
 import ItemBaseInfo from './components/ItemBaseInfo.vue'
 import ItemComponentsSection from './components/ItemComponentsSection.vue'
@@ -67,7 +92,7 @@ const toast = useToast()
 const isEditMode = computed(() => !!route.params.id)
 const loading = computed(() => itemStore.loading)
 
-// تأسيس كائن الحالة الشجرية بالكامل مع حقن متغيرات التسعير والعملة والصنف التجميعي
+// كائن الحالة الشجرية الكامل للصنف
 const form = reactive({
   name: '',
   item_type: 'product',
@@ -89,7 +114,6 @@ const form = reactive({
 onMounted(async () => {
   itemStore.validationErrors = null
 
-  // جلب البيانات الأساسية من دليل الوحدات وقوائم الأسعار قبل التحميل بالتوازي
   await unitStore.fetchUnits(1, { is_active: 1 })
   await itemStore.fetchPriceLists()
 
@@ -97,7 +121,7 @@ onMounted(async () => {
     await categoryStore.fetchCategories(1)
   }
 
-  // في حالة التعديل: قراءة الملف التاريخي للصنف وتعبئة الحالة بالقيم المحفوظة كما هي
+  // في حالة التعديل: قراءة الملف التاريخي للصنف وتعبئة الحالة
   if (isEditMode.value) {
     await itemStore.fetchItem(route.params.id)
     if (itemStore.currentItem) {
@@ -123,13 +147,11 @@ onMounted(async () => {
       form.is_composite = !!rawItem.is_composite
       form.expiry_date = rawItem.expiry_date || null
 
-      // سحب مصفوفة المكونات المرتبطة وتثبيتها بالواجهة
       form.components = (rawItem.components || []).map((comp) => ({
         child_item_id: comp.child_item_id,
         quantity: Number(comp.quantity),
       }))
 
-      // مزامنة الوحدات والباركودات وفئات الأسعار بالقيم المحفوظة في قاعدة البيانات
       form.units = (rawItem.units || []).map((unit) => {
         return {
           unit_id: unit.unit_id,
@@ -184,7 +206,6 @@ const preparePayload = () => {
     is_composite: form.is_composite ? 1 : 0,
     expiry_date: form.expiry_date || null,
 
-    // شحن المكونات فقط في حال كان الصنف تجميعياً بشكل فعلي
     components: form.is_composite
       ? form.components.map((comp) => ({
           child_item_id: comp.child_item_id,
@@ -192,7 +213,6 @@ const preparePayload = () => {
         }))
       : [],
 
-    // ترحيل مصفوفة الوحدات والأسعار
     units: form.units.map((unit) => ({
       unit_id: unit.unit_id,
       conversion_factor: Number(unit.conversion_factor),
@@ -216,13 +236,11 @@ const preparePayload = () => {
 }
 
 const submitForm = async () => {
-  // التحقق الفوري لضمان تعبئة الحقول الأساسية قبل الإرسال
   if (!form.name || !form.base_unit_id || form.units.length === 0) {
     toast.error('يرجى ملء كافة الحقول الإلزامية وتأمين وحدة قياس واحدة على الأقل بالجدول.')
     return
   }
 
-  // منع الحفظ في حال تم تفعيل "تجميعي" ولم يقم المستخدم بإدخال أي مكون
   if (form.is_composite && (!form.components || form.components.length === 0)) {
     toast.error('لقد قمت بتحديد أن الصنف تجميعي، يرجى إدراج مكون واحد على الأقل بجدول المكونات.')
     return

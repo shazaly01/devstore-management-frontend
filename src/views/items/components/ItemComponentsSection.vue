@@ -1,67 +1,65 @@
+<!--src\views\items\components\ItemComponentsSection.vue--->
 <template>
   <Transition
-    enter-active-class="transition ease-out duration-300 transform"
-    enter-from-class="opacity-0 -translate-y-4"
+    enter-active-class="transition ease-out duration-200 transform"
+    enter-from-class="opacity-0 -translate-y-2"
     enter-to-class="opacity-100 translate-y-0"
-    leave-active-class="transition ease-in duration-200 transform"
+    leave-active-class="transition ease-in duration-150 transform"
     leave-from-class="opacity-100 translate-y-0"
-    leave-to-class="opacity-0 -translate-y-4"
+    leave-to-class="opacity-0 -translate-y-2"
   >
-    <AppCard
-      v-if="props.formState.is_composite"
-      class="border border-fuchsia-500/20 shadow-lg shadow-fuchsia-950/5"
-    >
-      <div class="p-5 space-y-4">
+    <AppCard v-if="props.formState.is_composite">
+      <div class="space-y-4">
         <!-- ترويسة قسم التركيب والتجميع -->
-        <div class="flex justify-between items-center border-b border-surface-border pb-3">
-          <div>
-            <h3 class="text-sm font-black text-fuchsia-400 flex items-center gap-2">
-              <span>⚙️</span> تركيب ومكونات الصنف التجميعي
-            </h3>
-            <p class="text-[11px] text-text-muted mt-0.5">
-              حدد المواد الخام والمنتجات الفرعية التي يتكون منها هذا الصنف لضبط الخصم التلقائي من
-              المخازن.
-            </p>
+        <div
+          class="flex flex-wrap justify-between items-center gap-2 border-b border-surface-border pb-3"
+        >
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+            <div>
+              <h3 class="text-sm font-black text-text-primary">تركيب ومكونات الصنف التجميعي</h3>
+              <p class="text-xs text-text-muted mt-0.5">
+                تحديد المواد الخام والمنتجات الفرعية لضبط الخصم التلقائي المباشر من المخزون
+              </p>
+            </div>
           </div>
-          <AppButton
-            type="button"
-            variant="secondary"
-            size="sm"
-            class="!border-fuchsia-500/30 hover:!bg-fuchsia-500/10 text-fuchsia-400 text-xs font-bold transition-all"
-            @click="addComponentRow"
-          >
+          <AppButton type="button" variant="secondary" size="sm" @click="addComponentRow">
             + إضافة مادة خام / مكون
           </AppButton>
         </div>
 
-        <!-- حالة عدم وجود مكونات بعد -->
+        <!-- حالة عدم وجود مكونات مضافة بعد -->
         <div
           v-if="!props.formState.components || props.formState.components.length === 0"
-          class="text-center py-10 bg-surface-ground/30 rounded-xl border border-dashed border-surface-border/80 text-text-muted text-xs italic"
+          class="text-center py-8 bg-surface-ground/50 rounded-xl border border-dashed border-surface-border text-text-muted text-xs italic"
         >
           لم يتم إدراج أي مكونات لهذا الصنف التجميعي بعد. اضغط على "+ إضافة مادة خام / مكون" للبدء
           في ربط المواد.
         </div>
 
         <!-- جدول الأسطر التفاعلي للمكونات -->
-        <div v-else class="space-y-2 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">
+        <div v-else class="space-y-3 max-h-[350px] overflow-y-auto pr-1 custom-scrollbar">
           <div
             v-for="(row, index) in props.formState.components"
             :key="index"
-            class="p-3 bg-surface-ground rounded-xl border border-surface-border/60 flex flex-col sm:flex-row items-stretch sm:items-end gap-3 transition-all hover:border-surface-border relative group"
+            class="p-3.5 bg-surface-ground/60 rounded-xl border border-surface-border flex flex-col sm:flex-row items-stretch sm:items-end gap-3.5 transition-colors hover:border-surface-border/90"
           >
             <!-- 1. اختيار المكون (المادة الخام) -->
             <div class="flex-1">
-              <label class="block text-[10px] font-bold text-text-secondary mb-1.5"
-                >اختر المكون / المادة الخام</label
+              <label
+                :for="'component-dropdown-' + index"
+                class="block text-xs font-bold text-text-secondary mb-1.5"
               >
+                المكون / المادة الخام
+                <span class="text-text-muted text-[10px]">#{{ index + 1 }}</span>
+              </label>
               <AppDropdown
                 :id="'component-dropdown-' + index"
                 :model-value="row.child_item_id"
                 :options="filteredAvailableItems"
                 option-label="name"
                 option-value="id"
-                placeholder="ابحث واختر من المنتجات أو الخامات..."
+                placeholder="ابحث واختر من المنتجات أو المواد الخام..."
                 :show-clear="false"
                 @update:model-value="
                   (val) =>
@@ -75,11 +73,12 @@
             </div>
 
             <!-- 2. كمية المكون المطلوبة للتركيب -->
-            <div class="w-full sm:w-44">
+            <div class="w-full sm:w-48">
               <label
-                class="block text-[10px] font-bold text-text-secondary mb-1.5 text-center sm:text-right"
+                :for="'component-qty-' + index"
+                class="block text-xs font-bold text-text-secondary mb-1.5 text-center sm:text-right"
               >
-                الكمية المطلوبة (بالوحدة الصغرى)
+                الكمية (بالوحدة الصغرى)
               </label>
               <AppInput
                 :id="'component-qty-' + index"
@@ -87,7 +86,7 @@
                 step="0.001"
                 min="0.001"
                 :model-value="row.quantity"
-                input-class="text-center font-bold font-mono"
+                input-class="h-10 text-center font-bold font-mono [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                 placeholder="1.000"
                 @update:model-value="
                   (val) => modifyComponentRowField(index, 'quantity', Number(val))
@@ -96,31 +95,27 @@
             </div>
 
             <!-- 3. زر الحذف السريع للسطر -->
-            <div class="flex justify-center items-center h-10 self-center sm:self-end mb-0.5">
+            <div class="flex justify-center items-center h-10 self-center sm:self-end">
               <button
                 type="button"
                 @click="removeComponentRow(index)"
-                class="p-2 text-rose-500 hover:bg-rose-500/10 rounded-lg transition-colors shrink-0"
+                class="text-xs font-bold text-danger hover:bg-danger/10 px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer shrink-0"
                 title="حذف هذا المكون"
               >
-                ✕
+                إزالة ✕
               </button>
             </div>
           </div>
         </div>
 
-        <!-- عرض أخطاء التحقق القادمة من الباك إند للـ Components بشكل منسق -->
-        <!-- عرض أخطاء التحقق القادمة من الباك إند للـ Components بشكل منسق -->
+        <!-- عرض أخطاء التحقق القادمة من الباك إند -->
         <div
           v-if="itemStore.validationErrors && hasComponentErrors"
-          class="p-3 bg-rose-500/10 border border-rose-500/20 rounded-xl space-y-1 animate-fade-in"
+          class="p-3 bg-danger/10 border border-danger/20 rounded-xl space-y-1"
         >
-          <p class="text-rose-400 text-xs font-black">
-            يرجى تصحيح أخطاء المكونات التجميعية التالية:
-          </p>
-          <div class="text-rose-500 dark:text-rose-400 text-[11px] font-bold pl-2 space-y-0.5">
+          <p class="text-danger text-xs font-black">يرجى تصحيح أخطاء المكونات التجميعية التالية:</p>
+          <div class="text-danger text-[11px] font-bold pl-2 space-y-0.5">
             <template v-for="(errorsArray, fieldKey) in itemStore.validationErrors" :key="fieldKey">
-              <!-- [الحل]: فصل الـ v-if في template مستقل لمنع تداخلها مع الـ v-for على نفس العنصر -->
               <template v-if="fieldKey.startsWith('components')">
                 <p v-for="(err, i) in errorsArray" :key="i">• {{ err }}</p>
               </template>
@@ -155,8 +150,8 @@ const currentItemId = computed(() => (route.params.id ? Number(route.params.id) 
 
 /**
  * تصفية الأصناف المتاحة للتركيب:
- * 1. استبعاد الصنف التجميعي الأب نفسه لمنع حدوث تكرار حلقي دائم في قواعد البيانات.
- * 2. تصفية الأصناف من نوع (product أو raw_material).
+ * 1. استبعاد الصنف التجميعي الأب نفسه لمنع التكرار الحلقي
+ * 2. تصفية الأصناف من نوع (product أو raw_material)
  */
 const filteredAvailableItems = computed(() => {
   return (itemStore.items || []).filter((item) => {
@@ -238,11 +233,11 @@ const removeComponentRow = (index) => {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #cbd5e1;
+  background-color: rgb(var(--color-surface-border));
   border-radius: 10px;
 }
 :global(.dark) .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: #4b5563;
+  background-color: rgb(var(--color-surface-border));
 }
 
 input::-webkit-outer-spin-button,

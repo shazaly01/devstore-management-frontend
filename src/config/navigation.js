@@ -72,12 +72,12 @@ export const navigationConfig = [
     icon: DocumentTextIcon,
     permission: 'report.financial',
   },
-  {
-    name: 'ورشة التنفيذ',
-    routeName: 'MaterialConsumptionList',
-    icon: WrenchScrewdriverIcon,
-    permission: 'sale.swap_raw_materials',
-  },
+  // {
+  //   name: 'ورشة التنفيذ',
+  //   routeName: 'MaterialConsumptionList',
+  //   icon: WrenchScrewdriverIcon,
+  //   permission: 'sale.swap_raw_materials',
+  // },
 
   // ==========================================================================
   // الكتلة الثانية: المجموعات المنسدلة للتهيئة والتقارير (Bottom - Dropdown Menus)
