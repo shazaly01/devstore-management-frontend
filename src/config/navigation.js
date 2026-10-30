@@ -12,6 +12,7 @@ import {
   ReceiptRefundIcon,
   AdjustmentsHorizontalIcon,
   CalculatorIcon, // أيقونة محرك وسياسات التسعير
+  ScissorsIcon, // أيقونة عمليات التفكيك والتجزئة والتقطيع
 } from '@heroicons/vue/24/outline'
 
 /**
@@ -40,6 +41,12 @@ export const navigationConfig = [
     routeName: 'PurchasesList',
     icon: ShoppingBagIcon,
     permission: 'purchase.view',
+  },
+  {
+    name: 'أذونات التفكيك والتجزئة',
+    routeName: 'DisassemblyList',
+    icon: ScissorsIcon,
+    permission: 'disassembly.view',
   },
   {
     name: 'سندات الصرف',
@@ -98,7 +105,7 @@ export const navigationConfig = [
         permission: 'store.view',
       },
       {
-        name: ',العملة وسياسات التسعير',
+        name: 'العملة وسياسات التسعير',
         routeName: 'PricingView',
         permission: 'pricing.view',
       },
@@ -182,11 +189,6 @@ export const navigationConfig = [
         type: 'header',
         name: 'التقارير المالية والختامية',
       },
-      // {
-      //   name: 'دفتر الأستاذ العام',
-      //   routeName: 'AccountLedgerReport',
-      //   permission: 'report.financial',
-      // },
       {
         name: 'ميزان المراجعة',
         routeName: 'TrialBalanceReport',

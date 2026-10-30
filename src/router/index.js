@@ -39,7 +39,11 @@ const TechnicianSaleForm = () => import('@/views/technician/TechnicianSaleForm.v
 const StockAdjustmentsList = () => import('@/views/stock-adjustments/StockAdjustmentsList.vue')
 const StockAdjustmentForm = () => import('@/views/stock-adjustments/StockAdjustmentForm.vue')
 
-// --- 4. مسارات قسم التقارير الموحد والمعزول (تم التعديل هنا للمجلدات الجديدة) ---
+// مسارات موديول تفكيك وتجزئة الأصناف المخزنية
+const DisassemblyList = () => import('@/views/disassembly/DisassemblyList.vue')
+const DisassemblyForm = () => import('@/views/disassembly/DisassemblyForm.vue')
+
+// --- 4. مسارات قسم التقارير الموحد والمعزول ---
 const CurrentStockReport = () => import('@/views/reports/inventory/CurrentStockReport.vue')
 const StockCardReport = () => import('@/views/reports/inventory/StockCardReport.vue')
 const StockValuationReport = () => import('@/views/reports/inventory/StockValuationReport.vue')
@@ -78,12 +82,11 @@ const routes = [
     meta: { requiresAuth: true },
     children: [
       // لوحة التحكم الأساسية
-      // لوحة التحكم الأساسية
       {
         path: 'dashboard',
         name: 'Dashboard',
         component: DashboardView,
-        meta: { permission: 'dashboard.view' }, // <-- أضف هذا السطر لحماية الشاشة برمجياً
+        meta: { permission: 'dashboard.view' },
       },
 
       // ==========================================
@@ -283,6 +286,26 @@ const routes = [
         meta: { permission: 'stock_adjustment.update' },
       },
 
+      // مسارات موديول تفكيك وتجزئة الأصناف
+      {
+        path: 'disassemblies',
+        name: 'DisassemblyList',
+        component: DisassemblyList,
+        meta: { permission: 'disassembly.view' },
+      },
+      {
+        path: 'disassemblies/create',
+        name: 'DisassemblyCreate',
+        component: DisassemblyForm,
+        meta: { permission: 'disassembly.create' },
+      },
+      {
+        path: 'disassemblies/:id/edit',
+        name: 'DisassemblyEdit',
+        component: DisassemblyForm,
+        meta: { permission: 'disassembly.create' },
+      },
+
       // ==========================================
       // د. مجموعة مسارات قسم التقارير الموحد
       // ==========================================
@@ -397,7 +420,7 @@ const routes = [
 
   {
     path: '/reports/financial/sub-ledger/print',
-    name: 'SubLedgerPrint', // يمكنك تعديله إلى PrintSummary إذا كنت توحد اسم شاشات الطباعة
+    name: 'SubLedgerPrint',
     component: () => import('@/views/reports/financial/SubLedgerPrint.vue'),
     meta: {
       requiresAuth: true,
