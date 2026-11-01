@@ -1,7 +1,7 @@
 <!--src/views/sales/components/SaleHeader.vue-->
 <template>
   <div
-    class="p-5 bg-surface-section rounded-xl border border-surface-border shadow-sm space-y-4 text-right font-sans transition-colors duration-200"
+    class="p-5 bg-surface-header rounded-xl border border-surface-border border-t-4 border-t-primary shadow-sm space-y-4 text-right font-sans transition-colors duration-200"
     dir="rtl"
   >
     <!-- الصف الأول: 4 أعمدة (نوع الفاتورة + المخزن + التاريخ + الخزنة/البنك) -->
@@ -9,7 +9,7 @@
       <!-- invoice_type -->
       <div class="relative w-full">
         <div
-          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center shadow-sm transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+          class="relative w-full h-11 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-xs transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
           <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -45,7 +45,7 @@
       <!-- store_id -->
       <div class="relative w-full">
         <div
-          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+          class="relative w-full h-11 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-xs transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
           <span class="absolute right-3 text-text-muted pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -77,7 +77,7 @@
       <!-- invoice_date -->
       <div class="relative w-full">
         <div
-          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+          class="relative w-full h-11 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-xs transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
           <input
             type="date"
@@ -108,7 +108,7 @@
       <div class="relative w-full space-y-2">
         <div
           v-if="showTreasurySelector"
-          class="relative w-full h-11 bg-surface-ground border border-primary/50 focus-within:border-primary rounded-lg flex items-center animate-fade-in shadow-sm transition-all focus-within:ring-2 focus-within:ring-primary/20"
+          class="relative w-full h-11 bg-surface-card border border-primary/50 focus-within:border-primary rounded-lg flex items-center animate-fade-in shadow-xs transition-all focus-within:ring-2 focus-within:ring-primary/20"
         >
           <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -132,7 +132,7 @@
 
         <div
           v-if="showBankSelector"
-          class="relative w-full h-11 bg-surface-ground border border-primary/50 focus-within:border-primary rounded-lg flex items-center animate-fade-in shadow-sm transition-all focus-within:ring-2 focus-within:ring-primary/20"
+          class="relative w-full h-11 bg-surface-card border border-primary/50 focus-within:border-primary rounded-lg flex items-center animate-fade-in shadow-xs transition-all focus-within:ring-2 focus-within:ring-primary/20"
         >
           <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -156,7 +156,7 @@
 
         <div
           v-if="!showTreasurySelector && !showBankSelector"
-          class="relative w-full h-11 bg-surface-ground border border-dashed border-surface-border rounded-lg flex items-center justify-center text-text-muted text-[10px] font-medium select-none px-2 text-center"
+          class="relative w-full h-11 bg-surface-card border border-dashed border-surface-border rounded-lg flex items-center justify-center text-text-muted text-[10px] font-medium select-none px-2 text-center shadow-xs"
         >
           <span v-if="formData.invoice_type === 'return'">دين آجل - لا يوجد خزنة أو بنك</span>
           <span v-else>يظهر اختيار الخزينة أو البنك عند تسجيل مبلغ في القناة</span>
@@ -179,7 +179,7 @@
       <!-- payment_type للمرتجعات فقط؛ البيع يستخدم توزيع المبالغ -->
       <div v-if="formData.invoice_type === 'return'" class="relative w-full">
         <div
-          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+          class="relative w-full h-11 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-xs transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
           <span class="absolute right-3 text-text-muted pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -216,7 +216,7 @@
       <!-- customer_phone_search -->
       <div class="relative w-full">
         <div
-          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+          class="relative w-full h-11 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-xs transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
           <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -272,7 +272,7 @@
       <!-- customer_id -->
       <div class="relative w-full flex flex-col">
         <div
-          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+          class="relative w-full h-11 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-xs transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
           <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -316,7 +316,7 @@
       <!-- customer_name_text -->
       <div class="relative w-full">
         <div
-          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+          class="relative w-full h-11 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-xs transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
           <span class="absolute right-3 text-text-muted pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">

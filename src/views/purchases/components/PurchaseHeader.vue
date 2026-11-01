@@ -1,14 +1,14 @@
 <!--src/views/purchases/components/PurchaseHeader.vue-->
 <template>
   <div
-    class="p-5 bg-surface-section rounded-xl border border-surface-border shadow-sm space-y-4 text-right font-sans transition-colors duration-200"
+    class="p-5 bg-surface-header rounded-xl border border-surface-border border-t-4 border-t-primary shadow-sm space-y-4 text-right font-sans transition-colors duration-200"
     dir="rtl"
   >
     <!-- الصف الأول: نوع الفاتورة، المستودع، وحساب الدفع (خزنة/بنك) -->
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="relative w-full" key="purchase-invoice-type-container">
         <div
-          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center shadow-sm transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+          class="relative w-full h-11 bg-surface-card border border-surface-border rounded-lg flex items-center shadow-xs transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
         >
           <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -42,7 +42,7 @@
 
       <div class="relative w-full" key="purchase-store-container">
         <div
-          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
+          class="relative w-full h-11 bg-surface-card border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-xs"
         >
           <span class="absolute right-3 text-text-muted pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -73,7 +73,7 @@
         <div
           v-if="formData.payment_type === 'cash'"
           key="cash-treasury-active"
-          class="relative w-full h-11 bg-surface-ground border border-primary/50 focus-within:border-primary rounded-lg flex items-center animate-fade-in shadow-sm transition-all focus-within:ring-2 focus-within:ring-primary/20"
+          class="relative w-full h-11 bg-surface-card border border-primary/50 focus-within:border-primary rounded-lg flex items-center animate-fade-in shadow-xs transition-all focus-within:ring-2 focus-within:ring-primary/20"
         >
           <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -99,7 +99,7 @@
         <div
           v-if="formData.payment_type === 'card'"
           key="card-bank-active"
-          class="relative w-full h-11 bg-surface-ground border border-primary/50 focus-within:border-primary rounded-lg flex items-center animate-fade-in shadow-sm transition-all focus-within:ring-2 focus-within:ring-primary/20"
+          class="relative w-full h-11 bg-surface-card border border-primary/50 focus-within:border-primary rounded-lg flex items-center animate-fade-in shadow-xs transition-all focus-within:ring-2 focus-within:ring-primary/20"
         >
           <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -125,7 +125,7 @@
         <div
           v-if="formData.payment_type === 'credit'"
           key="credit-placeholder"
-          class="relative w-full h-11 bg-surface-ground border border-dashed border-surface-border rounded-lg flex items-center justify-center text-text-muted text-xs font-medium select-none"
+          class="relative w-full h-11 bg-surface-card border border-dashed border-surface-border rounded-lg flex items-center justify-center text-text-muted text-xs font-medium select-none shadow-xs"
         >
           <span>دين آجل - لا يوجد خزنة أو بنك</span>
         </div>
@@ -136,7 +136,7 @@
     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
       <div class="relative w-full" key="purchase-payment-type-container">
         <div
-          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
+          class="relative w-full h-11 bg-surface-card border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-xs"
         >
           <span class="absolute right-3 text-text-muted pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -171,7 +171,7 @@
 
       <div class="relative w-full" key="purchase-supplier-container">
         <div
-          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
+          class="relative w-full h-11 bg-surface-card border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-xs"
         >
           <span class="absolute right-3 text-primary pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -201,7 +201,7 @@
 
       <div class="relative w-full" key="purchase-invoice-date-container">
         <div
-          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
+          class="relative w-full h-11 bg-surface-card border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-xs"
         >
           <input
             type="date"
@@ -233,7 +233,7 @@
     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-surface-border">
       <div class="relative w-full" key="purchase-currency-container">
         <div
-          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
+          class="relative w-full h-11 bg-surface-card border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-xs"
         >
           <span class="absolute right-3 text-text-muted pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -273,7 +273,7 @@
 
       <div class="relative w-full" key="purchase-exchange-rate-container">
         <div
-          class="relative w-full h-11 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-sm"
+          class="relative w-full h-11 bg-surface-card border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-xs"
         >
           <span class="absolute right-3 text-text-muted pointer-events-none z-10">
             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -351,7 +351,7 @@
 
         <span class="absolute left-4 text-text-muted pointer-events-none text-[10px]">▼</span>
       </div>
-      <p v-if="getFieldError('parent_id')" class="text-danger text-[10px] font-bold mt-1 pr-1">
+      <p v-if="getFieldError('parent_id')" class="text-danger text-[10px] font-bold mt-0.5 pr-1">
         {{ getFieldError('parent_id') }}
       </p>
     </div>

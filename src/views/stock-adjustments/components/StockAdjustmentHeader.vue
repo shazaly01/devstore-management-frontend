@@ -1,7 +1,7 @@
 <!--src/views/stock-adjustments/components/StockAdjustmentHeader.vue-->
 <template>
   <div
-    class="p-4 bg-surface-section rounded-xl border border-surface-border shadow-sm grid grid-cols-1 md:grid-cols-2 gap-4 text-right items-end font-sans transition-all duration-200"
+    class="p-5 bg-surface-header rounded-xl border border-surface-border border-t-4 border-t-primary shadow-sm grid grid-cols-1 md:grid-cols-2 gap-4 text-right items-end font-sans transition-all duration-200"
     dir="rtl"
   >
     <!-- اختيار المستودع -->
@@ -11,7 +11,7 @@
         <select
           v-model="formData.store_id"
           :disabled="isEdit"
-          class="block w-full h-10 pr-3 pl-8 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-xs font-bold outline-none transition-all appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed shadow-sm"
+          class="block w-full h-11 pr-3 pl-8 border border-surface-border rounded-lg bg-surface-card text-text-primary focus:border-primary focus:ring-2 focus:ring-primary/20 text-xs font-bold outline-none transition-all appearance-none cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed shadow-xs"
         >
           <option value="" class="bg-surface-section text-text-muted">
             اختر المستودع المعني بالدورة الجردية...
@@ -42,7 +42,7 @@
       <input
         type="date"
         v-model="formData.adjustment_date"
-        class="block w-full h-10 px-3 border border-surface-border rounded-lg bg-surface-ground text-text-primary focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 text-xs font-bold font-mono outline-none transition-all cursor-pointer shadow-sm"
+        class="block w-full h-11 px-3 border border-surface-border rounded-lg bg-surface-card text-text-primary focus:border-primary focus:ring-2 focus:ring-primary/20 text-xs font-bold font-mono outline-none transition-all cursor-pointer shadow-xs"
       />
       <p v-if="getFieldError('adjustment_date')" class="text-danger text-[10px] font-bold mt-0.5">
         {{ getFieldError('adjustment_date') }}

@@ -4,9 +4,9 @@
     class="grid grid-cols-1 md:grid-cols-3 gap-4 text-right font-sans transition-colors duration-200"
     dir="rtl"
   >
-    <!-- 1. الإجماليات النهائية -->
+    <!-- 1. الإجماليات النهائية (مطابقة لهوية الرأس كمرساة ختامية) -->
     <div
-      class="p-4 bg-surface-section rounded-xl border border-surface-border shadow-sm flex flex-col justify-between space-y-3"
+      class="p-4 bg-surface-header rounded-xl border border-surface-border border-t-4 border-t-primary shadow-sm flex flex-col justify-between space-y-3 transition-colors duration-200"
     >
       <div class="space-y-2 text-xs font-semibold text-text-secondary">
         <h3 class="text-[11px] font-black text-text-primary border-b border-surface-border pb-1.5">

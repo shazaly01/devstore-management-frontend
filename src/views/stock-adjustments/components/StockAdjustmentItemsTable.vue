@@ -1,0 +1,1095 @@
+<!--src/views/stock-adjustments/components/StockAdjustmentItemsTable.vue-->
+<script setup>
+import { ref, computed, watch, nextTick, onMounted, onBeforeUnmount } from 'vue'
+import { useItemStore } from '@/stores/itemStore'
+import { useToast } from 'vue-toastification'
+
+import SmartSearchGrid from '@/components/ui/SmartSearchGrid.vue'
+import InvoiceDetailTable from '@/components/ui/dynamic-invoice/InvoiceDetailTable.vue'
+
+const props = defineProps({
+  items: { type: Array, required: true },
+  form: { type: Object, required: true },
+  visibleTableSchema: { type: Array, required: true },
+  getValidationError: { type: Function, required: true },
+  removeRow: { type: Function, required: true },
+  triggerAddNewEmptyLine: { type: Function, required: true },
+  handleGlobalItemSelect: { type: Function, required: true },
+  syncUnitCostAndFields: { type: Function, required: true },
+})
+
+const itemStore = useItemStore()
+const toast = useToast()
+
+// إدارة وضعية البحث مع الحفظ المحلي في المتصفح
+const searchMode = ref(localStorage.getItem('panda_stock_adjustments_search_mode') || 'classic')
+
+const setSearchMode = (mode) => {
+  searchMode.value = mode
+  localStorage.setItem('panda_stock_adjustments_search_mode', mode)
+
+  if (mode === 'modern') {
+    if (props.items.length === 0) {
+      props.triggerAddNewEmptyLine()
+    }
+    nextTick(() => {
+      focusModernCell(props.items.length - 1, 'name', true)
+    })
+  } else {
+    nextTick(() => {
+      searchGridRef.value?.focus()
+    })
+  }
+}
+
+// ----------------------------------------------------
+// 1. تجهيز بيانات الأصناف للبحث
+// ----------------------------------------------------
+const searchGridRef = ref(null)
+const tableWrapperRef = ref(null)
+
+const searchableItems = computed(() => {
+  if (!itemStore.items) return []
+  return itemStore.items.map((item) => {
+    const directBarcodes = Array.isArray(item.barcodes)
+      ? item.barcodes.map((b) => (typeof b === 'object' ? b.barcode : b))
+      : []
+
+    const unitBarcodes = Array.isArray(item.units)
+      ? item.units.flatMap((u) =>
+          Array.isArray(u.barcodes)
+            ? u.barcodes.map((b) => (typeof b === 'object' ? b.barcode : b))
+            : [],
+        )
+      : []
+
+    const allBarcodes = [...new Set([...directBarcodes, ...unitBarcodes])].filter(Boolean)
+
+    return {
+      ...item,
+      id_display: `PRD-${item.id}`,
+      name: item.name || '',
+      price_display: item.units?.[0] ? `${parseFloat(item.units[0].price).toFixed(2)}` : '0.00',
+      stock_display: item.current_stock !== undefined ? `${item.current_stock}` : '0',
+      all_barcodes: allBarcodes,
+    }
+  })
+})
+
+const formatSmartNumber = (value) => {
+  if (value === null || value === undefined || value === '') return '0'
+  const num = Number(value)
+  if (isNaN(num)) return '0'
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: num % 1 === 0 ? 0 : 2,
+    maximumFractionDigits: 4,
+  }).format(num)
+}
+
+const getRowBookQty = (row) => {
+  if (row.base_stock === null || row.base_stock === undefined) return 0
+  const matchedUnit = row.available_units?.find((u) => String(u.id) === String(row.item_unit_id))
+  const factor = matchedUnit ? parseFloat(matchedUnit.conversion_factor) || 1 : 1
+  return parseFloat((row.base_stock / factor).toFixed(2))
+}
+
+const updateRowDifferences = (row) => {
+  row.book_quantity = getRowBookQty(row)
+  const physical = parseFloat(row.physical_quantity) || 0
+  const book = parseFloat(row.book_quantity) || 0
+  row.quantity_difference = parseFloat((physical - book).toFixed(2))
+}
+
+// ----------------------------------------------------
+// 2. دوال وإجراءات الوضع الكلاسيكي
+// ----------------------------------------------------
+const onClassicItemSelected = (selectedItem) => {
+  props.handleGlobalItemSelect(selectedItem)
+}
+
+// ----------------------------------------------------
+// 3. دوال وإجراءات الوضع الحديث (البحث السطري المباشر)
+// ----------------------------------------------------
+const cellRefs = ref({})
+const dropdownItemRefs = ref([])
+const modernColumnsOrder = ['name', 'unit', 'qty']
+const activeTargetInput = ref(null)
+const activeQtyIndex = ref(null)
+
+const setCellRef = (el, rowIndex, colKey) => {
+  if (!cellRefs.value[rowIndex]) {
+    cellRefs.value[rowIndex] = {}
+  }
+  if (el) {
+    cellRefs.value[rowIndex][colKey] = el
+  }
+}
+
+const setDropdownItemRef = (el, index) => {
+  if (el) {
+    dropdownItemRefs.value[index] = el
+  }
+}
+
+const focusModernCell = (rowIndex, colKey, shouldScroll = true) => {
+  nextTick(() => {
+    const target = cellRefs.value[rowIndex]?.[colKey]
+    if (target) {
+      target.focus()
+      if (typeof target.select === 'function') {
+        target.select()
+      }
+      if (shouldScroll && typeof target.scrollIntoView === 'function') {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+      }
+    }
+  })
+}
+
+const handleFieldFocus = (event) => {
+  const el = event.target
+  if (el) {
+    if (typeof el.select === 'function') {
+      el.select()
+    }
+    if (typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' })
+    }
+  }
+}
+
+const onNameInputFocus = (index, event) => {
+  handleFieldFocus(event)
+  openSearchDropdown(index, event)
+}
+
+const onModernQtyFocus = (index, event) => {
+  activeQtyIndex.value = index
+  handleFieldFocus(event)
+}
+
+const getQtyDisplayValue = (row, index) => {
+  if (activeQtyIndex.value === index) {
+    return row.physical_quantity === null || row.physical_quantity === undefined
+      ? ''
+      : row.physical_quantity
+  }
+  return formatSmartNumber(row.physical_quantity)
+}
+
+const onModernQuantityChange = (row, event) => {
+  const val = event.target.value.replace(/[^0-9.-]/g, '')
+  row.physical_quantity = val === '' ? 0 : Number(val)
+  updateRowDifferences(row)
+}
+
+const isCursorAtStart = (el) => {
+  if (!el || el.selectionStart === undefined) return true
+  return el.selectionStart === 0
+}
+
+const isCursorAtEnd = (el) => {
+  if (!el || el.selectionEnd === undefined) return true
+  return el.selectionEnd >= el.value.length
+}
+
+const isTextFullySelected = (el) => {
+  if (!el || el.selectionStart === undefined) return false
+  return el.selectionStart === 0 && el.selectionEnd === el.value.length
+}
+
+const navigateModernHorizontal = (rowIndex, currentColKey, direction) => {
+  const currentIdx = modernColumnsOrder.indexOf(currentColKey)
+  const targetIdx = currentIdx + direction
+
+  if (targetIdx >= 0 && targetIdx < modernColumnsOrder.length) {
+    focusModernCell(rowIndex, modernColumnsOrder[targetIdx], true)
+  } else if (targetIdx >= modernColumnsOrder.length) {
+    if (rowIndex === props.items.length - 1) {
+      handleAddNewLineWithFocus()
+    } else {
+      focusModernCell(rowIndex + 1, 'name', true)
+    }
+  } else if (targetIdx < 0 && rowIndex > 0) {
+    focusModernCell(rowIndex - 1, 'qty', true)
+  }
+}
+
+const handleAddNewLineWithFocus = async () => {
+  props.triggerAddNewEmptyLine()
+  await nextTick()
+  const newIndex = props.items.length - 1
+  focusModernCell(newIndex, 'name', true)
+}
+
+const handleRemoveRowWithFocus = async (index) => {
+  props.removeRow(index)
+  await nextTick()
+  const targetIndex = Math.max(0, Math.min(index, props.items.length - 1))
+  focusModernCell(targetIndex, 'name', true)
+}
+
+const checkModernShortcuts = (event, index) => {
+  if (event.ctrlKey && event.key === 'Enter') {
+    event.preventDefault()
+    handleAddNewLineWithFocus()
+    return true
+  }
+
+  if (
+    (event.altKey && event.key === 'Delete') ||
+    (event.ctrlKey && (event.key === 'Delete' || event.key === 'Backspace'))
+  ) {
+    event.preventDefault()
+    handleRemoveRowWithFocus(index)
+    return true
+  }
+
+  return false
+}
+
+// قائمة المقترحات الطافية الذكية
+const activeDropdownIndex = ref(null)
+const highlightedProductIndex = ref(0)
+const searchResults = ref([])
+
+const dropdownStyle = ref({
+  top: 'auto',
+  bottom: 'auto',
+  right: '0px',
+  width: '520px',
+})
+
+const updateDropdownPosition = (targetElement) => {
+  if (!targetElement) return
+  activeTargetInput.value = targetElement
+  const rect = targetElement.getBoundingClientRect()
+  const dropdownEstimatedHeight = 260
+  const spaceBelow = window.innerHeight - rect.bottom
+  const spaceAbove = rect.top
+
+  const shouldOpenUpwards = spaceBelow < dropdownEstimatedHeight && spaceAbove > spaceBelow
+
+  const preferredWidth = Math.max(rect.width, 520)
+  const maxWidth = Math.min(preferredWidth, window.innerWidth - 20)
+  const rightOffset = Math.max(10, window.innerWidth - rect.right)
+
+  if (shouldOpenUpwards) {
+    dropdownStyle.value = {
+      top: 'auto',
+      bottom: `${window.innerHeight - rect.top + 4}px`,
+      right: `${rightOffset}px`,
+      width: `${maxWidth}px`,
+    }
+  } else {
+    dropdownStyle.value = {
+      top: `${rect.bottom + 4}px`,
+      bottom: 'auto',
+      right: `${rightOffset}px`,
+      width: `${maxWidth}px`,
+    }
+  }
+}
+
+const scrollHighlightedDropdownItemIntoView = () => {
+  nextTick(() => {
+    const el = dropdownItemRefs.value[highlightedProductIndex.value]
+    if (el && typeof el.scrollIntoView === 'function') {
+      el.scrollIntoView({ block: 'nearest' })
+    }
+  })
+}
+
+const executeFastSearch = (queryText, rowIndex, immediate = false) => {
+  const clean = queryText ? queryText.trim().toLowerCase() : ''
+  if (!clean) {
+    searchResults.value = []
+    return
+  }
+
+  const results = []
+  for (const it of searchableItems.value) {
+    const matchedBarcode = it.all_barcodes?.find((b) => b && b.toLowerCase() === clean)
+    const isNameMatch = it.name && it.name.toLowerCase().includes(clean)
+    const isIdMatch = `prd-${it.id}`.includes(clean) || String(it.id) === clean
+    const isCodeMatch = it.code && it.code.toLowerCase().includes(clean)
+
+    if (matchedBarcode) {
+      results.unshift({ ...it, matched_barcode: matchedBarcode })
+    } else if (isNameMatch || isIdMatch || isCodeMatch) {
+      results.push(it)
+    }
+
+    if (results.length >= 10) break
+  }
+
+  if (immediate && results.length === 1) {
+    onSelectModernProduct(props.items[rowIndex], results[0], rowIndex)
+    return
+  }
+
+  searchResults.value = results
+  highlightedProductIndex.value = 0
+  dropdownItemRefs.value = []
+
+  if (activeTargetInput.value) {
+    updateDropdownPosition(activeTargetInput.value)
+  }
+}
+
+const openSearchDropdown = (index, event) => {
+  activeDropdownIndex.value = index
+  updateDropdownPosition(event.target)
+  executeFastSearch(props.items[index]?.item_name || '', index, false)
+}
+
+const onItemNameInput = (row, index, event) => {
+  if (row.item_id) {
+    row.item_id = null
+    row.item_unit_id = null
+    row.available_units = []
+    row.book_quantity = 0
+    row.physical_quantity = 0
+    row.quantity_difference = 0
+    row.unit_cost = 0
+  }
+  activeDropdownIndex.value = index
+  updateDropdownPosition(event.target)
+  executeFastSearch(row.item_name, index, false)
+}
+
+const closeSearchDropdownDelayed = () => {
+  setTimeout(() => {
+    activeDropdownIndex.value = null
+    activeTargetInput.value = null
+    searchResults.value = []
+  }, 200)
+}
+
+const onSelectModernProduct = (row, product, index) => {
+  if (!row || props.items[index] !== row) return
+
+  if (!props.form.store_id) {
+    toast.warning('عفواً، يجب تحديد مستودع الجرد والتسوية أولاً لشحن الأرصدة الدفترية.')
+    return
+  }
+
+  const defaultUnit = product.units?.[0] || null
+  const defaultUnitId = defaultUnit?.id || ''
+
+  // فحص ما إذا كان الصنف مضافاً مسبقاً بنفس الوحدة (زيادة الكمية الفعلية مع الوميض)
+  const existingIndex = props.items.findIndex(
+    (it, idx) =>
+      idx !== index &&
+      it.item_id === product.id &&
+      String(it.item_unit_id) === String(defaultUnitId),
+  )
+
+  if (existingIndex !== -1) {
+    const existingRow = props.items[existingIndex]
+    existingRow.physical_quantity = (parseFloat(existingRow.physical_quantity) || 0) + 1
+    updateRowDifferences(existingRow)
+
+    existingRow._flashing = true
+    setTimeout(() => {
+      existingRow._flashing = false
+    }, 1200)
+
+    // تصفير السطر الحالي ليبقى جاهزاً لقراءة الصنف التالي
+    row.item_id = null
+    row.item_id_display = ''
+    row.item_name = ''
+    row.available_units = []
+    row.item_unit_id = null
+    row.book_quantity = 0
+    row.physical_quantity = 0
+    row.quantity_difference = 0
+    row.unit_cost = 0
+
+    activeDropdownIndex.value = null
+    activeTargetInput.value = null
+    searchResults.value = []
+    dropdownItemRefs.value = []
+
+    focusModernCell(existingIndex, 'qty', true)
+    return
+  }
+
+  // تسكين صنف جديد
+  row.item_id = product.id
+  row.item_id_display = `PRD-${product.id}`
+  row.item_name = product.name || ''
+  row.available_units = product.units || []
+  row.item_unit_id = defaultUnitId
+  row.base_stock = parseFloat(
+    product.current_stock !== undefined
+      ? product.current_stock
+      : product.stock !== undefined
+        ? product.stock
+        : 0,
+  )
+  row.unit_cost = defaultUnit?.cost || 0
+  row.physical_quantity = 1
+  updateRowDifferences(row)
+
+  activeDropdownIndex.value = null
+  activeTargetInput.value = null
+  searchResults.value = []
+  dropdownItemRefs.value = []
+
+  focusModernCell(index, 'qty', true)
+}
+
+const onModernUnitSelectChange = (row) => {
+  props.syncUnitCostAndFields(row)
+  updateRowDifferences(row)
+}
+
+// معالجات لوحة المفاتيح والأسهم
+const handleModernNameKeydown = (event, row, index) => {
+  if (checkModernShortcuts(event, index)) return
+
+  const isDropdownOpen = activeDropdownIndex.value === index && searchResults.value.length > 0
+
+  if (isDropdownOpen) {
+    if (event.key === 'ArrowDown') {
+      event.preventDefault()
+      highlightedProductIndex.value =
+        (highlightedProductIndex.value + 1) % searchResults.value.length
+      scrollHighlightedDropdownItemIntoView()
+      return
+    }
+
+    if (event.key === 'ArrowUp') {
+      event.preventDefault()
+      highlightedProductIndex.value =
+        (highlightedProductIndex.value - 1 + searchResults.value.length) %
+        searchResults.value.length
+      scrollHighlightedDropdownItemIntoView()
+      return
+    }
+
+    if (event.key === 'Enter' || event.key === 'Tab') {
+      event.preventDefault()
+      const selected = searchResults.value[highlightedProductIndex.value]
+      if (selected) {
+        onSelectModernProduct(row, selected, index)
+      }
+      return
+    }
+
+    if (event.key === 'Escape') {
+      event.preventDefault()
+      activeDropdownIndex.value = null
+      searchResults.value = []
+      return
+    }
+  }
+
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    if (!row.item_id && row.item_name && row.item_name.trim().length > 0) {
+      executeFastSearch(row.item_name, index, true)
+      return
+    }
+    activeDropdownIndex.value = null
+    if (row.item_id) {
+      focusModernCell(index, 'qty', true)
+    } else {
+      focusModernCell(index, 'unit', true)
+    }
+    return
+  }
+
+  if (event.key === 'ArrowDown') {
+    event.preventDefault()
+    activeDropdownIndex.value = null
+    if (index < props.items.length - 1) {
+      focusModernCell(index + 1, 'name', true)
+    } else {
+      handleAddNewLineWithFocus()
+    }
+    return
+  }
+
+  if (event.key === 'ArrowUp') {
+    if (index > 0) {
+      event.preventDefault()
+      activeDropdownIndex.value = null
+      focusModernCell(index - 1, 'name', true)
+    }
+    return
+  }
+
+  if (event.key === 'ArrowLeft') {
+    const el = event.target
+    if (isTextFullySelected(el) || isCursorAtEnd(el) || !row.item_name) {
+      event.preventDefault()
+      activeDropdownIndex.value = null
+      navigateModernHorizontal(index, 'name', 1)
+    }
+    return
+  }
+
+  if (event.key === 'ArrowRight') {
+    const el = event.target
+    if (isTextFullySelected(el) || isCursorAtStart(el)) {
+      if (index > 0) {
+        event.preventDefault()
+        activeDropdownIndex.value = null
+        navigateModernHorizontal(index, 'name', -1)
+      }
+    }
+  }
+}
+
+const handleModernGenericKeydown = (event, row, index, colKey) => {
+  if (checkModernShortcuts(event, index)) return
+
+  if (event.key === 'Enter') {
+    event.preventDefault()
+    const currentIdx = modernColumnsOrder.indexOf(colKey)
+    if (currentIdx < modernColumnsOrder.length - 1) {
+      focusModernCell(index, modernColumnsOrder[currentIdx + 1], true)
+    } else {
+      if (index < props.items.length - 1) {
+        focusModernCell(index + 1, 'name', true)
+      } else {
+        handleAddNewLineWithFocus()
+      }
+    }
+    return
+  }
+
+  if (event.key === 'ArrowDown') {
+    event.preventDefault()
+    if (index < props.items.length - 1) {
+      focusModernCell(index + 1, colKey, true)
+    } else {
+      handleAddNewLineWithFocus()
+    }
+    return
+  }
+
+  if (event.key === 'ArrowUp') {
+    if (index > 0) {
+      event.preventDefault()
+      focusModernCell(index - 1, colKey, true)
+    }
+    return
+  }
+
+  const el = event.target
+  if (event.key === 'ArrowLeft') {
+    if (isTextFullySelected(el) || isCursorAtEnd(el) || el.tagName === 'SELECT') {
+      event.preventDefault()
+      navigateModernHorizontal(index, colKey, 1)
+    }
+    return
+  }
+
+  if (event.key === 'ArrowRight') {
+    if (isTextFullySelected(el) || isCursorAtStart(el) || el.tagName === 'SELECT') {
+      event.preventDefault()
+      navigateModernHorizontal(index, colKey, -1)
+    }
+  }
+}
+
+const handleScrollOrResize = () => {
+  if (activeDropdownIndex.value !== null && activeTargetInput.value) {
+    updateDropdownPosition(activeTargetInput.value)
+  }
+}
+
+onMounted(() => {
+  window.addEventListener('scroll', handleScrollOrResize, true)
+  window.addEventListener('resize', handleScrollOrResize)
+
+  if (searchMode.value === 'modern' && props.items.length === 0) {
+    props.triggerAddNewEmptyLine()
+  }
+})
+
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', handleScrollOrResize, true)
+  window.removeEventListener('resize', handleScrollOrResize)
+})
+</script>
+
+<template>
+  <div ref="tableWrapperRef" class="space-y-3 font-sans text-right" dir="rtl">
+    <!-- شريط التبديل العلوي بين نمط البحث الكلاسيكي والحديث -->
+    <div
+      class="flex items-center justify-between bg-surface-ground p-1.5 rounded-xl border border-surface-border/80 shadow-xs"
+    >
+      <div class="flex items-center gap-1.5">
+        <span class="text-xs font-bold text-text-secondary px-2">نمط إدخال الأصناف:</span>
+        <button
+          type="button"
+          @click="setSearchMode('classic')"
+          class="px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer"
+          :class="
+            searchMode === 'classic'
+              ? 'bg-primary text-white shadow-sm'
+              : 'text-text-secondary hover:text-text-primary hover:bg-surface-section border border-transparent'
+          "
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 6h16M4 10h16M4 14h16M4 18h16"
+            />
+          </svg>
+          <span>بحث كلاسيكي</span>
+        </button>
+
+        <button
+          type="button"
+          @click="setSearchMode('modern')"
+          class="px-3 py-1.5 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer"
+          :class="
+            searchMode === 'modern'
+              ? 'bg-primary text-white shadow-sm'
+              : 'text-text-secondary hover:text-text-primary hover:bg-surface-section border border-transparent'
+          "
+        >
+          <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M13 10V3L4 14h7v7l9-11h-7z"
+            />
+          </svg>
+          <span>بحث حديث</span>
+        </button>
+      </div>
+
+      <div class="text-[11px] text-text-muted font-medium hidden sm:block">
+        <span v-if="searchMode === 'classic'">البحث الكلاسيكي عبر المحرك الشبكي العلوي</span>
+        <span v-else>الإدخال السطري المباشر وقراءة الباركود لجرد المخزون السريع</span>
+      </div>
+    </div>
+
+    <!-- رسائل التحقق العامة -->
+    <p
+      v-if="getValidationError('items')"
+      class="p-2.5 bg-danger/10 text-danger rounded-lg text-xs font-bold border border-danger/30 shadow-sm"
+    >
+      {{ getValidationError('items') }}
+    </p>
+
+    <!-- ========================================================================= -->
+    <!-- الوضع الأول: نمط البحث الكلاسيكي -->
+    <!-- ========================================================================= -->
+    <template v-if="searchMode === 'classic'">
+      <div
+        class="w-full text-xs bg-primary p-1 rounded-xl shadow-md shadow-primary/20 border border-primary transition-all duration-200"
+      >
+        <SmartSearchGrid
+          ref="searchGridRef"
+          :data="searchableItems"
+          :columns="[
+            { key: 'id_display', label: 'رقم الصنف', class: 'text-right' },
+            { key: 'name', label: 'اسم الصنف التجاري المعتمد', class: 'text-right font-bold' },
+            { key: 'price_display', label: 'السعر الافتراضي', class: 'text-center' },
+            { key: 'stock_display', label: 'الكمية المتاحة حالياً', class: 'text-center' },
+          ]"
+          :search-keys="['id', 'name', 'code', 'all_barcodes']"
+          placeholder="اكتب اسم المنتج أو رقم الصنف لمزامنة تسوية المخزون اللحظية..."
+          @select="onClassicItemSelected"
+        />
+      </div>
+
+      <InvoiceDetailTable
+        :items="items"
+        :schema="visibleTableSchema"
+        @remove-row="removeRow"
+        @add-row-request="triggerAddNewEmptyLine"
+      >
+        <template #cell-item_unit_id="{ row, index }">
+          <div class="flex flex-col w-full">
+            <select
+              v-model="row.item_unit_id"
+              @change="syncUnitCostAndFields(row)"
+              :disabled="!row.available_units || row.available_units.length === 0"
+              class="w-full p-1 bg-transparent text-text-primary border border-transparent hover:border-surface-border focus:border-primary focus:bg-surface-ground rounded-md text-xs font-bold outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed text-right appearance-none"
+            >
+              <option value="" class="bg-surface-section text-text-muted">اختر الوحدة...</option>
+              <option
+                v-for="u in row.available_units"
+                :key="u.id"
+                :value="u.id"
+                class="bg-surface-section text-text-primary"
+              >
+                {{ u.unit_name || u.unit?.name || 'وحدة مجهولة' }}
+              </option>
+            </select>
+            <p
+              v-if="getValidationError(`items.${index}.item_unit_id`)"
+              class="text-danger text-[9px] font-bold mt-0.5"
+            >
+              الوحدة مطلوبة للسطر
+            </p>
+          </div>
+        </template>
+
+        <template #cell-quantity_difference="{ row }">
+          <div class="w-full text-center font-mono font-black text-xs">
+            <span v-if="row.quantity_difference > 0" class="text-success">
+              +{{ formatSmartNumber(row.quantity_difference) }} (فائض)
+            </span>
+            <span v-else-if="row.quantity_difference < 0" class="text-danger">
+              {{ formatSmartNumber(row.quantity_difference) }} (عجز)
+            </span>
+            <span v-else class="text-text-muted">0.00</span>
+          </div>
+        </template>
+      </InvoiceDetailTable>
+    </template>
+
+    <!-- ========================================================================= -->
+    <!-- الوضع الثاني: نمط البحث الحديث (إدخال سطري + مقترحات طافية) -->
+    <!-- ========================================================================= -->
+    <template v-else>
+      <div
+        class="overflow-x-auto rounded-xl border border-surface-border bg-surface-section shadow-sm"
+      >
+        <table class="w-full border-collapse text-right text-xs">
+          <thead>
+            <tr
+              class="border-b border-surface-border bg-surface-ground/70 text-text-secondary font-black select-none h-11"
+            >
+              <th class="p-3 w-12 text-center">#</th>
+              <th class="p-3 min-w-[260px]">بيان الصنف أو مسح الباركود</th>
+              <th class="p-3 min-w-[130px] w-36">وحدة الجرد</th>
+              <th class="p-3 min-w-[110px] w-28 text-center">الكمية الدفترية</th>
+              <th class="p-3 min-w-[120px] w-32 text-center">الكمية الفعلية</th>
+              <th class="p-3 min-w-[140px] w-36 text-center">الفارق الجردي</th>
+              <th class="p-3 min-w-[110px] w-28 text-center">تكلفة الوحدة</th>
+              <th class="p-3 w-12 text-center">إجراء</th>
+            </tr>
+          </thead>
+
+          <tbody class="divide-y divide-surface-border/60">
+            <tr
+              v-for="(row, index) in items"
+              :key="index"
+              class="transition-all duration-300 hover:bg-surface-ground/40 h-14"
+              :class="{
+                'animate-flash-merge bg-primary/15 ring-2 ring-primary/50 ring-inset':
+                  row._flashing,
+              }"
+            >
+              <!-- 1. التسلسل والشارة -->
+              <td class="p-2.5 text-center font-mono align-middle">
+                <div class="flex items-center justify-center gap-1">
+                  <span class="font-bold text-xs text-text-muted">{{ index + 1 }}</span>
+                  <span
+                    v-if="row.item_id"
+                    class="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold bg-primary/10 text-primary border border-primary/20 whitespace-nowrap"
+                  >
+                    PRD-{{ row.item_id }}
+                  </span>
+                  <span
+                    v-else
+                    class="text-[9px] px-1.5 py-0.5 rounded font-sans font-bold bg-warning/10 text-warning border border-warning/20 whitespace-nowrap"
+                  >
+                    جديد
+                  </span>
+                </div>
+              </td>
+
+              <!-- 2. بيان الصنف ومسح الباركود المباشر -->
+              <td class="p-2.5 align-middle">
+                <div class="relative w-full h-9 flex items-center">
+                  <input
+                    :ref="(el) => setCellRef(el, index, 'name')"
+                    type="text"
+                    v-model="row.item_name"
+                    @focus="onNameInputFocus(index, $event)"
+                    @input="onItemNameInput(row, index, $event)"
+                    @blur="closeSearchDropdownDelayed"
+                    @keydown="handleModernNameKeydown($event, row, index)"
+                    placeholder="امسح الباركود أو اكتب اسم الصنف..."
+                    class="w-full h-9 px-3 bg-surface-ground border border-surface-border hover:border-primary/60 focus:border-primary rounded-lg text-text-primary text-xs font-semibold outline-none focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-text-muted"
+                  />
+                </div>
+
+                <p
+                  v-if="getValidationError(`items.${index}.item_id`)"
+                  class="text-danger text-[10px] font-bold mt-0.5 pr-1"
+                >
+                  {{ getValidationError(`items.${index}.item_id`) }}
+                </p>
+              </td>
+
+              <!-- 3. وحدة الجرد -->
+              <td class="p-2.5 align-middle">
+                <div class="relative w-full h-9 flex items-center">
+                  <select
+                    :ref="(el) => setCellRef(el, index, 'unit')"
+                    v-model="row.item_unit_id"
+                    @focus="handleFieldFocus($event)"
+                    @change="onModernUnitSelectChange(row)"
+                    @keydown="handleModernGenericKeydown($event, row, index, 'unit')"
+                    :disabled="!row.available_units || row.available_units.length === 0"
+                    class="w-full h-9 pr-2.5 pl-6 bg-surface-ground border border-surface-border hover:border-primary/60 focus:border-primary rounded-lg text-text-primary text-xs font-bold outline-none appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  >
+                    <option value="" class="bg-surface-section text-text-muted">
+                      اختر الوحدة...
+                    </option>
+                    <option
+                      v-for="u in row.available_units"
+                      :key="u.id"
+                      :value="u.id"
+                      class="bg-surface-section text-text-primary"
+                    >
+                      {{ u.unit_name || u.unit?.name || 'وحدة' }}
+                    </option>
+                  </select>
+                  <span class="absolute left-2.5 text-text-muted pointer-events-none text-[9px]"
+                    >▼</span
+                  >
+                </div>
+
+                <p
+                  v-if="getValidationError(`items.${index}.item_unit_id`)"
+                  class="text-danger text-[10px] font-bold mt-0.5 pr-1"
+                >
+                  الوحدة مطلوبة
+                </p>
+              </td>
+
+              <!-- 4. الكمية الدفترية -->
+              <td class="p-2.5 text-center align-middle select-none">
+                <div class="h-9 flex items-center justify-center">
+                  <span
+                    class="inline-block px-2.5 py-1 rounded-lg font-mono font-bold text-xs bg-surface-ground text-text-secondary border border-surface-border min-w-[70px]"
+                  >
+                    {{ formatSmartNumber(row.book_quantity) }}
+                  </span>
+                </div>
+              </td>
+
+              <!-- 5. الكمية الفعلية الجردية -->
+              <td class="p-2.5 align-middle">
+                <div class="h-9 flex items-center justify-center">
+                  <input
+                    :ref="(el) => setCellRef(el, index, 'qty')"
+                    type="text"
+                    inputmode="decimal"
+                    :value="getQtyDisplayValue(row, index)"
+                    @focus="onModernQtyFocus(index, $event)"
+                    @blur="activeQtyIndex = null"
+                    @input="onModernQuantityChange(row, $event)"
+                    @keydown="handleModernGenericKeydown($event, row, index, 'qty')"
+                    placeholder="0"
+                    class="w-full h-9 px-2 text-center font-mono font-black text-xs bg-surface-ground border border-surface-border hover:border-primary/60 focus:border-primary rounded-lg text-text-primary outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+                  />
+                </div>
+
+                <p
+                  v-if="getValidationError(`items.${index}.physical_quantity`)"
+                  class="text-danger text-[10px] font-bold mt-0.5 text-center"
+                >
+                  {{ getValidationError(`items.${index}.physical_quantity`) }}
+                </p>
+              </td>
+
+              <!-- 6. الفارق الجردي (فائض / عجز) -->
+              <td class="p-2.5 text-center align-middle select-none">
+                <div class="h-9 flex items-center justify-center">
+                  <span
+                    v-if="row.quantity_difference > 0"
+                    class="inline-flex items-center justify-center px-2 py-1 rounded-lg font-mono font-bold text-xs bg-success/10 text-success border border-success/30 min-w-[80px]"
+                  >
+                    +{{ formatSmartNumber(row.quantity_difference) }} (فائض)
+                  </span>
+                  <span
+                    v-else-if="row.quantity_difference < 0"
+                    class="inline-flex items-center justify-center px-2 py-1 rounded-lg font-mono font-bold text-xs bg-danger/10 text-danger border border-danger/30 min-w-[80px]"
+                  >
+                    {{ formatSmartNumber(row.quantity_difference) }} (عجز)
+                  </span>
+                  <span
+                    v-else
+                    class="inline-flex items-center justify-center px-2 py-1 rounded-lg font-mono font-bold text-xs bg-surface-ground text-text-muted border border-surface-border min-w-[80px]"
+                  >
+                    0.00
+                  </span>
+                </div>
+              </td>
+
+              <!-- 7. تكلفة الوحدة -->
+              <td class="p-2.5 text-center align-middle select-none">
+                <div class="h-9 flex items-center justify-center">
+                  <span class="font-mono font-bold text-xs text-text-secondary">
+                    {{ formatSmartNumber(row.unit_cost) }}
+                  </span>
+                </div>
+              </td>
+
+              <!-- 8. زر الحذف -->
+              <td class="p-2.5 text-center align-middle">
+                <div class="h-9 flex items-center justify-center">
+                  <button
+                    type="button"
+                    tabindex="-1"
+                    @click="handleRemoveRowWithFocus(index)"
+                    class="p-1.5 text-text-muted hover:text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
+                    title="حذف هذا السطر (Alt + Delete)"
+                  >
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- الحالة الافتراضية إذا فرغ الجدول -->
+            <tr v-if="items.length === 0">
+              <td colspan="8" class="py-10 text-center text-text-muted">
+                لم تسجل أي أصناف جردية بعد. انقر على الزر أدناه لإضافة سطر فحص جديد.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- شريط الإضافة السريع ومؤشر عدد البنود للوضع الحديث -->
+      <div class="flex items-center justify-between pt-1">
+        <button
+          type="button"
+          tabindex="-1"
+          @click="handleAddNewLineWithFocus"
+          class="h-9 px-4 bg-surface-ground hover:bg-surface-section text-primary border border-primary/40 hover:border-primary text-xs font-bold rounded-xl transition-all flex items-center gap-2 active:scale-95 shadow-sm cursor-pointer"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          <span>+ إضافة سطر صنف جديد (Ctrl + Enter)</span>
+        </button>
+
+        <span class="text-xs text-text-secondary font-mono">
+          إجمالي الأصناف الجردية:
+          <strong class="text-text-primary">{{ items.filter((r) => r.item_id).length }}</strong>
+        </span>
+      </div>
+
+      <!-- قائمة المقترحات الطافية الذكية عبر Teleport للوضع الحديث -->
+      <Teleport to="body">
+        <div
+          v-if="
+            activeDropdownIndex !== null && items[activeDropdownIndex] && searchResults.length > 0
+          "
+          :style="dropdownStyle"
+          class="fixed bg-surface-section border border-surface-border rounded-xl shadow-2xl z-[9999] max-h-64 overflow-y-auto divide-y divide-surface-border/60 text-right font-sans transition-all"
+          dir="rtl"
+        >
+          <div
+            v-for="(product, pIndex) in searchResults"
+            :key="product.id"
+            :ref="(el) => setDropdownItemRef(el, pIndex)"
+            @mousedown.prevent="
+              onSelectModernProduct(items[activeDropdownIndex], product, activeDropdownIndex)
+            "
+            @mouseenter="highlightedProductIndex = pIndex"
+            class="p-3 cursor-pointer flex items-center justify-between transition-colors"
+            :class="
+              highlightedProductIndex === pIndex
+                ? 'bg-primary/10 border-r-4 border-primary'
+                : 'hover:bg-surface-ground'
+            "
+          >
+            <div class="flex flex-col gap-1 pr-1">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-bold text-text-primary">{{ product.name }}</span>
+                <span
+                  v-if="product.matched_barcode"
+                  class="text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 rounded font-mono font-bold border border-primary/25"
+                >
+                  باركود: {{ product.matched_barcode }}
+                </span>
+              </div>
+
+              <div class="flex items-center gap-3 text-[10px] text-text-muted font-mono">
+                <span>كود: PRD-{{ product.id }}</span>
+                <span
+                  v-if="product.units?.[0]?.unit_name || product.units?.[0]?.unit?.name"
+                  class="font-sans text-text-secondary"
+                >
+                  الوحدة:
+                  {{ product.units[0].unit_name || product.units[0].unit?.name }}
+                </span>
+                <span class="font-sans font-bold text-info">
+                  الرصيد الدفتري:
+                  {{ formatSmartNumber(product.current_stock ?? product.stock ?? 0) }}
+                </span>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 pl-1">
+              <span
+                v-if="product.units?.[0]?.cost"
+                class="text-xs font-mono font-bold text-primary whitespace-nowrap"
+                title="تكلفة الوحدة"
+              >
+                ت: {{ formatSmartNumber(product.units[0].cost) }}
+              </span>
+              <span
+                class="text-[11px] font-bold px-2.5 py-1 rounded-lg transition-all whitespace-nowrap shadow-sm"
+                :class="
+                  highlightedProductIndex === pIndex
+                    ? 'bg-primary text-white'
+                    : 'text-primary bg-primary/10 border border-primary/20'
+                "
+              >
+                اختيار ↵
+              </span>
+            </div>
+          </div>
+        </div>
+      </Teleport>
+    </template>
+  </div>
+</template>
+
+<style scoped>
+@keyframes flashRow {
+  0% {
+    background-color: rgba(249, 115, 22, 0.35);
+  }
+  50% {
+    background-color: rgba(249, 115, 22, 0.15);
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.animate-flash-merge {
+  animation: flashRow 1.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+:deep(.smart-search-grid th.text-right),
+:deep(.smart-search-grid td.text-right),
+:deep(.smart-search-dropdown .text-right),
+:deep(table td:nth-child(2)) {
+  text-align: right !important;
+}
+</style>

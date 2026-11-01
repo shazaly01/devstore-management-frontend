@@ -29,6 +29,7 @@ export default {
         info: 'rgb(var(--color-info) / <alpha-value>)',
 
         'surface-ground': 'rgb(var(--color-surface-ground) / <alpha-value>)',
+        'surface-header': 'rgb(var(--color-surface-header) / <alpha-value>)',
         'surface-section': 'rgb(var(--color-surface-section) / <alpha-value>)',
         'surface-card': 'rgb(var(--color-surface-card) / <alpha-value>)',
         'surface-border': 'rgb(var(--color-surface-border) / <alpha-value>)',

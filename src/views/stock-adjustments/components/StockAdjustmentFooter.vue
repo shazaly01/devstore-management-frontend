@@ -13,19 +13,19 @@
         v-model="notesModel"
         rows="3"
         placeholder="سجل أسباب الفروقات الجردية أو تفاصيل تسوية المستودع الحالية..."
-        class="block w-full p-2.5 border border-surface-border rounded-lg bg-surface-ground text-text-primary placeholder:text-text-muted text-xs font-semibold focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+        class="block w-full p-2.5 border border-surface-border rounded-lg bg-surface-card text-text-primary placeholder:text-text-muted text-xs font-semibold focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none shadow-xs"
       ></textarea>
     </div>
 
     <!-- 2. تفاصيل الفحص وفروقات الكميات -->
     <div
-      class="p-3 bg-surface-ground rounded-xl border border-surface-border grid grid-cols-2 gap-3 md:col-span-1"
+      class="p-3 bg-surface-ground/60 rounded-xl border border-surface-border grid grid-cols-2 gap-3 md:col-span-1"
     >
       <div class="flex flex-col space-y-1 col-span-2">
         <div class="flex justify-between items-center text-xs font-semibold text-text-secondary">
           <span>إجمالي بنود الفحص الجردي:</span>
           <span
-            class="font-mono font-bold text-text-primary bg-surface-section px-2 py-0.5 rounded-lg border border-surface-border shadow-xs"
+            class="font-mono font-bold text-text-primary bg-surface-card px-2 py-0.5 rounded-lg border border-surface-border shadow-xs"
           >
             {{ totalItems }} أصناف
           </span>
@@ -51,9 +51,9 @@
       </div>
     </div>
 
-    <!-- 3. الأثر المالي الإجمالي -->
+    <!-- 3. الأثر المالي الإجمالي (مرآة لهوية الرأس كمرساة ختامية) -->
     <div
-      class="p-3 bg-surface-ground rounded-xl border border-surface-border space-y-2 md:col-span-1 font-semibold text-xs h-full flex flex-col justify-between"
+      class="p-3 bg-surface-header rounded-xl border border-surface-border border-t-4 border-t-primary space-y-2 md:col-span-1 font-semibold text-xs h-full flex flex-col justify-between shadow-xs transition-colors duration-200"
     >
       <div class="flex justify-between border-b border-surface-border/60 pb-1.5 text-danger">
         <span>خسائر عجز المخزون الحالية:</span>
@@ -105,7 +105,7 @@ const netImpactClass = computed(() => {
   } else if (netImpact.value < 0) {
     return 'bg-danger/10 border-danger/30 text-danger'
   }
-  return 'bg-surface-section border-surface-border text-text-primary'
+  return 'bg-surface-card border-surface-border text-text-primary'
 })
 
 const getFieldError = (path) => {

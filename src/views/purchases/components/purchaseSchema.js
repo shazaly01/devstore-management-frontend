@@ -1,3 +1,4 @@
+//src\views\purchases\components\purchaseSchema.js
 export const detailSchema = [
   {
     key: 'item_id_display',
