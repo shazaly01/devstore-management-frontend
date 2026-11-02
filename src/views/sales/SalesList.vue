@@ -1,4 +1,4 @@
-<!--src\views\sales\SalesList.vue--->
+<!--src/views/sales/SalesList.vue-->
 <template>
   <div class="space-y-6">
     <div class="flex justify-between items-center mb-6">
@@ -8,7 +8,19 @@
           استعراض، تتبع، وفلترة حركة المبيعات ومردودات المبيعات ومراقبة تأثيرها اللحظي على الأرصدة.
         </p>
       </div>
-      <AppButton type="button" @click="goToCreatePage"> إضافة فاتورة جديدة </AppButton>
+      <AppButton type="button" @click="goToCreatePage">
+        <span class="flex items-center gap-1.5">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 4v16m8-8H4"
+            />
+          </svg>
+          <span>إضافة فاتورة جديدة (POS)</span>
+        </span>
+      </AppButton>
     </div>
 
     <SaleFilters
@@ -36,6 +48,8 @@
       @row-clicked="goToEditPage"
       @print-sale="openPrintPage"
       @return-sale="goToReturnPage"
+      @view-pdf="openPdfPage"
+      @send-whatsapp="sendInvoiceToWhatsApp"
     />
 
     <AppConfirmDialog
@@ -48,7 +62,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useSaleStore } from '@/stores/saleStore'
 import { useStoreStore } from '@/stores/storeStore'
@@ -78,6 +92,9 @@ const fromDateFilter = ref('')
 const toDateFilter = ref('')
 let searchTimeout = null
 
+// قناة البث للمزامنة اللحظية مع شاشة الكاشير
+let posChannel = null
+
 const onSearch = () => {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
@@ -95,9 +112,14 @@ const handlePageChange = (page = 1) => {
     to_date: toDateFilter.value,
   }
 
-  saleStore.fetchSales(page, filters).catch(() => {
+  return saleStore.fetchSales(page, filters).catch(() => {
     toast.error('فشل النظام في جلب مستندات المبيعات المحدثة من الخادم.')
   })
+}
+
+// تحديث الجدول عند إعادة تركيز المستخدم على هذه النافذة بعد إغلاق الـ POS
+const onWindowFocus = () => {
+  handlePageChange(pagination.value?.current_page || 1)
 }
 
 onMounted(async () => {
@@ -107,23 +129,137 @@ onMounted(async () => {
     storeStore.fetchStores(1, { is_active: 1 }),
     customerStore.fetchCustomers(1, { is_active: 1 }),
   ])
+
+  // تفعيل الاستماع لقناة البث الحية لمزامنة المبيعات لحظة حفظها
+  if (typeof window !== 'undefined' && 'BroadcastChannel' in window) {
+    posChannel = new BroadcastChannel('panda_pos_sales_channel')
+    posChannel.onmessage = (event) => {
+      if (event.data?.type === 'SALE_SAVED') {
+        handlePageChange(1)
+      }
+    }
+  }
+
+  // تفعيل الاستماع لحدث تركيز النافذة
+  window.addEventListener('focus', onWindowFocus)
 })
 
+onBeforeUnmount(() => {
+  if (posChannel) {
+    posChannel.close()
+  }
+  window.removeEventListener('focus', onWindowFocus)
+})
+
+// فتح شاشة الكاشير في نافذة مستقلة خارج الإطار الحالي
 const goToCreatePage = () => {
-  router.push('/app/sales/create')
+  window.open('/pos', '_blank')
 }
 
 const goToEditPage = (sale) => {
   router.push(`/app/sales/${sale.id}/edit`)
 }
 
-// [التوجيه الذكي للمردود]: فتح صفحة الإنشاء مع حقن معرف الفاتورة المرجعية في الـ Query
+// التوجيه الذكي للمردود: فتح صفحة الإنشاء مع حقن معرف الفاتورة المرجعية في الـ Query
 const goToReturnPage = (sale) => {
   router.push(`/app/sales/create?return_from=${sale.id}`)
 }
 
 const openPrintPage = (sale) => {
   window.open(`/print/sales/${sale.id}`, '_blank')
+}
+
+// فتح ملف الـ PDF المولد والمخزن بالسيرفر مباشرة
+const openPdfPage = (sale) => {
+  if (sale.pdf_url) {
+    window.open(sale.pdf_url, '_blank')
+  } else {
+    toast.error('عفواً، رابط الفاتورة غير متوفر.')
+  }
+}
+
+/**
+ * فحص وتنسيق هاتف العميل لحظياً بصيغة الواتساب الدولية المعتمدة
+ */
+const parseSudanPhoneForWhatsApp = (rawPhone) => {
+  if (!rawPhone) return { valid: false, reason: 'empty' }
+
+  let clean = rawPhone.toString().replace(/[^0-9]/g, '')
+  if (!clean) return { valid: false, reason: 'empty' }
+
+  // إزالة الأصفار الدولية 00249
+  if (clean.startsWith('00249')) {
+    clean = clean.substring(2)
+  }
+
+  // إذا بدأ بـ 09 أو 01 واكتمل 10 أرقام (الصيغة المحلية المعتادة)
+  if ((clean.startsWith('09') || clean.startsWith('01')) && clean.length === 10) {
+    return { valid: true, phone: '249' + clean.substring(1) }
+  }
+
+  // إذا أدخل 9 أرقام تبدأ بـ 9 أو 1 مباشرة
+  if ((clean.startsWith('9') || clean.startsWith('1')) && clean.length === 9) {
+    return { valid: true, phone: '249' + clean }
+  }
+
+  // إذا كان الرقم مسجلاً بالمفتاح الدولي 249 ومكون من 12 رقماً
+  if (
+    clean.startsWith('249') &&
+    clean.length === 12 &&
+    (clean.startsWith('2499') || clean.startsWith('2491'))
+  ) {
+    return { valid: true, phone: clean }
+  }
+
+  // دعم عام لأي رقم دولي مكتمل بدون أصفار في البداية (بين 10 إلى 15 رقماً)
+  if (clean.length >= 10 && clean.length <= 15 && !clean.startsWith('0')) {
+    return { valid: true, phone: clean }
+  }
+
+  return { valid: false, reason: 'invalid_format' }
+}
+
+/**
+ * إرسال الفاتورة عبر واتساب مباشرة دون شاشات وسيطة مع فحص الهاتف
+ */
+const sendInvoiceToWhatsApp = (sale) => {
+  if (!sale.pdf_url) {
+    toast.error('عفواً، رابط الفاتورة غير متوفر.')
+    return
+  }
+
+  const rawPhone = sale.customer_phone || sale.customer?.phone
+
+  if (!rawPhone || !rawPhone.toString().trim()) {
+    toast.warning('عفواً، لا يوجد رقم هاتف مسجل لهذا العميل لإرسال الفاتورة عبر واتساب.')
+    return
+  }
+
+  const phoneResult = parseSudanPhoneForWhatsApp(rawPhone)
+
+  if (!phoneResult.valid) {
+    toast.error(
+      `رقم الهاتف المسجل للعميل (${rawPhone}) غير صحيح، يجب أن يتكون من 10 أرقام (مثال: 0912345678 أو 0123456789).`,
+    )
+    return
+  }
+
+  const customerName = sale.customer_name || sale.customer_name_text || 'عميلنا العزيز'
+  const invoiceNumber = sale.invoice_number || `#${sale.id}`
+  const message = `مرحباً ${customerName}،\nشكراً لتعاملكم معنا. تفضل رابط استعراض وتحميل الفاتورة رقم (${invoiceNumber}):\n${sale.pdf_url}`
+  const encodedText = encodeURIComponent(message)
+
+  // كشف نوع الجهاز: هل هو هاتف محمول أم كمبيوتر مكتبي؟
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+
+  let targetUrl = ''
+  if (isMobile) {
+    targetUrl = `whatsapp://send?phone=${phoneResult.phone}&text=${encodedText}`
+  } else {
+    targetUrl = `https://web.whatsapp.com/send?phone=${phoneResult.phone}&text=${encodedText}`
+  }
+
+  window.open(targetUrl, '_blank')
 }
 
 const isDeleteDialogOpen = ref(false)

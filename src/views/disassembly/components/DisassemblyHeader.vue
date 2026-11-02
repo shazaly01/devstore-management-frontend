@@ -1,12 +1,12 @@
 <!--src/views/disassembly/components/DisassemblyHeader.vue-->
 <template>
   <div
-    class="bg-surface-section rounded-xl border border-surface-border shadow-sm text-right font-sans overflow-hidden transition-colors duration-200"
+    class="bg-surface-header rounded-xl border border-surface-border border-t-4 border-t-primary shadow-sm text-right font-sans overflow-hidden transition-colors duration-200"
     dir="rtl"
   >
-    <!-- 1. الصف العلوي: المستودع وتاريخ التشغيل (مفصول بشريط متميز من ألوان النظام) -->
+    <!-- 1. الصف العلوي: المستودع وتاريخ التشغيل -->
     <div
-      class="px-4 py-2.5 bg-surface-ground/70 border-b border-surface-border flex flex-wrap items-center justify-between gap-3"
+      class="px-4 py-2.5 bg-surface-header border-b border-surface-border flex flex-wrap items-center justify-between gap-3"
     >
       <div class="flex items-center gap-2">
         <span class="w-2 h-2 rounded-full bg-primary"></span>
@@ -19,7 +19,7 @@
           <label class="text-[11px] font-bold text-text-secondary shrink-0">المستودع:</label>
           <div class="w-56 flex flex-col">
             <div
-              class="relative w-full h-8 bg-surface-section border border-surface-border rounded-lg flex items-center transition-all hover:border-primary/60 focus-within:border-primary shadow-xs"
+              class="relative w-full h-8 bg-surface-card border border-surface-border rounded-lg flex items-center transition-all hover:border-primary/60 focus-within:border-primary shadow-xs"
             >
               <span class="absolute right-2 text-text-muted pointer-events-none z-10">
                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -51,7 +51,7 @@
           <label class="text-[11px] font-bold text-text-secondary shrink-0">التاريخ:</label>
           <div class="w-36 flex flex-col">
             <div
-              class="relative w-full h-8 bg-surface-section border border-surface-border rounded-lg flex items-center transition-all hover:border-primary/60 focus-within:border-primary shadow-xs"
+              class="relative w-full h-8 bg-surface-card border border-surface-border rounded-lg flex items-center transition-all hover:border-primary/60 focus-within:border-primary shadow-xs"
             >
               <input
                 type="date"
@@ -82,8 +82,8 @@
       </div>
     </div>
 
-    <!-- 2. الصف السفلي: بيانات الصنف الخام والميزان المالي (مستقلة ومتوازنة المقاسات) -->
-    <div class="p-3.5 bg-surface-section">
+    <!-- 2. الصف السفلي: بيانات الصنف الخام والميزان المالي -->
+    <div class="p-3.5 bg-surface-header">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-end">
         <!-- 1. الصنف الخام المصروف (4 أعمدة) -->
         <div class="lg:col-span-4 flex flex-col space-y-1">
@@ -92,7 +92,7 @@
           </label>
           <div
             ref="searchInputContainerRef"
-            class="relative w-full h-9 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-xs"
+            class="relative w-full h-9 bg-surface-card border border-surface-border rounded-lg flex items-center transition-all hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-xs"
           >
             <span class="absolute right-2.5 text-primary pointer-events-none z-10">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,7 +136,7 @@
         <div class="lg:col-span-2 flex flex-col space-y-1">
           <label class="text-[11px] font-bold text-text-secondary pr-1">وحدة الصرف</label>
           <div
-            class="relative w-full h-9 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-xs"
+            class="relative w-full h-9 bg-surface-card border border-surface-border rounded-lg flex items-center transition-all hover:border-primary/60 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20 shadow-xs"
           >
             <select
               v-model="formData.source_item_unit_id"
@@ -178,7 +178,7 @@
           </div>
 
           <div
-            class="relative w-full h-9 bg-surface-ground border rounded-lg flex items-center transition-all shadow-xs"
+            class="relative w-full h-9 bg-surface-card border rounded-lg flex items-center transition-all shadow-xs"
             :class="
               isOverStock
                 ? 'border-danger/60 focus-within:border-danger focus-within:ring-2 focus-within:ring-danger/20'
@@ -226,8 +226,8 @@
             class="relative w-full h-9 rounded-lg flex items-center transition-all shadow-xs"
             :class="
               isCostUnlocked
-                ? 'bg-surface-ground border border-warning/60 focus-within:border-warning focus-within:ring-2 focus-within:ring-warning/20'
-                : 'bg-surface-ground/60 border border-surface-border/60'
+                ? 'bg-surface-card border border-warning/60 focus-within:border-warning focus-within:ring-2 focus-within:ring-warning/20'
+                : 'bg-surface-card/60 border border-surface-border/60'
             "
           >
             <input

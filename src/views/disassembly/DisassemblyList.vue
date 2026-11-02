@@ -4,7 +4,7 @@
     <!-- ترويسة الصفحة وزر الإضافة -->
     <div class="flex justify-between items-center mb-6">
       <div class="text-right" dir="rtl">
-        <h1 class="text-2xl font-black text-text-primary">إدارة أذونات التفكيك والتجزئة</h1>
+        <h1 class="text-2xl font-black text-text-primary">إدارة أذونات التجزئة</h1>
         <p class="text-xs text-text-secondary mt-1">
           استعراض، تتبع، وفلترة حركة تفكيك وتقطيع الدواجن ومراقبة تأثيرها اللحظي على المخازن وتوزيع
           التكاليف.

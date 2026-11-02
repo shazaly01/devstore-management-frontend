@@ -5,89 +5,96 @@ import {
   BanknotesIcon,
   DocumentChartBarIcon,
   Cog6ToothIcon,
-  WrenchScrewdriverIcon,
   DocumentTextIcon,
   ShoppingCartIcon,
   ShoppingBagIcon,
   ReceiptRefundIcon,
   AdjustmentsHorizontalIcon,
-  CalculatorIcon, // أيقونة محرك وسياسات التسعير
-  ScissorsIcon, // أيقونة عمليات التفكيك والتجزئة والتقطيع
+  ScissorsIcon,
 } from '@heroicons/vue/24/outline'
 
 /**
- * إعدادات القائمة الجانبية للتطبيق (مجرّدة وقابلة لإعادة الاستخدام)
- * الهيكل الحالي مصمم لتقديم العمليات اليومية أولاً، وتأخير القوائم المنسدلة لأسفل الواجهة.
+ * إعدادات القائمة الجانبية للنظام
+ * - تم تقسيم القائمة إلى فئات هيكلية واضحة (Headers)
+ * - إسناد خاصية theme لكل مجموعة للفرز البصري الدلالي
  */
 export const navigationConfig = [
   // ==========================================================================
-  // الكتلة الأولى: الشاشات والعمليات المباشرة والسريعة (Top - Flat Root Items)
+  // الكتلة الأولى: العمليات والمدخلات اليومية (Daily Operations)
   // ==========================================================================
-
+  {
+    type: 'header',
+    name: 'العمليات والمدخلات اليومية',
+  },
   {
     name: 'لوحة التحكم',
     routeName: 'Dashboard',
     icon: HomeIcon,
     permission: 'dashboard.view',
+    theme: 'primary',
   },
   {
     name: 'فواتير المبيعات',
     routeName: 'SalesList',
     icon: ShoppingCartIcon,
     permission: 'sale.view',
+    theme: 'primary',
   },
   {
     name: 'فواتير المشتريات',
     routeName: 'PurchasesList',
     icon: ShoppingBagIcon,
     permission: 'purchase.view',
+    theme: 'primary',
   },
   {
     name: 'أذونات التفكيك والتجزئة',
     routeName: 'DisassemblyList',
     icon: ScissorsIcon,
     permission: 'disassembly.view',
+    theme: 'primary',
   },
   {
     name: 'سندات الصرف',
     routeName: 'PaymentVouchersList',
     icon: ReceiptRefundIcon,
     permission: 'voucher.view',
+    theme: 'primary',
   },
   {
     name: 'سندات القبض',
     routeName: 'ReceiptVouchersList',
     icon: ReceiptRefundIcon,
     permission: 'voucher.view',
+    theme: 'primary',
   },
   {
     name: 'التسويات الجردية',
     routeName: 'StockAdjustmentsList',
     icon: AdjustmentsHorizontalIcon,
     permission: 'stock_adjustment.view',
+    theme: 'primary',
   },
   {
     name: 'كشف الحساب المساعد',
     routeName: 'SubLedgerReport',
     icon: DocumentTextIcon,
-    permission: 'report.financial',
+    permission: 'report.sub_ledger',
+    theme: 'primary',
   },
-  // {
-  //   name: 'ورشة التنفيذ',
-  //   routeName: 'MaterialConsumptionList',
-  //   icon: WrenchScrewdriverIcon,
-  //   permission: 'sale.swap_raw_materials',
-  // },
 
   // ==========================================================================
-  // الكتلة الثانية: المجموعات المنسدلة للتهيئة والتقارير (Bottom - Dropdown Menus)
+  // الكتلة الثانية: التهيئة والبيانات الأساسية (Master Data)
   // ==========================================================================
-
-  // 1. موديول البيانات الأساسية والتهيئة
+  {
+    type: 'header',
+    name: 'التهيئة والمحاسبة',
+  },
   {
     name: 'البيانات الأساسية',
     icon: Squares2X2Icon,
     permission: 'item.view',
+    theme: 'sky',
     children: [
       {
         name: 'مجموعات الأصناف',
@@ -114,7 +121,6 @@ export const navigationConfig = [
         routeName: 'ItemsList',
         permission: 'item.view',
       },
-
       {
         name: 'إدارة العملاء',
         routeName: 'CustomersList',
@@ -127,12 +133,11 @@ export const navigationConfig = [
       },
     ],
   },
-
-  // 2. موديول الحسابات والمالية
   {
     name: 'المالية والمحاسبة',
     icon: BanknotesIcon,
     permission: 'account.view',
+    theme: 'emerald',
     children: [
       {
         name: 'الخزائن المالية',
@@ -152,13 +157,19 @@ export const navigationConfig = [
     ],
   },
 
-  // 3. قسم التقارير الموحد والمبوب داخلياً بفواصل صلبة
+  // ==========================================================================
+  // الكتلة الثالثة: التقارير والرقابة (Reports & BI)
+  // ==========================================================================
+  {
+    type: 'header',
+    name: 'المخرجات والتقارير',
+  },
   {
     name: 'قسم التقارير',
     icon: DocumentChartBarIcon,
     permission: 'report.view',
+    theme: 'indigo',
     children: [
-      // عنوان فرعي صلب للمجموعة الأولى
       {
         type: 'header',
         name: 'تقارير المخازن والمستودعات',
@@ -183,8 +194,6 @@ export const navigationConfig = [
         routeName: 'AdjustmentsSummaryReport',
         permission: 'report.inventory',
       },
-
-      // عنوان فرعي صلب ومستقل للمجموعة الثانية
       {
         type: 'header',
         name: 'التقارير المالية والختامية',
@@ -207,11 +216,18 @@ export const navigationConfig = [
     ],
   },
 
-  // 4. موديول الإدارة العامة والنظام
+  // ==========================================================================
+  // الكتلة الرابعة: الإدارة العامة والنظام (Administration)
+  // ==========================================================================
+  {
+    type: 'header',
+    name: 'إدارة النظام',
+  },
   {
     name: 'الإدارة العامة',
     icon: Cog6ToothIcon,
     permission: 'user.view',
+    theme: 'slate',
     children: [
       {
         name: 'إدارة المستخدمين',

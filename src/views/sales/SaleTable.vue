@@ -82,6 +82,36 @@
 
       <template #cell-actions="{ item }">
         <div class="flex items-center justify-end space-x-1 space-x-reverse" @click.stop>
+          <!-- زر إرسال الفاتورة عبر واتساب -->
+          <button
+            @click="$emit('send-whatsapp', item)"
+            class="p-1.5 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+            title="مشاركة الفاتورة للعميل عبر واتساب"
+          >
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+              <path
+                d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.669-.699c.969.54 1.771.82 2.791.82 3.181 0 5.767-2.586 5.768-5.766 0-3.18-2.586-5.766-5.768-5.766zm9.969 5.766c0 5.518-4.482 10-10 10-1.705 0-3.32-.428-4.743-1.185l-5.257 1.376 1.4-5.122c-.832-1.482-1.3-3.195-1.3-5.011 0-5.518 4.482-10 10-10 5.518 0 10 4.482 10 10z"
+              />
+            </svg>
+          </button>
+
+          <!-- زر استعراض وتحميل ملف الـ PDF المباشر -->
+          <button
+            @click="$emit('view-pdf', item)"
+            class="p-1.5 text-rose-600 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+            title="معاينة وتحميل ملف PDF الفاتورة"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+              />
+            </svg>
+          </button>
+
+          <!-- زر مردود المبيعات -->
           <button
             v-if="item.invoice_type === 'sale'"
             @click="$emit('return-sale', item)"
@@ -98,6 +128,7 @@
             </svg>
           </button>
 
+          <!-- زر الطباعة العادي -->
           <button
             @click="$emit('print-sale', item)"
             class="p-1.5 text-info hover:bg-info/10 rounded-lg transition-colors cursor-pointer"
@@ -113,6 +144,7 @@
             </svg>
           </button>
 
+          <!-- زر التعديل -->
           <button
             @click="$emit('edit-sale', item)"
             class="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors cursor-pointer"
@@ -128,6 +160,7 @@
             </svg>
           </button>
 
+          <!-- زر الحذف -->
           <button
             @click="$emit('delete-sale', item)"
             class="p-1.5 text-danger hover:bg-danger/10 rounded-lg transition-colors cursor-pointer"
@@ -164,7 +197,16 @@ defineProps({
   loading: { type: Boolean, default: false },
 })
 
-defineEmits(['page-change', 'edit-sale', 'delete-sale', 'row-clicked', 'print-sale', 'return-sale'])
+defineEmits([
+  'page-change',
+  'edit-sale',
+  'delete-sale',
+  'row-clicked',
+  'print-sale',
+  'return-sale',
+  'view-pdf',
+  'send-whatsapp',
+])
 
 const tableHeaders = computed(() => [
   { key: 'id', label: 'المعرف المالي' },
@@ -173,7 +215,7 @@ const tableHeaders = computed(() => [
   { key: 'sale_type', label: 'نوع البيع', class: 'text-center' },
   { key: 'payment_type', label: 'طريقة الدفع' },
   { key: 'financials', label: 'الحساب المالي والتدقيق' },
-  { key: 'actions', label: 'إجراءات تخصصية', class: 'text-left min-w-[110px]' },
+  { key: 'actions', label: 'إجراءات تخصصية', class: 'text-left min-w-[150px]' },
 ])
 
 const getSalePaymentParts = (item) => {
@@ -196,7 +238,6 @@ const getSalePaymentParts = (item) => {
         ? Number(item.remaining_amount) || 0
         : Math.max(0, grandTotal - cashAmount - bankAmount)
   } else {
-    // توافق احتياطي مع استجابة API القديمة التي لا تتضمن حقول المبالغ المفصلة.
     cashAmount = item.payment_type === 'cash' ? grandTotal : 0
     bankAmount = item.payment_type === 'card' ? grandTotal : 0
     remainingAmount =

@@ -280,7 +280,7 @@ const onUnitPriceEnter = () => {
 }
 
 // ----------------------------------------------------
-// 3. دوال وإجراءات الوضع الحديث (البحث السطري المباشر)
+// 3. دوال وإجراءات الوضع الحديث (البحث السطري والباركود السريع)
 // ----------------------------------------------------
 const cellRefs = ref({})
 const dropdownItemRefs = ref([])
@@ -289,6 +289,22 @@ const activeTargetInput = ref(null)
 
 const activePriceIndex = ref(null)
 const activeQtyIndex = ref(null)
+const activeMultiplier = ref(1)
+
+/**
+ * تحليل مُعامل الكمية والضرب السريع (مثال: "5*باركود" أو "10*اسم الصنف")
+ */
+const parseMultiplierQuery = (input) => {
+  if (!input) return { multiplier: 1, cleanQuery: '' }
+  const match = input.trim().match(/^(\d+(\.\d+)?)\s*[*xX×]\s*(.*)$/)
+  if (match) {
+    return {
+      multiplier: parseFloat(match[1]) || 1,
+      cleanQuery: match[3]?.trim() || '',
+    }
+  }
+  return { multiplier: 1, cleanQuery: input.trim() }
+}
 
 const setCellRef = (el, rowIndex, colKey) => {
   if (!cellRefs.value[rowIndex]) {
@@ -507,7 +523,10 @@ const scrollHighlightedDropdownItemIntoView = () => {
 }
 
 const executeFastSearch = (queryText, rowIndex, immediate = false) => {
-  const clean = queryText ? queryText.trim().toLowerCase() : ''
+  const { multiplier, cleanQuery } = parseMultiplierQuery(queryText)
+  activeMultiplier.value = multiplier
+  const clean = cleanQuery ? cleanQuery.toLowerCase() : ''
+
   if (!clean) {
     searchResults.value = []
     return
@@ -529,8 +548,9 @@ const executeFastSearch = (queryText, rowIndex, immediate = false) => {
     if (results.length >= 10) break
   }
 
+  // في حالة المسح المباشر بالباركود وتطابق صنف وحيد
   if (immediate && results.length === 1) {
-    onSelectModernProduct(props.items[rowIndex], results[0], rowIndex)
+    onSelectModernProduct(props.items[rowIndex], results[0], rowIndex, multiplier)
     return
   }
 
@@ -570,11 +590,16 @@ const closeSearchDropdownDelayed = () => {
   }, 200)
 }
 
-const onSelectModernProduct = (row, product, index) => {
+/**
+ * تسكين الصنف: يدعم الكمية الممررة (أو معامل الضرب)، وإذا تكرر الصنف تزيد كميته السابقة فوراً
+ * وبعد التسكين يفتح سطراً جديداً ويوجه المؤشر إليه لمواصلة المسح السريع
+ */
+const onSelectModernProduct = async (row, product, index, initialQty = 1) => {
   if (!row || props.items[index] !== row) return
 
   const defaultUnit = product.units?.[0] || null
   const defaultUnitId = defaultUnit?.id || ''
+  const addQty = Number(initialQty) > 0 ? Number(initialQty) : 1
 
   // 1. فحص إذا كان الصنف مضافاً مسبقاً بنفس الوحدة في سطر آخر
   const existingIndex = props.items.findIndex(
@@ -582,9 +607,9 @@ const onSelectModernProduct = (row, product, index) => {
   )
 
   if (existingIndex !== -1) {
-    // زيادة كمية السطر المسبق بمقدار 1 ومزامنة الإجمالي
+    // زيادة كمية السطر المسبق بمقدار addQty ومزامنة الإجمالي
     const existingRow = props.items[existingIndex]
-    existingRow.quantity = (parseFloat(existingRow.quantity) || 0) + 1
+    existingRow.quantity = (parseFloat(existingRow.quantity) || 0) + addQty
     updateRowTotal(existingRow)
 
     // تشغيل وميض مرئي برتقالي لتمييز السطر
@@ -593,7 +618,7 @@ const onSelectModernProduct = (row, product, index) => {
       existingRow._flashing = false
     }, 1200)
 
-    // تصفير السطر الحالي ليبقى جاهزاً لقراءة الصنف التالي
+    // تصفير السطر الحالي ليبقى فارغاً وجاهزاً لقراءة الصنف التالي
     row.item_id = null
     row.item_id_display = ''
     row.item_name = ''
@@ -609,9 +634,10 @@ const onSelectModernProduct = (row, product, index) => {
     activeTargetInput.value = null
     searchResults.value = []
     dropdownItemRefs.value = []
+    activeMultiplier.value = 1
 
-    // التمرير السلس والتركيز المباشر على كمية السطر الذي زادت كميته
-    focusModernCell(existingIndex, 'qty', true)
+    // البقاء في خانة الباركود للسطر الحالي لمواصلة المسح
+    focusModernCell(index, 'name', true)
     return
   }
 
@@ -636,19 +662,17 @@ const onSelectModernProduct = (row, product, index) => {
     row.unit_price = Number(defaultUnit?.price) || 0
   }
 
-  if (!row.quantity || Number(row.quantity) <= 0) {
-    row.quantity = 1
-  }
-
+  row.quantity = addQty
   updateRowTotal(row)
 
   activeDropdownIndex.value = null
   activeTargetInput.value = null
   searchResults.value = []
   dropdownItemRefs.value = []
+  activeMultiplier.value = 1
 
-  // التمرير والتركيز على حقل الكمية بالسطر الجديد
-  focusModernCell(index, 'qty', true)
+  // الانتقال السلس والمباشر: فتح سطر جديد والتركيز على خانة الباركود فيه فوراً
+  await handleAddNewLineWithFocus()
 }
 
 const onModernUnitSelectChange = (row) => {
@@ -683,7 +707,7 @@ const handleModernNameKeydown = (event, row, index) => {
       event.preventDefault()
       const selected = searchResults.value[highlightedProductIndex.value]
       if (selected) {
-        onSelectModernProduct(row, selected, index)
+        onSelectModernProduct(row, selected, index, activeMultiplier.value)
       }
       return
     }
@@ -722,11 +746,16 @@ const handleModernNameKeydown = (event, row, index) => {
     return
   }
 
+  // عند الضغط على سهم لأعلى: إذا كان الحقل فارغاً، يقفز مباشرة لكمية السطر السابق لتعديلها فوراً
   if (event.key === 'ArrowUp') {
     if (index > 0) {
       event.preventDefault()
       activeDropdownIndex.value = null
-      focusModernCell(index - 1, 'name', true)
+      if (!row.item_name || row.item_name.trim() === '') {
+        focusModernCell(index - 1, 'qty', true)
+      } else {
+        focusModernCell(index - 1, 'name', true)
+      }
     }
     return
   }
@@ -777,9 +806,14 @@ const handleModernUnitKeydown = (event, row, index) => {
 const handleModernQtyKeydown = (event, row, index) => {
   if (checkModernShortcuts(event, index)) return
 
+  // عند تعديل الكمية والضغط على Enter، يعود المؤشر فوراً لخانة الباركود بالسطر التالي لمواصلة العمل
   if (event.key === 'Enter') {
     event.preventDefault()
-    focusModernCell(index, 'price', true)
+    if (index < props.items.length - 1) {
+      focusModernCell(index + 1, 'name', true)
+    } else {
+      handleAddNewLineWithFocus()
+    }
     return
   }
 
@@ -947,7 +981,9 @@ onBeforeUnmount(() => {
         <span v-if="searchMode === 'classic'"
           >البحث الكلاسيكي عبر المحرك الشبكي العلوي واختيار الصنف للأعلى</span
         >
-        <span v-else>الإدخال السطري المباشر وقراءة الباركود مع القائمة المقترحة السريعة</span>
+        <span v-else>
+          مسح باركود متتابع سريع (يدعم 5* للكمية، والسهم ↑ للقفز لكمية السطر السابق)
+        </span>
       </div>
     </div>
 
@@ -1069,7 +1105,7 @@ onBeforeUnmount(() => {
       </InvoiceDetailTable>
     </template>
 
-    <!-- الوضع الثاني: نمط البحث الحديث -->
+    <!-- الوضع الثاني: نمط البحث الحديث والمسح المباشر السريع -->
     <template v-else>
       <div
         class="overflow-x-auto rounded-xl border border-surface-border bg-surface-section shadow-sm"
@@ -1331,7 +1367,12 @@ onBeforeUnmount(() => {
             :key="product.id"
             :ref="(el) => setDropdownItemRef(el, pIndex)"
             @mousedown.prevent="
-              onSelectModernProduct(items[activeDropdownIndex], product, activeDropdownIndex)
+              onSelectModernProduct(
+                items[activeDropdownIndex],
+                product,
+                activeDropdownIndex,
+                activeMultiplier,
+              )
             "
             @mouseenter="highlightedProductIndex = pIndex"
             class="p-3 cursor-pointer flex items-center justify-between transition-colors"
@@ -1349,6 +1390,12 @@ onBeforeUnmount(() => {
                   class="text-[9px] bg-primary/15 text-primary px-1.5 py-0.5 rounded font-mono font-bold border border-primary/25"
                 >
                   باركود: {{ product.matched_barcode }}
+                </span>
+                <span
+                  v-if="activeMultiplier > 1"
+                  class="text-[9px] bg-warning/15 text-warning px-1.5 py-0.5 rounded font-mono font-black border border-warning/30"
+                >
+                  × {{ activeMultiplier }}
                 </span>
               </div>
 

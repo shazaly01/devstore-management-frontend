@@ -48,7 +48,7 @@
               min="0"
               v-model.number="wasteModel"
               @input="$emit('recalculate')"
-              class="w-full h-7 px-2 text-center font-mono font-bold text-xs bg-surface-ground border border-surface-border focus:border-danger rounded text-danger outline-none"
+              class="w-full h-7 px-2 text-center font-mono font-bold text-xs bg-surface-card border border-surface-border focus:border-danger rounded text-danger outline-none shadow-xs"
               placeholder="0.00"
             />
           </div>
@@ -75,9 +75,9 @@
       </div>
     </div>
 
-    <!-- 2. ميزان التكاليف (التدقيق المالي والمخزني) -->
+    <!-- 2. ميزان التكاليف (مرآة لهوية الرأس كمرساة ختامية) -->
     <div
-      class="p-4 bg-surface-section rounded-xl border border-surface-border shadow-sm flex flex-col justify-between space-y-3"
+      class="p-4 bg-surface-header rounded-xl border border-surface-border border-t-4 border-t-primary shadow-sm flex flex-col justify-between space-y-3 transition-colors duration-200"
     >
       <div class="space-y-2.5 text-xs font-semibold text-text-secondary">
         <div class="flex items-center justify-between border-b border-surface-border pb-2">
@@ -143,7 +143,7 @@
         v-model="notesModel"
         rows="4"
         placeholder="سجل أي ملاحظات خاصة بوردية التقطيع، أسباب زيادة الهالك، أو أرقام الباتشات..."
-        class="block w-full h-full min-h-[110px] p-3 border border-surface-border rounded-lg bg-surface-ground text-text-primary placeholder:text-text-muted text-xs font-semibold focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+        class="block w-full h-full min-h-[110px] p-3 border border-surface-border rounded-lg bg-surface-card text-text-primary placeholder:text-text-muted text-xs font-semibold focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none shadow-xs"
       ></textarea>
       <p v-if="getFieldError('notes')" class="text-danger text-[10px] font-bold mt-1">
         {{ getFieldError('notes') }}

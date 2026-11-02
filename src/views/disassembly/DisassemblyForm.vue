@@ -39,10 +39,10 @@ const {
       <div>
         <h1 class="text-base font-black text-text-primary flex items-center gap-2">
           <span class="inline-block w-1.5 h-3 bg-primary rounded-full"></span>
-          {{ isEdit ? 'تعديل إذن تفكيك وتجزئة' : 'إذن تفكيك وتجزئة دواجن جديد' }}
+          {{ isEdit ? 'تعديل إذن  التجزئة' : 'إذن تجزئة جديد' }}
         </h1>
         <p class="text-[11px] text-text-secondary mt-0.5">
-          صرف الدجاج الكامل الخام وتوليد الأجزاء الناتجة وتوزيع التكلفة بالأوزان والقيم البيعية
+          صرف المادة الكاملة خام وتوليد الأجزاء الناتجة منها وتوزيع التكلفة بالأوزان والقيم البيعية
           آلياً.
         </p>
       </div>

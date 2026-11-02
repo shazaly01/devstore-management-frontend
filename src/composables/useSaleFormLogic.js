@@ -1,5 +1,5 @@
-//src\composables\useSaleFormLogic.js
-import { ref, computed, onMounted, watch } from 'vue'
+// src/composables/useSaleFormLogic.js
+import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useSaleStore } from '@/stores/saleStore'
 import { useItemStore } from '@/stores/itemStore'
@@ -18,13 +18,26 @@ export function useSaleFormLogic() {
   const authStore = useAuthStore()
   const customerStore = useCustomerStore()
 
-  const isEdit = computed(() => !!route.params.id)
+  // تمييز ما إذا كانت الشاشة مفتوحة في وضع التعديل
+  const isEdit = computed(() => !isPos.value && !!route.params.id)
 
   // تحديد ما إذا كانت الشاشة مفتوحة لإنشاء مردود من فاتورة مباعة
-  const isReturnFromInvoice = computed(() => !!route.query.return_from)
+  const isReturnFromInvoice = computed(() => !isPos.value && !!route.query.return_from)
+
+  // تمييز وضع الكاشير ونقطة البيع المستقلة
+  const isPos = computed(() => route.path === '/pos' || !!route.meta.isPos)
 
   // بوابة التحكم الهندسية لحالة استعداد البيانات في دورة الحياة (Lifecycle Guard)
   const isFormLoaded = ref(false)
+
+  // إدارة وضع ملء الشاشة البرمجي للمتصفح (Fullscreen API)
+  const isFullscreen = ref(false)
+
+  // إنشاء قناة بث حية للمتصفح لمزامنة التحديثات اللحظية مع شاشة القائمة في الخلفية
+  const posChannel =
+    typeof window !== 'undefined' && 'BroadcastChannel' in window
+      ? new BroadcastChannel('panda_pos_sales_channel')
+      : null
 
   const form = ref({
     invoice_type: 'sale',
@@ -340,7 +353,114 @@ export function useSaleFormLogic() {
     return saleStore.validationErrors?.[path]?.[0] || null
   }
 
+  // دالة تحديد العميل الافتراضي (عام / مباشر)
+  const resolveDefaultCustomer = () => {
+    const defaultCust = customerStore.customers?.find((c) => {
+      const name = (c.name || c.display_label || '').trim()
+      return name.includes('عميل عام') || name.includes('عميل مباشر')
+    })
+    return defaultCust ? defaultCust.id : ''
+  }
+
+  // إعادة تعيين وتصفير الفاتورة تلقائياً للبدء الفوري بالفاتورة التالية في وضع الـ POS
+  const resetFormForNextSale = async () => {
+    // 1. تصفير عناصر الفاتورة
+    items.value = []
+
+    // 2. تصفير الحقول المالية مع الحفاظ التلقائي على المستودع والخزينة والبنك الافتراضيين
+    form.value.invoice_type = 'sale'
+    form.value.parent_id = null
+    form.value.store_id = authStore.user?.store_id || form.value.store_id || ''
+    form.value.treasury_id = authStore.user?.treasury_id || ''
+    form.value.bank_id = authStore.user?.bank_id || ''
+    form.value.cash_amount = 0
+    form.value.bank_amount = 0
+    form.value.payment_mode = 'bank'
+    form.value.payment_type = 'card'
+    form.value.discount_amount = 0
+    form.value.tax_amount = 0
+    form.value.customer_name_text = null
+    form.value.notes = ''
+    form.value.invoice_date = new Date().toISOString().substr(0, 10)
+
+    // 3. إعادة تعيين العميل الافتراضي
+    form.value.customer_id = resolveDefaultCustomer()
+
+    // 4. تحديث قائمة الأصناف للمستودع المعتمد للتأكد من جاهزية المخزون
+    if (form.value.store_id) {
+      await itemStore.fetchItems(1, { is_active: 1, store_id: form.value.store_id, all: true })
+    }
+
+    // 5. إذا كان النمط الحديث، يتم إنشاء سطر فارغ جاهز فوراً للإدخال
+    const searchMode = localStorage.getItem('panda_sales_search_mode') || 'classic'
+    if (searchMode === 'modern') {
+      triggerAddNewEmptyLine()
+    }
+
+    // 6. إطلاق حدث مخصص لإعادة تركيز مؤشر الكتابة فوراً في حقل قراءة الباركود
+    await nextTick()
+    window.dispatchEvent(new CustomEvent('pos:focus-barcode'))
+  }
+
+  // التعامل مع أجهزة وشاشات العرض كاملة (Fullscreen API)
+  const checkFullscreen = () => {
+    isFullscreen.value = !!(
+      document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.msFullscreenElement
+    )
+  }
+
+  const toggleFullscreen = async () => {
+    try {
+      if (!isFullscreen.value) {
+        const root = document.documentElement
+        if (root.requestFullscreen) {
+          await root.requestFullscreen()
+        } else if (root.webkitRequestFullscreen) {
+          await root.webkitRequestFullscreen()
+        } else if (root.msRequestFullscreen) {
+          await root.msRequestFullscreen()
+        }
+      } else {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen()
+        } else if (document.webkitExitFullscreen) {
+          await document.webkitExitFullscreen()
+        } else if (document.msExitFullscreen) {
+          await document.msExitFullscreen()
+        }
+      }
+    } catch (err) {
+      console.warn('تعذر تبديل وضع ملء الشاشة برمجياً:', err)
+    }
+  }
+
+  // خروج آمن من شاشة الكاشير والرجوع للنظام العادي
+  const exitPosTerminal = async () => {
+    if (isFullscreen.value) {
+      try {
+        if (document.exitFullscreen) {
+          await document.exitFullscreen()
+        }
+      } catch (e) {
+        console.warn(e)
+      }
+    }
+
+    // إذا كانت الشاشة مفتوحة عبر window.open بنافذة مستقلة، يتم إغلاقها فوراً
+    if (window.opener) {
+      window.close()
+    } else {
+      router.push('/app/sales')
+    }
+  }
+
   onMounted(async () => {
+    document.addEventListener('fullscreenchange', checkFullscreen)
+    document.addEventListener('webkitfullscreenchange', checkFullscreen)
+
     // جلب العملاء لضمان مطابقة الفئات السعرية بأمان
     await customerStore.fetchCustomers(1, { is_active: 1 })
 
@@ -465,18 +585,19 @@ export function useSaleFormLogic() {
         form.value.bank_id = authStore.user.bank_id
       }
 
-      // 2. البحث عن عميل عام أو عميل مباشر واختياره تلقائياً من قائمة العملاء
-      const defaultCustomer = customerStore.customers?.find((c) => {
-        const name = (c.name || c.display_label || '').trim()
-        return name.includes('عميل عام') || name.includes('عميل مباشر')
-      })
-
-      if (defaultCustomer) {
-        form.value.customer_id = defaultCustomer.id
-      }
+      // 2. تعيين العميل الافتراضي (عام / مباشر)
+      form.value.customer_id = resolveDefaultCustomer()
     }
 
     isFormLoaded.value = true
+  })
+
+  onBeforeUnmount(() => {
+    document.removeEventListener('fullscreenchange', checkFullscreen)
+    document.removeEventListener('webkitfullscreenchange', checkFullscreen)
+    if (posChannel) {
+      posChannel.close()
+    }
   })
 
   const handleSubmit = async () => {
@@ -519,6 +640,11 @@ export function useSaleFormLogic() {
         }
       })
 
+    if (dynamicItemsPayload.length === 0) {
+      toast.warning('يرجى إضافة صنف واحد على الأقل لإصدار الفاتورة.')
+      return
+    }
+
     const finalPayload = {
       ...form.value,
       subtotal: headerSubtotal.value,
@@ -541,22 +667,42 @@ export function useSaleFormLogic() {
       if (isEdit.value) {
         await saleStore.updateSale(route.params.id, finalPayload)
         toast.success('تم تحديث ومزامنة مستند المبيعات بنجاح.')
+        router.push('/app/sales')
       } else {
-        await saleStore.createSale(finalPayload)
+        const response = await saleStore.createSale(finalPayload)
         toast.success(
           form.value.invoice_type === 'return'
             ? 'تم ترحيل مستند مردود المبيعات وإدخال الأرصدة للمخازن بنجاح.'
-            : 'تم ترحيل فاتورة المبيعات واقتطاع الأرصدة بنجاح.',
+            : 'تم ترحيل فاتورة المبيعات بنجاح، والشاشة جاهزة للفاتورة التالية.',
         )
+
+        // إرسال إشعار عبر قناة البث الحية لتحديث شاشة SalesList في الخلفية
+        if (posChannel) {
+          posChannel.postMessage({
+            type: 'SALE_SAVED',
+            saleId: response?.data?.id || response?.id,
+            timestamp: Date.now(),
+          })
+        }
+
+        // السلوك الحاسم لوضع الـ POS: البقاء في الشاشة والتصفير الذكي للفاتورة التالية
+        if (isPos.value) {
+          await resetFormForNextSale()
+        } else {
+          router.push('/app/sales')
+        }
       }
-      router.push('/app/sales')
     } catch {
       toast.error('فشلت عملية الحفظ، يرجى التحقق من نواقص الكميات والأخطاء.')
     }
   }
 
   const handleCancel = () => {
-    router.push('/app/sales')
+    if (isPos.value) {
+      exitPosTerminal()
+    } else {
+      router.push('/app/sales')
+    }
   }
 
   const formatNumber = (value) => {
@@ -582,6 +728,11 @@ export function useSaleFormLogic() {
     isFormLoaded,
     isEdit,
     isReturnFromInvoice,
+    isPos,
+    isFullscreen,
+    toggleFullscreen,
+    exitPosTerminal,
+    resetFormForNextSale,
     form,
     items,
     detailSchema,

@@ -75,6 +75,19 @@ const routes = [
     ],
   },
 
+  // --- مسار نقطة البيع وشاشة الكاشير المستقلة بالكامل خارج إطار التطبيق ---
+  {
+    path: '/pos',
+    name: 'PosTerminal',
+    component: SaleForm,
+    meta: {
+      requiresAuth: true,
+      permission: 'sale.create',
+      isPos: true,
+      title: 'شاشة نقطة البيع والكاشير السريع',
+    },
+  },
+
   // --- المسارات المحمية داخل النظام (تتطلب مصادقة وصلاحيات) ---
   {
     path: '/app',
