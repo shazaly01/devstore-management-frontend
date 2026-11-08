@@ -59,6 +59,7 @@ const BalanceSheetReport = () => import('@/views/reports/financial/BalanceSheetR
 const UsersList = () => import('@/views/users/UsersList.vue')
 const RolesList = () => import('@/views/roles/RolesList.vue')
 const BackupsList = () => import('@/views/settings/BackupsList.vue')
+const SettingsView = () => import('@/views/settings/SettingsView.vue')
 const PrintSummary = () => import('@/views/reports/PrintSummary.vue')
 
 // --- مسارات موديول التسعير المتقدم وأسعار الصرف ---
@@ -397,6 +398,12 @@ const routes = [
         name: 'BackupsList',
         component: BackupsList,
         meta: { permission: 'backup.view' },
+      },
+      {
+        path: 'settings',
+        name: 'SettingsView',
+        component: SettingsView,
+        meta: { permission: 'setting.view' },
       },
 
       // التوجيه التلقائي للمسار الفارغ داخل التطبيق

@@ -26,6 +26,7 @@
         @input="onInput"
         @blur="onBlur"
         @focus="onFocus"
+        @click="onClick"
         :placeholder="placeholder"
         :required="required"
         :disabled="disabled"
@@ -64,7 +65,7 @@ const props = defineProps({
   variant: { type: String, default: 'default' },
 })
 
-const emit = defineEmits(['update:modelValue', 'blur', 'focus'])
+const emit = defineEmits(['update:modelValue', 'blur', 'focus', 'click'])
 
 const inputRef = ref(null)
 const formattedValue = ref('')
@@ -99,9 +100,57 @@ watch(
   { immediate: true },
 )
 
+/**
+ * إخفاء وتفريغ الصفر فور النقر أو التركيز لتسهيل كتابة الرقم الجديد مباشرة
+ */
+const clearZeroOnInteraction = (target) => {
+  const clean = String(formattedValue.value || '')
+    .replace(/,/g, '')
+    .trim()
+  if (clean === '0' || clean === '0.00' || Number(clean) === 0) {
+    formattedValue.value = ''
+    if (target) {
+      target.value = ''
+    }
+  } else {
+    // تظليل الرقم بالكامل عند التركيز إذا كانت القيمة غير صفرية لسرعة الاستبدال
+    nextTick(() => {
+      target?.select()
+    })
+  }
+}
+
+const onFocus = (e) => {
+  isFocused.value = true
+  clearZeroOnInteraction(e.target)
+  emit('focus', e)
+}
+
+const onClick = (e) => {
+  clearZeroOnInteraction(e.target)
+  emit('click', e)
+}
+
+const onBlur = (e) => {
+  isFocused.value = false
+  if (props.modelValue !== null && props.modelValue !== '' && props.modelValue !== undefined) {
+    formattedValue.value = formatNumberWithCommas(props.modelValue)
+  } else {
+    formattedValue.value = ''
+  }
+  emit('blur', e)
+}
+
 const onInput = (event) => {
   let val = event.target.value
   val = val.replace(/[^0-9.]/g, '')
+
+  // إزالة الصفر البادئ تلقائياً عند البدء بكتابة أرقام صحيحة (مثال: '05' تصبح '5')
+  if (/^0+[1-9]/.test(val)) {
+    val = val.replace(/^0+/, '')
+  } else if (/^0{2,}$/.test(val)) {
+    val = '0'
+  }
 
   const parts = val.split('.')
   if (parts.length > 2) {
@@ -126,18 +175,5 @@ const onInput = (event) => {
       inputRef.value.value = formatted
     }
   })
-}
-
-const onFocus = (e) => {
-  isFocused.value = true
-  emit('focus', e)
-}
-
-const onBlur = (e) => {
-  isFocused.value = false
-  if (props.modelValue !== null && props.modelValue !== '') {
-    formattedValue.value = formatNumberWithCommas(props.modelValue)
-  }
-  emit('blur', e)
 }
 </script>

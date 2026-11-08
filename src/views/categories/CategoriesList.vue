@@ -2,7 +2,7 @@
 <template>
   <div>
     <div class="flex justify-between items-center mb-6">
-      <h1 class="text-2xl font-bold text-text-primary">إدارة التصنيفات المجموعية</h1>
+      <h1 class="text-2xl font-bold text-text-primary">إدارة التصنيفات والمجموعات</h1>
       <AppButton v-if="authStore.can('category.create')" @click="openCategoryModal()">
         إضافة تصنيف جديد
       </AppButton>

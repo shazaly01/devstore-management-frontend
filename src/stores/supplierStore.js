@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import supplierService from '@/services/supplierService'
+import importService from '@/services/importService'
 
 export const useSupplierStore = defineStore('supplier', () => {
   // --- State (الحالات التفاعلية للموردين) ---
@@ -113,6 +114,28 @@ export const useSupplierStore = defineStore('supplier', () => {
     }
   }
 
+  // 6. استيراد مجمع للموردين من ملف الإكسيل وإعادة تحديث القائمة
+  async function importSuppliers(suppliersPayload) {
+    loading.value = true
+    error.value = null
+    validationErrors.value = null
+    try {
+      const response = await importService.importSuppliers(suppliersPayload)
+      // إعادة جلب القائمة لتحديث الحسابات والأرصدة الافتتاحية للموردين فوراً
+      await fetchSuppliers(1)
+      return response.data
+    } catch (err) {
+      if (err.response?.status === 422) {
+        validationErrors.value = err.response.data.errors
+      }
+      error.value = err.response?.data?.message || 'فشل في استيراد بيانات الموردين.'
+      console.error(err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     suppliers,
     pagination,
@@ -125,5 +148,6 @@ export const useSupplierStore = defineStore('supplier', () => {
     createSupplier,
     updateSupplier,
     deleteSupplier,
+    importSuppliers,
   }
 })

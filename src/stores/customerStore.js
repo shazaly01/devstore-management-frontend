@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import customerService from '@/services/customerService'
+import importService from '@/services/importService'
 
 export const useCustomerStore = defineStore('customer', () => {
   // --- State (الحالات التفاعلية للعملاء) ---
@@ -172,6 +173,28 @@ export const useCustomerStore = defineStore('customer', () => {
     }
   }
 
+  // 7. استيراد مجمع للعملاء من ملف الإكسيل وإعادة تحديث القائمة
+  async function importCustomers(customersPayload) {
+    loading.value = true
+    error.value = null
+    validationErrors.value = null
+    try {
+      const response = await importService.importCustomers(customersPayload)
+      // إعادة جلب القائمة لتحديث البيانات والأرصدة مباشرة بعد الاستيراد
+      await fetchCustomers(1)
+      return response.data
+    } catch (err) {
+      if (err.response?.status === 422) {
+        validationErrors.value = err.response.data.errors
+      }
+      error.value = err.response?.data?.message || 'فشل في استيراد بيانات العملاء.'
+      console.error(err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
   return {
     customers,
     pagination,
@@ -185,5 +208,6 @@ export const useCustomerStore = defineStore('customer', () => {
     updateCustomer,
     deleteCustomer,
     findByPhone,
+    importCustomers,
   }
 })

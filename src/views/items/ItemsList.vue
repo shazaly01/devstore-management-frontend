@@ -1,16 +1,30 @@
-<!--src\views\items\ItemsList.vue--->
+<!--src/views/items/ItemsList.vue-->
 <template>
   <div>
     <div class="flex justify-between items-center mb-6">
       <div>
-        <h1 class="text-2xl font-bold text-text-primary">دليل الأصناف والمصفوفة السعرية</h1>
+        <h1 class="text-2xl font-bold text-text-primary">دليل الأصناف والاسعار</h1>
         <p class="text-xs text-text-muted mt-1">
           إدارة المنتجات المخزنية، الخدمات، المواد الخام، وربط الباركودات وفئات الأسعار اللانهائية
         </p>
       </div>
-      <AppButton v-if="authStore.can('item.create')" @click="navigateToCreateForm">
-        إضافة صنف جديد
-      </AppButton>
+
+      <div class="flex items-center gap-3">
+        <!-- زر فتح نافذة استيراد الإكسيل -->
+        <AppButton
+          v-if="authStore.can('item.create')"
+          variant="outline"
+          @click="isImportModalOpen = true"
+        >
+          <ArrowUpTrayIcon class="h-4 w-4 ml-1.5" />
+          استيراد من إكسيل
+        </AppButton>
+
+        <!-- زر إضافة صنف جديد يدوياً -->
+        <AppButton v-if="authStore.can('item.create')" @click="navigateToCreateForm">
+          إضافة صنف جديد
+        </AppButton>
+      </div>
     </div>
 
     <ItemsFilter
@@ -35,7 +49,16 @@
       @row-clicked="navigateToEditForm"
     />
 
-    <!-- [إضافة]: نافذة حوارية منبثقة معزولة لإدخال وتعديل حد الطلب مخصصة بالمكونات المعتمدة ونظام الباندا UI -->
+    <!-- نافذة استيراد الإكسيل الذكية والمطابقة التفاعلية للأصناف -->
+    <ExcelImportModal
+      v-model="isImportModalOpen"
+      title="استيراد الأصناف ووحداتها وأسعارها من ملف إكسيل"
+      :target-fields="itemImportFields"
+      :submit-handler="handleImportSubmit"
+      @success="handleImportSuccess"
+    />
+
+    <!-- نافذة حوارية منبثقة لإدخال وتعديل حد الطلب -->
     <div
       v-if="isReorderModalOpen"
       class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
@@ -53,10 +76,9 @@
 
           <div class="space-y-4 my-2">
             <div>
-              <label class="block text-xs font-bold text-text-secondary mb-1.5"
-                >حد الطلب المقترح (بالوحدة الصغرى:
-                {{ selectedItemForReorder?.base_unit_name }})</label
-              >
+              <label class="block text-xs font-bold text-text-secondary mb-1.5">
+                حد الطلب المقترح (بالوحدة الصغرى: {{ selectedItemForReorder?.base_unit_name }})
+              </label>
               <AppInput
                 type="number"
                 v-model.number="reorderLevelForm.reorder_level"
@@ -69,7 +91,7 @@
 
           <div class="flex justify-end items-center gap-2 mt-5 pt-3 border-t border-surface-border">
             <AppButton
-              type="secondary"
+              variant="secondary"
               size="sm"
               @click="closeReorderLevelModal"
               :disabled="modalSubmitting"
@@ -77,7 +99,7 @@
               إلغاء الأمر
             </AppButton>
             <AppButton
-              type="primary"
+              variant="primary"
               size="sm"
               @click="submitReorderLevel"
               :loading="modalSubmitting"
@@ -106,6 +128,7 @@ import { useStoreStore } from '@/stores/storeStore'
 import { useAuthStore } from '@/stores/authStore'
 import { storeToRefs } from 'pinia'
 import { useToast } from 'vue-toastification'
+import { ArrowUpTrayIcon } from '@heroicons/vue/24/outline'
 
 // استيراد مكونات موديول الأصناف والقطع المشتركة الموحدة للواجهة
 import AppButton from '@/components/ui/AppButton.vue'
@@ -114,6 +137,7 @@ import AppCard from '@/components/ui/AppCard.vue'
 import ItemsFilter from './ItemsFilter.vue'
 import ItemsTable from './ItemsTable.vue'
 import AppConfirmDialog from '@/components/ui/AppConfirmDialog.vue'
+import ExcelImportModal from '@/components/ui/ExcelImportModal.vue'
 
 const router = useRouter()
 const itemStore = useItemStore()
@@ -204,6 +228,65 @@ onMounted(async () => {
   handlePageChange()
 })
 
+// --- إعدادات وخريطة حقول استيراد الأصناف من الإكسيل ---
+const isImportModalOpen = ref(false)
+
+const itemImportFields = [
+  {
+    key: 'name',
+    label: 'اسم الصنف',
+    required: true,
+    aliases: ['اسم', 'الصنف', 'المنتج', 'اسم الصنف', 'name', 'item', 'product'],
+    description: 'اسم الصنف أو المنتج التجاري',
+  },
+  {
+    key: 'unit_name',
+    label: 'وحدة القياس',
+    required: false,
+    aliases: ['وحدة', 'الوحدة', 'وحدة القياس', 'unit', 'uom'],
+    description: 'الوحدة الأساسية (تُعتمد تلقائياً الوحدة رقم 1 المسجلة في النظام عند عدم التحديد)',
+  },
+  {
+    key: 'cost',
+    label: 'سعر التكلفة (الشراء)',
+    required: false,
+    defaultValue: 0,
+    aliases: ['تكلفة', 'سعر الشراء', 'سعر التكلفة', 'شراء', 'cost', 'purchase_price', 'costprice'],
+    description: 'تكلفة شراء الوحدة الواحدة (افتراضياً 0 في حال عدم التحديد)',
+  },
+  {
+    key: 'price',
+    label: 'سعر البيع الافتراضي',
+    required: false,
+    defaultValue: 0,
+    aliases: ['سعر', 'سعر البيع', 'قطاعي', 'بيع', 'price', 'sale_price', 'saleprice'],
+    description: 'سعر بيع الوحدة الأساسية (افتراضياً 0 في حال عدم التحديد)',
+  },
+  {
+    key: 'barcode',
+    label: 'الباركود',
+    required: false,
+    aliases: ['باركود', 'كود', 'الباركود', 'barcode', 'code'],
+    description: 'رقم أو كود الباركود الدولي أو الداخلي للصنف',
+  },
+]
+
+const handleImportSubmit = async (payload) => {
+  return await itemStore.importItems(payload)
+}
+
+const handleImportSuccess = (response) => {
+  const resultData = response.data || response
+  if (resultData && resultData.created_count !== undefined) {
+    toast.success(
+      `تمت المعالجة بنجاح: تم إنشاء (${resultData.created_count}) صنف جديد، وتحديث أسعار (${resultData.updated_count}) صنف مسجل مسبقاً.`,
+    )
+  } else {
+    toast.success(response.message || 'تم استيراد الأصناف ومصفوفة أسعارها بنجاح.')
+  }
+  handlePageChange(1)
+}
+
 // --- معالجات إدارة وحفظ نافذة حد الطلب المنبثقة اللحظية ---
 const openReorderLevelModal = (item) => {
   selectedItemForReorder.value = item
@@ -229,7 +312,6 @@ const submitReorderLevel = async () => {
 
     toast.success(`تم تثبيت حد الطلب بنجاح للصنف "${selectedItemForReorder.value.name}".`)
 
-    // مزامنة القيمة داخل مصفوفة الجدول فوراً بالواجهة دون الحاجة لإعادة شحن الشبكة بالكامل بالـ API
     const targetItem = items.value.find((i) => i.id === selectedItemForReorder.value.id)
     if (targetItem) {
       targetItem.reorder_level = reorderLevelForm.reorder_level
@@ -271,7 +353,6 @@ const deleteSelectedItem = async () => {
       await itemStore.deleteItem(itemToDelete.value.id)
       toast.success(`تم استبعاد وحذف الصنف '${itemToDelete.value.name}' وكافة خلايا مصفوفته بنجاح.`)
 
-      // معايرة رقم الصفحة التلقائي في حال تم تصفير عناصر الصفحة الحالية
       if (items.value.length === 1 && pagination.value?.current_page > 1) {
         await handlePageChange(pagination.value.current_page - 1)
       } else {

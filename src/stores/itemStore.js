@@ -1,7 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import itemService from '@/services/itemService'
-import priceListService from '@/services/priceListService' // جلب خدمات فئات الأسعار للمصفوفة
+import priceListService from '@/services/priceListService'
+import importService from '@/services/importService'
 
 export const useItemStore = defineStore('item', () => {
   // --- State ---
@@ -137,7 +138,7 @@ export const useItemStore = defineStore('item', () => {
     error.value = null
     try {
       const response = await itemService.refreshStock(payload)
-      return response.data.data // إرجاع كائن الـ Map الخفيف مباشرة للـ Component
+      return response.data.data
     } catch (err) {
       error.value = 'فشل في تحديث بيانات المخزون اللحظي للأصناف.'
       console.error(err)
@@ -147,7 +148,7 @@ export const useItemStore = defineStore('item', () => {
     }
   }
 
-  // [إضافة]: تحديث حد الطلب للصنف ومزامنة الأخطاء الخاصة بالعملية
+  // تحديث حد الطلب للصنف ومزامنة الأخطاء الخاصة بالعملية
   async function updateItemReorderLevel(id, payload) {
     loading.value = true
     error.value = null
@@ -160,6 +161,28 @@ export const useItemStore = defineStore('item', () => {
         validationErrors.value = err.response.data.errors
       }
       error.value = err.response?.data?.message || 'فشل في تحديث حد الطلب للصنف بالمخزن.'
+      console.error(err)
+      throw err
+    } finally {
+      loading.value = false
+    }
+  }
+
+  // استيراد مجمع للأصناف من ملف الإكسيل ومزامنة الوحدات والأسعار
+  async function importItems(itemsPayload) {
+    loading.value = true
+    error.value = null
+    validationErrors.value = null
+    try {
+      const response = await importService.importItems(itemsPayload)
+      // إعادة جلب قائمة الأصناف لتحديث الواجهة فوراً بالأصناف الجديدة
+      await fetchItems(1)
+      return response.data
+    } catch (err) {
+      if (err.response?.status === 422) {
+        validationErrors.value = err.response.data.errors
+      }
+      error.value = err.response?.data?.message || 'فشل في استيراد بيانات الأصناف.'
       console.error(err)
       throw err
     } finally {
@@ -182,6 +205,7 @@ export const useItemStore = defineStore('item', () => {
     updateItem,
     deleteItem,
     refreshItemsStock,
-    updateItemReorderLevel, // تصدير الـ Action الجديد للاستخدام بالـ Components
+    updateItemReorderLevel,
+    importItems,
   }
 })

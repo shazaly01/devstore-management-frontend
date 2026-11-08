@@ -1,11 +1,25 @@
-<!---src\views\customers\CustomersList.vue--->
+<!---src/views/customers/CustomersList.vue--->
 <template>
   <div>
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold text-text-primary">إدارة العملاء</h1>
-      <AppButton v-if="authStore.can('customer.create')" @click="openCustomerModal()">
-        إضافة عميل
-      </AppButton>
+
+      <div class="flex items-center gap-3">
+        <!-- زر فتح نافذة استيراد الإكسيل -->
+        <AppButton
+          v-if="authStore.can('customer.create')"
+          variant="outline"
+          @click="isImportModalOpen = true"
+        >
+          <ArrowUpTrayIcon class="h-4 w-4 ml-1.5" />
+          استيراد من إكسيل
+        </AppButton>
+
+        <!-- زر إضافة عميل مفرد يدوي -->
+        <AppButton v-if="authStore.can('customer.create')" @click="openCustomerModal()">
+          إضافة عميل
+        </AppButton>
+      </div>
     </div>
 
     <CustomersFilter
@@ -33,6 +47,15 @@
       @save="handleSaveCustomer"
     />
 
+    <!-- نافذة استيراد الإكسيل الذكية والمطابقة التفاعلية -->
+    <ExcelImportModal
+      v-model="isImportModalOpen"
+      title="استيراد أرصدة وبيانات العملاء من ملف إكسيل"
+      :target-fields="customerImportFields"
+      :submit-handler="handleImportSubmit"
+      @success="handleImportSuccess"
+    />
+
     <AppConfirmDialog
       v-model="isDeleteDialogOpen"
       title="تأكيد حذف العميل"
@@ -48,6 +71,7 @@ import { useCustomerStore } from '@/stores/customerStore'
 import { useAuthStore } from '@/stores/authStore'
 import { storeToRefs } from 'pinia'
 import { useToast } from 'vue-toastification'
+import { ArrowUpTrayIcon } from '@heroicons/vue/24/outline'
 
 // استيراد قطع الليغو المكونة للموديول ومكونات الواجهة الموحدة
 import AppButton from '@/components/ui/AppButton.vue'
@@ -55,6 +79,7 @@ import CustomersFilter from './CustomersFilter.vue'
 import CustomersTable from './CustomersTable.vue'
 import CustomerModal from './CustomerModal.vue'
 import AppConfirmDialog from '@/components/ui/AppConfirmDialog.vue'
+import ExcelImportModal from '@/components/ui/ExcelImportModal.vue'
 
 // تهيئة الستور المستنتج وإدارة الحالات المشتركة للعملاء
 const customerStore = useCustomerStore()
@@ -123,6 +148,56 @@ const handleSaveCustomer = async (formData) => {
       'تعذر حفظ بيانات العميل بسبب خطأ في الخادم.'
     toast.error(errorMessage)
   }
+}
+
+// --- إعدادات وخريطة حقول استيراد العملاء من الإكسيل ---
+const isImportModalOpen = ref(false)
+
+const customerImportFields = [
+  {
+    key: 'name',
+    label: 'اسم العميل',
+    required: true,
+    aliases: ['اسم', 'العميل', 'name', 'client', 'customer'],
+    description: 'الاسم الرسمي المسجل للعميل أو الشركة',
+  },
+  {
+    key: 'phone',
+    label: 'رقم الهاتف',
+    required: false,
+    aliases: ['هاتف', 'تليفون', 'موبايل', 'جوال', 'phone', 'mobile'],
+    description: 'رقم الهاتف المحمول أو الأرضي',
+  },
+  {
+    key: 'email',
+    label: 'البريد الإلكتروني',
+    required: false,
+    aliases: ['بريد', 'ايميل', 'email', 'mail'],
+    description: 'البريد الإلكتروني للعميل',
+  },
+  {
+    key: 'credit_limit',
+    label: 'الحد الائتماني',
+    required: false,
+    aliases: ['حد ائتماني', 'الحد الائتماني', 'credit', 'credit_limit'],
+    description: 'سقف المديونية الأقصى المسموح به',
+  },
+  {
+    key: 'opening_balance',
+    label: 'الرصيد الافتتاحي',
+    required: false,
+    aliases: ['رصيد', 'افتتاحي', 'الرصيد السابق', 'رصيد اول المدة', 'balance', 'opening_balance'],
+    description: 'المبلغ المستحق على العميل كرصيد مرحل سابق',
+  },
+]
+
+const handleImportSubmit = async (payload) => {
+  return await customerStore.importCustomers(payload)
+}
+
+const handleImportSuccess = (response) => {
+  toast.success(response.message || 'تم استيراد بيانات العملاء وتحديث الأرصدة بنجاح.')
+  handlePageChange(1)
 }
 
 // --- إدارة حوار النوافذ التفاعلية لعمليات حذف العميل الآمن ---

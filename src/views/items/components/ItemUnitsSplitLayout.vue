@@ -1,88 +1,62 @@
-<!--src\views\items\components\ItemUnitsSplitLayout.vue--->
+<!--src/views/items/components/ItemUnitsSplitLayout.vue-->
 <template>
-  <div class="space-y-5">
-    <!-- 1. جدول وحدات القياس وسياسات التكلفة والبيع بكامل العرض لمنع الاختناق -->
+  <div class="space-y-4">
+    <!-- 1. جدول وحدات القياس الإضافية ومعاملات التحويل -->
     <ItemUnitsMasterTable
       :form-state="props.formState"
       :active-index="activeUnitIndex"
-      @update:active-index="(val) => (activeUnitIndex = val)"
+      :is-details-open="isDetailsOpen"
+      @toggle-details="handleToggleDetails"
+      @update:active-index="handleSelectUnit"
       @update:form-state="(payload) => emit('update:formState', payload)"
       @clear-error="(field) => emit('clear-error', field)"
     />
 
-    <!-- 2. بطاقة تفاصيل الوحدة النشطة تظهر أسفل الجدول مباشرة بشكل مريح -->
-    <AppCard v-if="activeUnitRow">
-      <div class="space-y-4">
-        <!-- ترويسة تفاصيل الوحدة النشطة -->
-        <div
-          class="flex flex-wrap items-center justify-between gap-2 border-b border-surface-border pb-3"
-        >
-          <div class="flex items-center gap-2">
-            <span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
-            <div>
-              <h3 class="text-sm font-black text-text-primary">
-                التفاصيل المتقدمة لوحدة:
+    <!-- 2. كرت مسح وإدارة باركودات الوحدة النشطة (يفتح عند الضغط على زر الباركودات أو السطر) -->
+    <Transition
+      enter-active-class="transition duration-200 ease-out"
+      enter-from-class="opacity-0 -translate-y-2"
+      enter-to-class="opacity-100 translate-y-0"
+      leave-active-class="transition duration-150 ease-in"
+      leave-from-class="opacity-100 translate-y-0"
+      leave-to-class="opacity-0 -translate-y-2"
+    >
+      <AppCard v-if="isDetailsOpen && activeUnitRow">
+        <div class="space-y-3.5">
+          <!-- ترويسة إدارة باركودات الوحدة النشطة -->
+          <div
+            class="flex flex-wrap items-center justify-between gap-3 border-b border-surface-border pb-3"
+          >
+            <div class="flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-primary"></span>
+              <h3 class="text-sm font-black text-text-primary flex items-center gap-1.5">
+                <span>🏷️ باركودات وحدة:</span>
                 <span class="text-primary font-bold">[{{ activeUnitName }}]</span>
               </h3>
-              <p class="text-xs text-text-muted mt-0.5">
-                إدارة الباركودات المتعددة ومصفوفة فئات الأسعار والخصومات المرتبطة بهذه الوحدة
-              </p>
             </div>
-          </div>
 
-          <div class="flex items-center gap-2">
-            <span
-              class="text-xs font-bold text-text-secondary bg-surface-ground px-3 py-1.5 rounded-lg border border-surface-border"
+            <!-- زر طي وإغلاق قسم الباركودات -->
+            <button
+              type="button"
+              @click="isDetailsOpen = false"
+              class="text-xs font-bold text-text-muted hover:text-danger hover:bg-danger/10 px-2.5 py-1.5 rounded-lg border border-surface-border transition-colors cursor-pointer flex items-center gap-1"
+              title="طي قسم الباركودات"
             >
-              سعر بيع الجمهور المعتمد:
-              <span class="font-mono text-primary font-black mr-1" dir="ltr">
-                {{
-                  Number(activeUnitRow.price || 0).toLocaleString('en-US', {
-                    minimumFractionDigits: 2,
-                    maximumFractionDigits: 2,
-                  })
-                }}
-              </span>
-            </span>
+              <span>إغلاق</span>
+              <span>✕</span>
+            </button>
           </div>
-        </div>
 
-        <!-- شبكة التفاصيل: الباركودات ومصفوفة الخصومات والأسعار في صف متوازن -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start pt-1">
-          <!-- عمود الباركودات (5 أعمدة) -->
-          <div
-            class="lg:col-span-5 bg-surface-ground/50 p-4 rounded-xl border border-surface-border space-y-3"
-          >
+          <!-- مكون إدخال ومسح الباركودات للوحدة -->
+          <div class="pt-1">
             <ItemUnitBarcodes
-              :model-value="activeUnitRow.barcodes"
-              @update:model-value="
-                (updatedBarcodes) => updateActiveUnitSubArray('barcodes', updatedBarcodes)
-              "
-            />
-          </div>
-
-          <!-- عمود مصفوفة فئات الأسعار والخصومات (7 أعمدة) -->
-          <div
-            class="lg:col-span-7 bg-surface-ground/50 p-4 rounded-xl border border-surface-border space-y-3"
-          >
-            <ItemUnitPricesGrid
-              :prices="activeUnitRow.prices"
-              :base-price="activeUnitRow.price"
-              :rounding-rule="props.formState.rounding_rule"
-              @update:prices="(updatedPrices) => updateActiveUnitSubArray('prices', updatedPrices)"
+              :model-value="activeUnitRow.barcodes || []"
+              @update:model-value="handleUpdateBarcodes"
             />
           </div>
         </div>
-      </div>
-    </AppCard>
-
-    <!-- تنبيه هادئ في حال وجود وحدات ولم يتم اختيار أي وحدة -->
-    <div
-      v-else-if="props.formState.units && props.formState.units.length > 0"
-      class="text-center py-6 bg-surface-ground/40 rounded-xl border border-dashed border-surface-border text-text-muted text-xs"
-    >
-      انقر على أحد أسطر الوحدات أعلاه لإظهار الباركودات وفئات الأسعار المرتبطة بها.
-    </div>
+      </AppCard>
+    </Transition>
   </div>
 </template>
 
@@ -92,7 +66,6 @@ import { useUnitStore } from '@/stores/unitStore'
 import AppCard from '@/components/ui/AppCard.vue'
 import ItemUnitsMasterTable from './ItemUnitsMasterTable.vue'
 import ItemUnitBarcodes from './ItemUnitBarcodes.vue'
-import ItemUnitPricesGrid from './ItemUnitPricesGrid.vue'
 
 const props = defineProps({
   formState: { type: Object, required: true },
@@ -102,9 +75,14 @@ const emit = defineEmits(['update:formState', 'clear-error'])
 
 const unitStore = useUnitStore()
 const activeUnitIndex = ref(0)
+const isDetailsOpen = ref(false)
 
 const activeUnitRow = computed(() => {
-  if (props.formState.units && props.formState.units[activeUnitIndex.value]) {
+  if (
+    props.formState.units &&
+    activeUnitIndex.value !== null &&
+    props.formState.units[activeUnitIndex.value]
+  ) {
     return props.formState.units[activeUnitIndex.value]
   }
   return null
@@ -113,15 +91,32 @@ const activeUnitRow = computed(() => {
 const activeUnitName = computed(() => {
   if (!activeUnitRow.value) return ''
   const unitObj = unitStore.units.find((u) => u.id === activeUnitRow.value.unit_id)
-  return unitObj ? unitObj.name : 'غير محددة'
+  return unitObj
+    ? unitObj.name
+    : activeUnitIndex.value === 0
+      ? 'الوحدة الأساسية'
+      : `وحدة إضافية #${activeUnitIndex.value}`
 })
 
-const updateActiveUnitSubArray = (key, updatedArray) => {
+const handleToggleDetails = (index) => {
+  if (isDetailsOpen.value && activeUnitIndex.value === index) {
+    isDetailsOpen.value = false
+  } else {
+    activeUnitIndex.value = index
+    isDetailsOpen.value = true
+  }
+}
+
+const handleSelectUnit = (index) => {
+  activeUnitIndex.value = index
+}
+
+const handleUpdateBarcodes = (updatedBarcodes) => {
   const clonedUnits = props.formState.units.map((unit, idx) => {
     if (idx === activeUnitIndex.value) {
       return {
         ...unit,
-        [key]: [...updatedArray],
+        barcodes: [...updatedBarcodes],
       }
     }
     return unit

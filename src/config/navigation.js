@@ -244,6 +244,11 @@ export const navigationConfig = [
         routeName: 'BackupsList',
         permission: 'backup.view',
       },
+      {
+        name: 'إعدادات النظام',
+        routeName: 'SettingsView',
+        permission: 'setting.view',
+      },
     ],
   },
 ]

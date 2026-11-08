@@ -1,6 +1,6 @@
-<!--src\components\forms\StoresDropdown.vue--->
+<!--src/components/forms/StoresDropdown.vue-->
 <template>
-  <div class="w-full h-full">
+  <div class="w-full">
     <AppDropdown
       :id="id"
       :model-value="modelValue"
@@ -39,7 +39,6 @@ const error = ref(null)
 onMounted(async () => {
   if (stores.value.length === 0) {
     try {
-      // تمرير الصفحة الأولى وفلتر جلب عدد كافي للمنسدلة
       await storeStore.fetchStores(1, { per_page: 1000 })
     } catch (err) {
       error.value = 'فشل تحميل قائمة المخازن.'

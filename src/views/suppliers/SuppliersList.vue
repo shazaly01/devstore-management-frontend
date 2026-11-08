@@ -1,10 +1,25 @@
+<!--src/views/suppliers/SuppliersList.vue-->
 <template>
   <div>
     <div class="flex justify-between items-center mb-6">
       <h1 class="text-2xl font-bold text-text-primary">إدارة الموردين</h1>
-      <AppButton v-if="authStore.can('supplier.create')" @click="openSupplierModal()">
-        إضافة مورد
-      </AppButton>
+
+      <div class="flex items-center gap-3">
+        <!-- زر فتح نافذة استيراد الإكسيل -->
+        <AppButton
+          v-if="authStore.can('supplier.create')"
+          variant="outline"
+          @click="isImportModalOpen = true"
+        >
+          <ArrowUpTrayIcon class="h-4 w-4 ml-1.5" />
+          استيراد من إكسيل
+        </AppButton>
+
+        <!-- زر إضافة مورد مفرد يدوي -->
+        <AppButton v-if="authStore.can('supplier.create')" @click="openSupplierModal()">
+          إضافة مورد
+        </AppButton>
+      </div>
     </div>
 
     <SuppliersFilter
@@ -32,6 +47,15 @@
       @save="handleSaveSupplier"
     />
 
+    <!-- نافذة استيراد الإكسيل الذكية والمطابقة التفاعلية -->
+    <ExcelImportModal
+      v-model="isImportModalOpen"
+      title="استيراد أرصدة وبيانات الموردين من ملف إكسيل"
+      :target-fields="supplierImportFields"
+      :submit-handler="handleImportSubmit"
+      @success="handleImportSuccess"
+    />
+
     <AppConfirmDialog
       v-model="isDeleteDialogOpen"
       title="تأكيد حذف المورد"
@@ -47,6 +71,7 @@ import { useSupplierStore } from '@/stores/supplierStore'
 import { useAuthStore } from '@/stores/authStore'
 import { storeToRefs } from 'pinia'
 import { useToast } from 'vue-toastification'
+import { ArrowUpTrayIcon } from '@heroicons/vue/24/outline'
 
 // استيراد قطع الليغو المكونة للموديول ومكونات الواجهة الموحدة
 import AppButton from '@/components/ui/AppButton.vue'
@@ -54,6 +79,7 @@ import SuppliersFilter from './SuppliersFilter.vue'
 import SuppliersTable from './SuppliersTable.vue'
 import SupplierModal from './SupplierModal.vue'
 import AppConfirmDialog from '@/components/ui/AppConfirmDialog.vue'
+import ExcelImportModal from '@/components/ui/ExcelImportModal.vue'
 
 // تهيئة الستور المستنتج وإدارة الحالات المشتركة للموردين
 const supplierStore = useSupplierStore()
@@ -122,6 +148,49 @@ const handleSaveSupplier = async (formData) => {
       'تعذر حفظ بيانات المورد بسبب خطأ في الخادم.'
     toast.error(errorMessage)
   }
+}
+
+// --- إعدادات وخريطة حقول استيراد الموردين من الإكسيل ---
+const isImportModalOpen = ref(false)
+
+const supplierImportFields = [
+  {
+    key: 'name',
+    label: 'اسم المورد',
+    required: true,
+    aliases: ['اسم', 'المورد', 'الشركة', 'name', 'supplier', 'vendor'],
+    description: 'اسم المورد أو الشركة أو الجهة الموردة',
+  },
+  {
+    key: 'phone',
+    label: 'رقم الهاتف',
+    required: false,
+    aliases: ['هاتف', 'تليفون', 'موبايل', 'جوال', 'phone', 'mobile'],
+    description: 'رقم الهاتف والتواصل المباشر',
+  },
+  {
+    key: 'tax_number',
+    label: 'الرقم الضريبي',
+    required: false,
+    aliases: ['ضريبي', 'الرقم الضريبي', 'tax', 'tax_number', 'vat'],
+    description: 'الرقم الضريبي للمنشأة إن وجد',
+  },
+  {
+    key: 'opening_balance',
+    label: 'الرصيد الافتتاحي',
+    required: false,
+    aliases: ['رصيد', 'افتتاحي', 'الرصيد السابق', 'رصيد اول المدة', 'balance', 'opening_balance'],
+    description: 'المبلغ المستحق للمورد كدين سابق مرحل',
+  },
+]
+
+const handleImportSubmit = async (payload) => {
+  return await supplierStore.importSuppliers(payload)
+}
+
+const handleImportSuccess = (response) => {
+  toast.success(response.message || 'تم استيراد بيانات الموردين وتحديث الأرصدة بنجاح.')
+  handlePageChange(1)
 }
 
 // --- إدارة حوار النوافذ التفاعلية لعمليات حذف المورد الآمن ---

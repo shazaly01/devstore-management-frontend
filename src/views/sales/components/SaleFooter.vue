@@ -1,10 +1,10 @@
 <!--src/views/sales/components/SaleFooter.vue-->
 <template>
   <div
-    class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 text-right font-sans transition-colors duration-200"
+    class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 text-right font-sans transition-colors duration-200 items-start"
     dir="rtl"
   >
-    <!-- 1. الإجماليات النهائية (مطابقة لهوية الرأس كمرساة ختامية) -->
+    <!-- 1. الإجماليات النهائية -->
     <div
       class="p-4 bg-surface-header rounded-xl border border-surface-border border-t-4 border-t-primary shadow-sm flex flex-col justify-between space-y-3 transition-colors duration-200"
     >
@@ -159,13 +159,60 @@
       </p>
     </div>
 
-    <!-- 3. التسويات المالية (الخصم والضريبة) -->
-    <div class="p-4 bg-surface-section rounded-xl border border-surface-border shadow-sm space-y-4">
-      <h3 class="text-[11px] font-black text-text-primary border-b border-surface-border pb-1.5">
-        إضافات وتسويات مالية
-      </h3>
+    <!-- 3. التسويات المالية (الخصم والضريبة) - قابلة للطي في مكانها -->
+    <div
+      class="p-4 bg-surface-section rounded-xl border border-surface-border shadow-sm transition-all duration-200"
+    >
+      <div
+        class="flex items-center justify-between border-b border-surface-border pb-1.5 cursor-pointer select-none"
+        @click="isAdjustmentsOpen = !isAdjustmentsOpen"
+      >
+        <div class="flex items-center gap-1.5">
+          <h3 class="text-[11px] font-black text-text-primary">إضافات وتسويات مالية</h3>
+          <span
+            v-if="hasAdjustments"
+            class="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold bg-primary/10 text-primary border border-primary/25"
+          >
+            مطبقة
+          </span>
+        </div>
 
-      <div class="flex flex-col space-y-4">
+        <div class="flex items-center gap-1 text-text-muted hover:text-primary">
+          <span class="text-[10px] font-medium">{{ isAdjustmentsOpen ? 'طي' : 'توسيع' }}</span>
+          <svg
+            class="w-4 h-4 transition-transform duration-200"
+            :class="{ 'rotate-180': isAdjustmentsOpen }"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <!-- ملخص سريع يظهر فقط أثناء الطي -->
+      <div
+        v-if="!isAdjustmentsOpen"
+        class="pt-2 text-xs flex justify-between items-center text-text-muted cursor-pointer"
+        @click="isAdjustmentsOpen = true"
+      >
+        <div v-if="hasAdjustments" class="flex gap-2 font-mono font-bold text-[11px]">
+          <span v-if="discountModel > 0" class="text-danger"
+            >خصم: {{ formatCurrency(discountModel) }}</span
+          >
+          <span v-if="taxModel > 0" class="text-info">ضريبة: {{ formatCurrency(taxModel) }}</span>
+        </div>
+        <span v-else class="text-[10px]">لا توجد تسويات مالية (انقر لتعديل)</span>
+      </div>
+
+      <!-- حقول الإدخال تظهر عند التوسيع -->
+      <div v-show="isAdjustmentsOpen" class="space-y-4 pt-3 transition-all">
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div class="flex flex-col space-y-1.5">
             <label class="text-[10px] font-bold text-text-secondary truncate">الخصم الممنوح</label>
@@ -211,27 +258,70 @@
       </div>
     </div>
 
-    <!-- 4. ملاحظات وشروط الفاتورة -->
+    <!-- 4. ملاحظات وشروط الفاتورة - قابلة للطي في مكانها -->
     <div
-      class="p-4 bg-surface-section rounded-xl border border-surface-border shadow-sm flex flex-col space-y-1.5"
+      class="p-4 bg-surface-section rounded-xl border border-surface-border shadow-sm flex flex-col transition-all duration-200"
     >
-      <label
-        class="text-[11px] font-black text-text-primary border-b border-surface-border pb-1.5 mb-1"
+      <div
+        class="flex items-center justify-between border-b border-surface-border pb-1.5 cursor-pointer select-none"
+        @click="isNotesOpen = !isNotesOpen"
       >
-        ملاحظات وشروط الفاتورة
-      </label>
-      <textarea
-        v-model="notesModel"
-        rows="3"
-        placeholder="سجل أي ملاحظات خاصة بحركة البيع الحالية..."
-        class="block w-full h-full min-h-[96px] p-3 border border-surface-border rounded-lg bg-surface-ground text-text-primary placeholder:text-text-muted text-xs font-semibold focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
-      ></textarea>
+        <div class="flex items-center gap-1.5">
+          <label class="text-[11px] font-black text-text-primary cursor-pointer">
+            ملاحظات وشروط الفاتورة
+          </label>
+          <span
+            v-if="hasNotes"
+            class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-info/10 text-info border border-info/25"
+          >
+            مسجلة
+          </span>
+        </div>
+
+        <div class="flex items-center gap-1 text-text-muted hover:text-primary">
+          <span class="text-[10px] font-medium">{{ isNotesOpen ? 'طي' : 'توسيع' }}</span>
+          <svg
+            class="w-4 h-4 transition-transform duration-200"
+            :class="{ 'rotate-180': isNotesOpen }"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </div>
+      </div>
+
+      <!-- معاينة سريعة تظهر فقط أثناء الطي -->
+      <div
+        v-if="!isNotesOpen"
+        class="pt-2 text-[10px] text-text-muted cursor-pointer truncate"
+        @click="isNotesOpen = true"
+      >
+        <span v-if="hasNotes" class="text-text-secondary font-semibold">{{ notesModel }}</span>
+        <span v-else>لا توجد ملاحظات (انقر للكتابة)...</span>
+      </div>
+
+      <!-- حقل النص يظهر عند التوسيع -->
+      <div v-show="isNotesOpen" class="pt-2 flex flex-col space-y-1.5 transition-all">
+        <textarea
+          v-model="notesModel"
+          rows="3"
+          placeholder="سجل أي ملاحظات خاصة بحركة البيع الحالية..."
+          class="block w-full min-h-[96px] p-3 border border-surface-border rounded-lg bg-surface-ground text-text-primary placeholder:text-text-muted text-xs font-semibold focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+        ></textarea>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { computed, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { formatCurrency } from '@/utils/formatters'
 import AppCurrencyInput from '@/components/ui/AppCurrencyInput.vue'
 
@@ -249,6 +339,28 @@ const props = defineProps({
   invoiceType: { type: String, default: 'sale' },
   validationErrors: { type: Object, default: () => null },
 })
+
+// حالات الطي للبطاقتين (افتراضياً مغلقتان في مكانهما)
+const isAdjustmentsOpen = ref(false)
+const isNotesOpen = ref(false)
+
+const hasAdjustments = computed(() => {
+  return Number(discountModel.value) > 0 || Number(taxModel.value) > 0
+})
+
+const hasNotes = computed(() => {
+  return typeof notesModel.value === 'string' && notesModel.value.trim().length > 0
+})
+
+// فتح قسم التسويات تلقائياً عند حدوث أخطاء تحقق
+watch(
+  () => [props.validationErrors?.discount_amount, props.validationErrors?.tax_amount],
+  ([discountErr, taxErr]) => {
+    if (discountErr || taxErr) {
+      isAdjustmentsOpen.value = true
+    }
+  },
+)
 
 const toAmount = (value) => {
   const amount = Number(value)

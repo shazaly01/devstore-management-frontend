@@ -18,6 +18,25 @@ export function useSaleFormLogic() {
   const authStore = useAuthStore()
   const customerStore = useCustomerStore()
 
+  // مفتاح تخزين تفضيل المعاينة التلقائية في ذاكرة المتصفح
+  const STORAGE_KEY_AUTO_PREVIEW = 'panda_pos_auto_preview'
+
+  // خيار المعاينة التلقائية بعد الترحيل (يُقرأ افتراضياً من المتصفح، وافتراضياً مفعل true)
+  const autoPreviewAfterSave = ref(
+    localStorage.getItem(STORAGE_KEY_AUTO_PREVIEW) !== null
+      ? localStorage.getItem(STORAGE_KEY_AUTO_PREVIEW) === 'true'
+      : true,
+  )
+
+  watch(autoPreviewAfterSave, (newVal) => {
+    localStorage.setItem(STORAGE_KEY_AUTO_PREVIEW, String(newVal))
+  })
+
+  // حالات التحكم بنافذة المعاينة المنبثقة
+  const isPreviewModalOpen = ref(false)
+  const previewSaleData = ref(null)
+  const lastSavedSale = ref(null)
+
   // تمييز ما إذا كانت الشاشة مفتوحة في وضع التعديل
   const isEdit = computed(() => !isPos.value && !!route.params.id)
 
@@ -457,6 +476,53 @@ export function useSaleFormLogic() {
     }
   }
 
+  // فتح معاينة مسودة الفاتورة الحالية من واقع المدخلات المعروضة على الشاشة
+  const openDraftPreview = () => {
+    const validItems = items.value.filter((row) => row.item_id && row.item_unit_id)
+    if (validItems.length === 0) {
+      toast.warning('يرجى إضافة صنف واحد على الأقل لمعاينة الفاتورة.')
+      return
+    }
+
+    const currentCustomer = customerStore.customers?.find((c) => c.id === form.value.customer_id)
+
+    previewSaleData.value = {
+      ...form.value,
+      id: isEdit.value ? route.params.id : null,
+      invoice_number: isEdit.value
+        ? saleStore.currentSale?.invoice_number || `#${route.params.id}`
+        : 'مسودة جديدة (قيد الإدخال)',
+      customer_name: currentCustomer?.name || 'عميل عام / مباشر',
+      customer_phone: currentCustomer?.phone || '',
+      subtotal: headerSubtotal.value,
+      grand_total: headerGrandTotal.value,
+      items: validItems.map((row) => {
+        const matchedUnit = row.available_units?.find((u) => u.id === row.item_unit_id)
+        return {
+          item_id: row.item_id,
+          item_name: row.item_name,
+          item_unit_id: row.item_unit_id,
+          unit_name: matchedUnit?.unit_name || matchedUnit?.name || '',
+          quantity: parseFloat(row.quantity) || 0,
+          unit_price: parseFloat(row.unit_price) || 0,
+          grand_total: parseFloat(row.grand_total) || 0,
+        }
+      }),
+    }
+
+    isPreviewModalOpen.value = true
+  }
+
+  // فتح معاينة آخر فاتورة تم حفظها بنجاح
+  const openLastSavedPreview = () => {
+    if (lastSavedSale.value) {
+      previewSaleData.value = lastSavedSale.value
+      isPreviewModalOpen.value = true
+    } else {
+      toast.info('لا توجد فاتورة مرحلة سابقة في هذه الجلسة لمعاينتها.')
+    }
+  }
+
   onMounted(async () => {
     document.addEventListener('fullscreenchange', checkFullscreen)
     document.addEventListener('webkitfullscreenchange', checkFullscreen)
@@ -654,6 +720,24 @@ export function useSaleFormLogic() {
       items: dynamicItemsPayload,
     }
 
+    // تجهيز لقطة بنود الفاتورة بالأسماء والوحدات لعرضها في المعاينة حتى بعد تصفير الشاشة
+    const previewSnapshotItems = items.value
+      .filter((row) => row.item_id && row.item_unit_id)
+      .map((row) => {
+        const matchedUnit = row.available_units?.find((u) => u.id === row.item_unit_id)
+        return {
+          item_id: row.item_id,
+          item_name: row.item_name,
+          item_unit_id: row.item_unit_id,
+          unit_name: matchedUnit?.unit_name || matchedUnit?.name || '',
+          quantity: parseFloat(row.quantity) || 0,
+          unit_price: parseFloat(row.unit_price) || 0,
+          grand_total: parseFloat(row.grand_total) || 0,
+        }
+      })
+
+    const currentCustomer = customerStore.customers?.find((c) => c.id === form.value.customer_id)
+
     // payment_mode حالة واجهة فقط، ولا تُرسل إلى الخادم.
     delete finalPayload.payment_mode
 
@@ -670,6 +754,23 @@ export function useSaleFormLogic() {
         router.push('/app/sales')
       } else {
         const response = await saleStore.createSale(finalPayload)
+        const savedSaleObj = response?.data || response
+
+        // تكوين كائن الفاتورة المكتمل والنهائي للاحتفاظ به للمعاينة
+        const completedSavedSale = {
+          ...finalPayload,
+          id: savedSaleObj?.id || null,
+          invoice_number:
+            savedSaleObj?.invoice_number || (savedSaleObj?.id ? `#${savedSaleObj.id}` : null),
+          customer_name: currentCustomer?.name || 'عميل عام / مباشر',
+          customer_phone: currentCustomer?.phone || '',
+          pdf_url: savedSaleObj?.pdf_url || null,
+          created_at: savedSaleObj?.created_at || new Date().toISOString(),
+          items: previewSnapshotItems,
+        }
+
+        lastSavedSale.value = completedSavedSale
+
         toast.success(
           form.value.invoice_type === 'return'
             ? 'تم ترحيل مستند مردود المبيعات وإدخال الأرصدة للمخازن بنجاح.'
@@ -680,9 +781,15 @@ export function useSaleFormLogic() {
         if (posChannel) {
           posChannel.postMessage({
             type: 'SALE_SAVED',
-            saleId: response?.data?.id || response?.id,
+            saleId: savedSaleObj?.id,
             timestamp: Date.now(),
           })
+        }
+
+        // إظهار نافذة المعاينة تلقائياً إذا كان الخيار مفعلاً
+        if (autoPreviewAfterSave.value) {
+          previewSaleData.value = completedSavedSale
+          isPreviewModalOpen.value = true
         }
 
         // السلوك الحاسم لوضع الـ POS: البقاء في الشاشة والتصفير الذكي للفاتورة التالية
@@ -733,6 +840,12 @@ export function useSaleFormLogic() {
     toggleFullscreen,
     exitPosTerminal,
     resetFormForNextSale,
+    autoPreviewAfterSave,
+    isPreviewModalOpen,
+    previewSaleData,
+    lastSavedSale,
+    openDraftPreview,
+    openLastSavedPreview,
     form,
     items,
     detailSchema,
