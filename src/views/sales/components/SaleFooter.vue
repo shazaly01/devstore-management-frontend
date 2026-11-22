@@ -1,153 +1,314 @@
 <!--src/views/sales/components/SaleFooter.vue-->
 <template>
   <div
-    class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 text-right font-sans transition-colors duration-200 items-start"
+    class="grid grid-cols-1 lg:grid-cols-12 gap-3.5 text-right font-sans transition-colors duration-200 items-stretch"
     dir="rtl"
   >
-    <!-- 1. الإجماليات النهائية -->
-    <div
-      class="p-4 bg-surface-header rounded-xl border border-surface-border border-t-4 border-t-primary shadow-sm flex flex-col justify-between space-y-3 transition-colors duration-200"
-    >
-      <div class="space-y-2 text-xs font-semibold text-text-secondary">
-        <h3 class="text-[11px] font-black text-text-primary border-b border-surface-border pb-1.5">
-          الإجماليات النهائية
-        </h3>
+    <!-- 1. العمود الأيمن: التسويات المالية + ملاحظات الفاتورة (مكدّسة رأسياً لتوازن الارتفاع) -->
+    <div class="lg:col-span-3 flex flex-col gap-3 justify-between">
+      <!-- 1.أ التسويات المالية (الخصم والضريبة) - قابلة للطي -->
+      <div
+        class="p-3.5 bg-surface-section rounded-xl border border-surface-border shadow-xs transition-all duration-200"
+      >
+        <div
+          class="flex items-center justify-between border-b border-surface-border/80 pb-1.5 cursor-pointer select-none"
+          @click="isAdjustmentsOpen = !isAdjustmentsOpen"
+        >
+          <div class="flex items-center gap-1.5">
+            <h3 class="text-[11px] font-black text-text-primary">إضافات وتسويات مالية</h3>
+            <span
+              v-if="hasAdjustments"
+              class="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold bg-primary/10 text-primary border border-primary/25"
+            >
+              مطبقة
+            </span>
+          </div>
 
-        <div class="flex justify-between border-b border-surface-border/60 pb-1.5">
-          <span>الإجمالي قبل الخصم والضريبة:</span>
-          <span class="font-mono font-bold text-text-primary">{{ formatCurrency(subtotal) }}</span>
+          <div class="flex items-center gap-1 text-text-muted hover:text-primary transition-colors">
+            <span class="text-[10px] font-bold">{{ isAdjustmentsOpen ? 'طي' : 'توسيع' }}</span>
+            <svg
+              class="w-3.5 h-3.5 transition-transform duration-200"
+              :class="{ 'rotate-180': isAdjustmentsOpen }"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
         </div>
 
-        <div class="flex justify-between border-b border-surface-border/60 pb-1.5 text-danger">
-          <span>إجمالي الخصم الممنوح (-):</span>
-          <span class="font-mono font-bold">{{ formatCurrency(discountModel || 0) }}</span>
+        <!-- ملخص سريع يظهر أثناء الطي -->
+        <div
+          v-if="!isAdjustmentsOpen"
+          class="pt-2 text-xs flex justify-between items-center text-text-muted cursor-pointer"
+          @click="isAdjustmentsOpen = true"
+        >
+          <div v-if="hasAdjustments" class="flex flex-wrap gap-2 font-mono font-bold text-[11px]">
+            <span v-if="discountModel > 0" class="text-danger">
+              خصم: {{ formatCurrency(discountModel) }}
+            </span>
+            <span v-if="taxModel > 0" class="text-info">
+              ضريبة: {{ formatCurrency(taxModel) }}
+            </span>
+          </div>
+          <span v-else class="text-[10px]">لا توجد تسويات مالية (انقر للتعديل)</span>
         </div>
 
-        <div class="flex justify-between border-b border-surface-border/60 pb-1.5 text-info">
-          <span>إجمالي الضريبة المستحقة (+):</span>
-          <span class="font-mono font-bold">{{ formatCurrency(taxModel || 0) }}</span>
+        <!-- حقول الإدخال تظهر عند التوسيع -->
+        <div v-show="isAdjustmentsOpen" class="space-y-2.5 pt-2.5 transition-all">
+          <div class="grid grid-cols-2 gap-2">
+            <div class="flex flex-col space-y-1">
+              <label class="text-[10px] font-bold text-text-secondary truncate"
+                >الخصم الممنوح</label
+              >
+              <div
+                class="relative w-full h-8 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all hover:border-primary/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+              >
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  v-model.number="discountModel"
+                  class="block w-full h-full px-2 bg-transparent text-danger font-mono text-left font-bold text-xs focus:outline-none"
+                />
+              </div>
+              <p
+                v-if="getFieldError('discount_amount')"
+                class="text-danger text-[10px] font-bold mt-0.5"
+              >
+                {{ getFieldError('discount_amount') }}
+              </p>
+            </div>
+
+            <div class="flex flex-col space-y-1">
+              <label class="text-[10px] font-bold text-text-secondary truncate"
+                >الضريبة المضافة</label
+              >
+              <div
+                class="relative w-full h-8 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all hover:border-primary/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+              >
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  v-model.number="taxModel"
+                  class="block w-full h-full px-2 bg-transparent text-info font-mono text-left font-bold text-xs focus:outline-none"
+                />
+              </div>
+              <p
+                v-if="getFieldError('tax_amount')"
+                class="text-danger text-[10px] font-bold mt-0.5"
+              >
+                {{ getFieldError('tax_amount') }}
+              </p>
+            </div>
+          </div>
         </div>
       </div>
 
-      <div class="pt-2 space-y-2">
+      <!-- 1.ب ملاحظات وشروط الفاتورة - قابلة للطي -->
+      <div
+        class="p-3.5 bg-surface-section rounded-xl border border-surface-border shadow-xs flex-1 flex flex-col justify-between transition-all duration-200"
+      >
         <div
-          class="flex justify-between items-center bg-primary/10 border border-primary/30 p-2.5 rounded-lg text-primary shadow-sm"
+          class="flex items-center justify-between border-b border-surface-border/80 pb-1.5 cursor-pointer select-none"
+          @click="isNotesOpen = !isNotesOpen"
         >
-          <span class="font-black text-[11px]">الإجمالي النهائي الفعلي:</span>
-          <span class="text-xl font-mono font-black tracking-wide">
-            {{ formatCurrency(grandTotal) }}
-          </span>
+          <div class="flex items-center gap-1.5">
+            <label class="text-[11px] font-black text-text-primary cursor-pointer">
+              ملاحظات وشروط الفاتورة
+            </label>
+            <span
+              v-if="hasNotes"
+              class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-info/10 text-info border border-info/25"
+            >
+              مسجلة
+            </span>
+          </div>
+
+          <div class="flex items-center gap-1 text-text-muted hover:text-primary transition-colors">
+            <span class="text-[10px] font-bold">{{ isNotesOpen ? 'طي' : 'توسيع' }}</span>
+            <svg
+              class="w-3.5 h-3.5 transition-transform duration-200"
+              :class="{ 'rotate-180': isNotesOpen }"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2.2"
+                d="M19 9l-7 7-7-7"
+              />
+            </svg>
+          </div>
         </div>
 
-        <div v-if="invoiceType !== 'return'" class="flex justify-between items-center px-1 text-xs">
-          <span class="text-text-secondary font-bold">المدفوع:</span>
-          <span class="font-mono font-black text-text-primary">{{
-            formatCurrency(paidAmount)
-          }}</span>
-        </div>
-        <div v-if="invoiceType !== 'return'" class="flex justify-between items-center px-1 text-xs">
-          <span class="text-text-secondary font-bold">المتبقي على حساب العميل:</span>
-          <span class="font-mono font-black text-warning">{{
-            formatCurrency(remainingAmount)
-          }}</span>
+        <!-- معاينة سريعة أثناء الطي -->
+        <div
+          v-if="!isNotesOpen"
+          class="pt-2 text-[10px] text-text-muted cursor-pointer truncate"
+          @click="isNotesOpen = true"
+        >
+          <span v-if="hasNotes" class="text-text-secondary font-semibold">{{ notesModel }}</span>
+          <span v-else>لا توجد ملاحظات (انقر للكتابة)...</span>
         </div>
 
-        <p
-          v-if="getFieldError('grand_total')"
-          class="text-danger text-[10px] text-center font-bold mt-1"
-        >
-          {{ getFieldError('grand_total') }}
-        </p>
+        <!-- حقل النص عند التوسيع -->
+        <div v-show="isNotesOpen" class="pt-2 flex flex-col space-y-1.5 transition-all">
+          <textarea
+            v-model="notesModel"
+            rows="2"
+            placeholder="سجل أي ملاحظات خاصة بحركة البيع الحالية..."
+            class="block w-full min-h-[72px] p-2.5 border border-surface-border rounded-lg bg-surface-ground text-text-primary placeholder:text-text-muted text-xs font-semibold focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
+          ></textarea>
+        </div>
       </div>
     </div>
 
-    <!-- 2. توزيع السداد -->
+    <!-- 2. العمود الأوسط: توزيع السداد -->
     <div
       v-if="invoiceType !== 'return'"
-      class="p-4 bg-surface-section rounded-xl border border-surface-border shadow-sm space-y-3"
+      class="lg:col-span-4 p-4 bg-surface-section rounded-xl border border-surface-border shadow-xs flex flex-col justify-between space-y-3"
     >
-      <h3 class="text-[11px] font-black text-text-primary border-b border-surface-border pb-1.5">
-        توزيع السداد
-      </h3>
-
-      <div class="grid grid-cols-2 gap-2">
-        <button
-          type="button"
-          :aria-pressed="paymentModeModel === 'bank'"
-          :class="modeButtonClass('bank')"
-          @click="selectPaymentMode('bank')"
-        >
-          كامل بنك
-        </button>
-        <button
-          type="button"
-          :aria-pressed="paymentModeModel === 'cash'"
-          :class="modeButtonClass('cash')"
-          @click="selectPaymentMode('cash')"
-        >
-          كامل نقداً
-        </button>
-        <button
-          type="button"
-          :aria-pressed="paymentModeModel === 'credit'"
-          :class="modeButtonClass('credit')"
-          @click="selectPaymentMode('credit')"
-        >
-          كامل آجل
-        </button>
-        <button
-          type="button"
-          :aria-pressed="paymentModeModel === 'split'"
-          :class="modeButtonClass('split')"
-          @click="selectPaymentMode('split')"
-        >
-          تقسيم
-        </button>
-      </div>
-
-      <div v-if="paymentModeModel === 'split'" class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-        <div class="flex flex-col space-y-1.5">
-          <label for="sale-cash-amount" class="text-[10px] font-bold text-text-secondary">
-            المبلغ النقدي
-          </label>
-          <div
-            class="relative w-full h-10 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
-          >
-            <AppCurrencyInput
-              id="sale-cash-amount"
-              v-model="cashAmountModel"
-              :precision="2"
-              variant="sales"
-              input-class="h-10 !px-2 !text-left !font-mono !font-bold !text-xs"
-              @focus="selectPaymentAmount"
-              @click="selectPaymentAmount"
-            />
-          </div>
-          <p v-if="getFieldError('cash_amount')" class="text-danger text-[10px] font-bold">
-            {{ getFieldError('cash_amount') }}
-          </p>
+      <div class="space-y-3">
+        <div class="flex items-center justify-between border-b border-surface-border/80 pb-2">
+          <h3 class="text-xs font-black text-text-primary flex items-center gap-1.5">
+            <span class="w-1.5 h-3.5 rounded-full bg-primary inline-block"></span>
+            <span>توزيع السداد</span>
+          </h3>
+          <span class="text-[10px] font-bold text-text-muted">طريقة التحصيل</span>
         </div>
 
-        <div class="flex flex-col space-y-1.5">
-          <label for="sale-bank-amount" class="text-[10px] font-bold text-text-secondary">
-            المبلغ البنكي
-          </label>
-          <div
-            class="relative w-full h-10 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+        <div class="grid grid-cols-2 gap-2">
+          <!-- كامل بنك -->
+          <button
+            type="button"
+            :aria-pressed="paymentModeModel === 'bank'"
+            :class="modeButtonClass('bank')"
+            @click="selectPaymentMode('bank')"
           >
-            <AppCurrencyInput
-              id="sale-bank-amount"
-              v-model="bankAmountModel"
-              :precision="2"
-              variant="sales"
-              input-class="h-10 !px-2 !text-left !font-mono !font-bold !text-xs"
-              @focus="selectPaymentAmount"
-              @click="selectPaymentAmount"
-            />
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+              />
+            </svg>
+            <span>كامل بنك</span>
+          </button>
+
+          <!-- كامل نقداً -->
+          <button
+            type="button"
+            :aria-pressed="paymentModeModel === 'cash'"
+            :class="modeButtonClass('cash')"
+            @click="selectPaymentMode('cash')"
+          >
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+              />
+            </svg>
+            <span>كامل نقداً</span>
+          </button>
+
+          <!-- كامل آجل -->
+          <button
+            type="button"
+            :aria-pressed="paymentModeModel === 'credit'"
+            :class="modeButtonClass('credit')"
+            @click="selectPaymentMode('credit')"
+          >
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+              />
+            </svg>
+            <span>كامل آجل</span>
+          </button>
+
+          <!-- تقسيم -->
+          <button
+            type="button"
+            :aria-pressed="paymentModeModel === 'split'"
+            :class="modeButtonClass('split')"
+            @click="selectPaymentMode('split')"
+          >
+            <svg class="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
+              />
+            </svg>
+            <span>تقسيم</span>
+          </button>
+        </div>
+
+        <!-- حقول التقسيم عند الاختيار -->
+        <div
+          v-if="paymentModeModel === 'split'"
+          class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1"
+        >
+          <div class="flex flex-col space-y-1">
+            <label for="sale-cash-amount" class="text-[10px] font-bold text-text-secondary">
+              المبلغ النقدي
+            </label>
+            <div
+              class="relative w-full h-9 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+            >
+              <AppCurrencyInput
+                id="sale-cash-amount"
+                v-model="cashAmountModel"
+                :precision="2"
+                variant="sales"
+                input-class="h-9 !px-2 !text-left !font-mono !font-bold !text-xs"
+                @focus="selectPaymentAmount"
+                @click="selectPaymentAmount"
+              />
+            </div>
+            <p v-if="getFieldError('cash_amount')" class="text-danger text-[10px] font-bold">
+              {{ getFieldError('cash_amount') }}
+            </p>
           </div>
-          <p v-if="getFieldError('bank_amount')" class="text-danger text-[10px] font-bold">
-            {{ getFieldError('bank_amount') }}
-          </p>
+
+          <div class="flex flex-col space-y-1">
+            <label for="sale-bank-amount" class="text-[10px] font-bold text-text-secondary">
+              المبلغ البنكي
+            </label>
+            <div
+              class="relative w-full h-9 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+            >
+              <AppCurrencyInput
+                id="sale-bank-amount"
+                v-model="bankAmountModel"
+                :precision="2"
+                variant="sales"
+                input-class="h-9 !px-2 !text-left !font-mono !font-bold !text-xs"
+                @focus="selectPaymentAmount"
+                @click="selectPaymentAmount"
+              />
+            </div>
+            <p v-if="getFieldError('bank_amount')" class="text-danger text-[10px] font-bold">
+              {{ getFieldError('bank_amount') }}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -159,162 +320,88 @@
       </p>
     </div>
 
-    <!-- 3. التسويات المالية (الخصم والضريبة) - قابلة للطي في مكانها -->
+    <!-- 3. العمود الأيسر: الإجماليات النهائية (نهاية مسار العين وفوق زر الحفظ مباشرة) -->
     <div
-      class="p-4 bg-surface-section rounded-xl border border-surface-border shadow-sm transition-all duration-200"
+      :class="invoiceType === 'return' ? 'lg:col-span-9' : 'lg:col-span-5'"
+      class="p-4 bg-surface-section rounded-xl border border-surface-border border-t-4 border-t-primary shadow-xs flex flex-col justify-between space-y-3 transition-colors duration-200"
     >
-      <div
-        class="flex items-center justify-between border-b border-surface-border pb-1.5 cursor-pointer select-none"
-        @click="isAdjustmentsOpen = !isAdjustmentsOpen"
-      >
-        <div class="flex items-center gap-1.5">
-          <h3 class="text-[11px] font-black text-text-primary">إضافات وتسويات مالية</h3>
-          <span
-            v-if="hasAdjustments"
-            class="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold bg-primary/10 text-primary border border-primary/25"
-          >
-            مطبقة
+      <div class="space-y-2 text-xs font-semibold text-text-secondary">
+        <div class="flex items-center justify-between border-b border-surface-border/80 pb-2">
+          <h3 class="text-xs font-black text-text-primary flex items-center gap-1.5">
+            <span class="w-1.5 h-3.5 rounded-full bg-primary inline-block"></span>
+            <span>الإجماليات النهائية</span>
+          </h3>
+          <span class="text-[10px] font-bold text-text-muted">ملخص الفاتورة</span>
+        </div>
+
+        <div class="flex justify-between items-center border-b border-surface-border/50 pb-1.5">
+          <span>الإجمالي قبل الخصم والضريبة:</span>
+          <span class="font-mono font-bold text-text-primary">{{ formatCurrency(subtotal) }}</span>
+        </div>
+
+        <div
+          class="flex justify-between items-center border-b border-surface-border/50 pb-1.5"
+          :class="Number(discountModel) > 0 ? 'text-danger' : 'text-text-muted'"
+        >
+          <span>إجمالي الخصم الممنوح (-):</span>
+          <span class="font-mono font-bold">{{ formatCurrency(discountModel || 0) }}</span>
+        </div>
+
+        <div
+          v-if="Number(taxModel) > 0"
+          class="flex justify-between items-center border-b border-surface-border/50 pb-1.5 text-info"
+        >
+          <span>إجمالي الضريبة المستحقة (+):</span>
+          <span class="font-mono font-bold">{{ formatCurrency(taxModel || 0) }}</span>
+        </div>
+      </div>
+
+      <div class="space-y-2 pt-0.5">
+        <!-- صندوق الإجمالي النهائي الفعلي بسطر واحد واضح وعريض -->
+        <div
+          class="flex justify-between items-center gap-3 bg-primary/10 border border-primary/35 px-3.5 py-2.5 rounded-xl text-primary shadow-2xs"
+        >
+          <span class="font-black text-xs whitespace-nowrap">الإجمالي النهائي الفعلي:</span>
+          <span class="text-xl sm:text-2xl font-mono font-black tracking-tight whitespace-nowrap">
+            {{ formatCurrency(grandTotal) }}
           </span>
         </div>
 
-        <div class="flex items-center gap-1 text-text-muted hover:text-primary">
-          <span class="text-[10px] font-medium">{{ isAdjustmentsOpen ? 'طي' : 'توسيع' }}</span>
-          <svg
-            class="w-4 h-4 transition-transform duration-200"
-            :class="{ 'rotate-180': isAdjustmentsOpen }"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
+        <!-- شريط المدفوع والمتبقي في صف واحد متوازن -->
+        <div v-if="invoiceType !== 'return'" class="grid grid-cols-2 gap-2">
+          <div
+            class="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-surface-ground/70 border border-surface-border/70 text-xs"
           >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </div>
-      </div>
-
-      <!-- ملخص سريع يظهر فقط أثناء الطي -->
-      <div
-        v-if="!isAdjustmentsOpen"
-        class="pt-2 text-xs flex justify-between items-center text-text-muted cursor-pointer"
-        @click="isAdjustmentsOpen = true"
-      >
-        <div v-if="hasAdjustments" class="flex gap-2 font-mono font-bold text-[11px]">
-          <span v-if="discountModel > 0" class="text-danger"
-            >خصم: {{ formatCurrency(discountModel) }}</span
-          >
-          <span v-if="taxModel > 0" class="text-info">ضريبة: {{ formatCurrency(taxModel) }}</span>
-        </div>
-        <span v-else class="text-[10px]">لا توجد تسويات مالية (انقر لتعديل)</span>
-      </div>
-
-      <!-- حقول الإدخال تظهر عند التوسيع -->
-      <div v-show="isAdjustmentsOpen" class="space-y-4 pt-3 transition-all">
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div class="flex flex-col space-y-1.5">
-            <label class="text-[10px] font-bold text-text-secondary truncate">الخصم الممنوح</label>
-            <div
-              class="relative w-full h-10 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
+            <span class="text-text-secondary font-bold text-[11px]">المدفوع:</span>
+            <span
+              class="font-mono font-black"
+              :class="paidAmount > 0 ? 'text-success' : 'text-text-primary'"
             >
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                v-model.number="discountModel"
-                class="block w-full h-full px-2 bg-transparent text-danger font-mono text-left font-bold text-xs focus:outline-none"
-              />
-            </div>
-            <p
-              v-if="getFieldError('discount_amount')"
-              class="text-danger text-[10px] font-bold mt-0.5"
-            >
-              {{ getFieldError('discount_amount') }}
-            </p>
+              {{ formatCurrency(paidAmount) }}
+            </span>
           </div>
 
-          <div class="flex flex-col space-y-1.5">
-            <label class="text-[10px] font-bold text-text-secondary truncate"
-              >الضريبة المضافة</label
-            >
-            <div
-              class="relative w-full h-10 bg-surface-ground border border-surface-border rounded-lg flex items-center transition-all duration-200 hover:border-primary/50 focus-within:border-primary focus-within:ring-2 focus-within:ring-primary/20"
-            >
-              <input
-                type="number"
-                step="0.01"
-                min="0"
-                v-model.number="taxModel"
-                class="block w-full h-full px-2 bg-transparent text-info font-mono text-left font-bold text-xs focus:outline-none"
-              />
-            </div>
-            <p v-if="getFieldError('tax_amount')" class="text-danger text-[10px] font-bold mt-0.5">
-              {{ getFieldError('tax_amount') }}
-            </p>
+          <div
+            class="flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-xs transition-colors"
+            :class="
+              remainingAmount > 0
+                ? 'bg-warning/10 border-warning/35 text-warning'
+                : 'bg-surface-ground/70 border-surface-border/70 text-text-muted'
+            "
+          >
+            <span class="font-bold text-[11px]">المتبقي:</span>
+            <span class="font-mono font-black">
+              {{ formatCurrency(remainingAmount) }}
+            </span>
           </div>
         </div>
-      </div>
-    </div>
 
-    <!-- 4. ملاحظات وشروط الفاتورة - قابلة للطي في مكانها -->
-    <div
-      class="p-4 bg-surface-section rounded-xl border border-surface-border shadow-sm flex flex-col transition-all duration-200"
-    >
-      <div
-        class="flex items-center justify-between border-b border-surface-border pb-1.5 cursor-pointer select-none"
-        @click="isNotesOpen = !isNotesOpen"
-      >
-        <div class="flex items-center gap-1.5">
-          <label class="text-[11px] font-black text-text-primary cursor-pointer">
-            ملاحظات وشروط الفاتورة
-          </label>
-          <span
-            v-if="hasNotes"
-            class="text-[9px] px-1.5 py-0.5 rounded font-bold bg-info/10 text-info border border-info/25"
-          >
-            مسجلة
-          </span>
-        </div>
-
-        <div class="flex items-center gap-1 text-text-muted hover:text-primary">
-          <span class="text-[10px] font-medium">{{ isNotesOpen ? 'طي' : 'توسيع' }}</span>
-          <svg
-            class="w-4 h-4 transition-transform duration-200"
-            :class="{ 'rotate-180': isNotesOpen }"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M19 9l-7 7-7-7"
-            />
-          </svg>
-        </div>
-      </div>
-
-      <!-- معاينة سريعة تظهر فقط أثناء الطي -->
-      <div
-        v-if="!isNotesOpen"
-        class="pt-2 text-[10px] text-text-muted cursor-pointer truncate"
-        @click="isNotesOpen = true"
-      >
-        <span v-if="hasNotes" class="text-text-secondary font-semibold">{{ notesModel }}</span>
-        <span v-else>لا توجد ملاحظات (انقر للكتابة)...</span>
-      </div>
-
-      <!-- حقل النص يظهر عند التوسيع -->
-      <div v-show="isNotesOpen" class="pt-2 flex flex-col space-y-1.5 transition-all">
-        <textarea
-          v-model="notesModel"
-          rows="3"
-          placeholder="سجل أي ملاحظات خاصة بحركة البيع الحالية..."
-          class="block w-full min-h-[96px] p-3 border border-surface-border rounded-lg bg-surface-ground text-text-primary placeholder:text-text-muted text-xs font-semibold focus:border-primary focus:bg-surface-section focus:ring-2 focus:ring-primary/20 outline-none transition-all resize-none"
-        ></textarea>
+        <p
+          v-if="getFieldError('grand_total')"
+          class="text-danger text-[10px] text-center font-bold mt-1"
+        >
+          {{ getFieldError('grand_total') }}
+        </p>
       </div>
     </div>
   </div>
@@ -352,12 +439,19 @@ const hasNotes = computed(() => {
   return typeof notesModel.value === 'string' && notesModel.value.trim().length > 0
 })
 
-// فتح قسم التسويات تلقائياً عند حدوث أخطاء تحقق
+// فتح قسم التسويات أو الملاحظات تلقائياً عند حدوث أخطاء تحقق
 watch(
-  () => [props.validationErrors?.discount_amount, props.validationErrors?.tax_amount],
-  ([discountErr, taxErr]) => {
+  () => [
+    props.validationErrors?.discount_amount,
+    props.validationErrors?.tax_amount,
+    props.validationErrors?.notes,
+  ],
+  ([discountErr, taxErr, notesErr]) => {
     if (discountErr || taxErr) {
       isAdjustmentsOpen.value = true
+    }
+    if (notesErr) {
+      isNotesOpen.value = true
     }
   },
 )
@@ -387,10 +481,10 @@ const amountsExceedTotal = computed(() => {
 })
 
 const modeButtonClass = (mode) => [
-  'min-h-10 px-2 py-2 rounded-lg border text-[10px] sm:text-xs font-black transition-colors focus:outline-none focus:ring-2 focus:ring-primary/30',
+  'min-h-10 px-2.5 py-2 rounded-xl border text-[11px] sm:text-xs font-black inline-flex items-center justify-center gap-1.5 transition-all focus:outline-none focus:ring-2 focus:ring-primary/30 cursor-pointer',
   paymentModeModel.value === mode
-    ? 'border-primary bg-primary/10 text-primary shadow-sm'
-    : 'border-surface-border bg-surface-ground text-text-secondary hover:border-primary/50 hover:text-primary',
+    ? 'border-primary bg-primary/10 text-primary ring-1 ring-primary/30 shadow-2xs'
+    : 'border-surface-border bg-surface-ground/70 text-text-secondary hover:bg-surface-card hover:border-primary/50 hover:text-primary',
 ]
 
 const selectPaymentMode = (mode) => {

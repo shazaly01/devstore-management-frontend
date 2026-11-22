@@ -1,137 +1,142 @@
 <!-- src/views/dashboard/components/ExpensesSummaryTable.vue -->
 <template>
-  <AppCard class="flex flex-col h-full font-sans" dir="rtl">
-    <!-- رأس الكرت: العنوان والمؤشرات العلوية -->
-    <div class="flex items-center justify-between mb-5">
-      <div class="flex items-center gap-3">
-        <!-- أيقونة تعبر عن المصروفات وتدفق الأموال للخارج -->
-        <div class="p-2.5 bg-danger/10 text-danger rounded-xl border border-danger/20 shadow-sm">
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"
-            ></path>
-          </svg>
+  <article
+    class="dashboard-enter dashboard-luminous-card relative flex flex-col rounded-xl border border-surface-border bg-surface-card p-5 transition-all duration-300 hover:border-rose-500/50"
+    :style="{
+      '--stagger-index': staggerIndex,
+      '--accent-rgb': '244, 63, 94',
+    }"
+    dir="rtl"
+  >
+    <!-- رأس البطاقة -->
+    <div class="relative z-10 flex items-center justify-between gap-3 mb-4">
+      <div class="flex items-center gap-3 min-w-0">
+        <div
+          class="dashboard-icon-gem flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+        >
+          <ReceiptPercentIcon class="h-5 w-5" stroke-width="1.85" />
         </div>
-        <div>
-          <h3 class="text-lg font-black text-text-primary tracking-tight">المصروفات التشغيلية</h3>
-          <p class="text-xs text-text-muted mt-0.5">تحليل بنود الصرف للفترة المحددة</p>
+        <div class="min-w-0">
+          <h3 class="text-sm sm:text-base font-extrabold text-text-primary truncate">
+            كشف المصروفات التشغيلية
+          </h3>
+          <p class="mt-0.5 text-xs text-text-muted truncate">
+            تفصيل بنود المصروفات المنصرفة خلال الفترة المحددة
+          </p>
         </div>
       </div>
 
-      <!-- شارة توضح عدد البنود المسجلة -->
+      <!-- شارة إجمالي المصروفات -->
       <div
-        class="text-[11px] font-bold text-danger bg-danger/10 px-3 py-1.5 rounded-lg border border-danger/20"
+        class="shrink-0 rounded-xl border border-rose-500/35 bg-rose-500/10 px-3 py-1.5 text-left dark:bg-rose-400/15"
       >
-        {{ expenses.list?.length || 0 }} بنود
+        <span class="block text-[10px] font-bold text-text-muted">الإجمالي</span>
+        <span class="text-xs sm:text-sm font-black text-rose-600 dark:text-rose-300 tabular-nums">
+          {{ formatCurrency(grandTotal) }}
+        </span>
       </div>
     </div>
 
-    <!-- حاوية الجدول: متجاوبة مع الجوال عبر التمرير الأفقي -->
+    <!-- حالة عدم وجود مصروفات -->
     <div
-      class="flex-1 overflow-x-auto rounded-xl border border-surface-border bg-surface-ground mb-5"
+      v-if="!itemsList.length"
+      class="relative z-10 flex flex-col items-center justify-center text-center px-4 py-10 rounded-xl border border-dashed border-surface-border/80 bg-surface-ground/40"
     >
-      <table class="w-full text-right whitespace-nowrap">
-        <thead class="bg-surface-section text-xs text-text-secondary sticky top-0 z-10">
-          <tr>
-            <th class="px-5 py-3.5 font-bold border-b border-surface-border">بند المصروف</th>
-            <th class="px-5 py-3.5 font-bold border-b border-surface-border w-32 text-left">
-              المبلغ المستهلك
-            </th>
+      <div
+        class="flex h-11 w-11 items-center justify-center rounded-full bg-surface-section text-text-muted mb-2.5 ring-1 ring-surface-border"
+      >
+        <BanknotesIcon class="h-6 w-6" />
+      </div>
+      <p class="text-sm font-bold text-text-secondary">لا توجد مصروفات مسجلة في هذه الفترة</p>
+      <p class="mt-1 text-xs text-text-muted max-w-xs">
+        ستظهر بنود المصروفات وسندات الصرف تلقائياً هنا عند تسجيلها ضمن النطاق الزمني.
+      </p>
+    </div>
+
+    <!-- جدول المصروفات التفصيلي -->
+    <div v-else class="relative z-10 overflow-x-auto max-h-[360px] overflow-y-auto">
+      <table class="w-full text-right border-collapse">
+        <thead class="sticky top-0 z-10 bg-surface-card">
+          <tr
+            class="border-b border-surface-border text-[11px] font-extrabold text-text-muted uppercase tracking-wider"
+          >
+            <th class="py-2.5 px-2 w-10 text-center">#</th>
+            <th class="py-2.5 px-3">بند / بيان المصروف</th>
+            <th class="py-2.5 px-3 text-center w-24">النسبة</th>
+            <th class="py-2.5 px-3 text-left">المبلغ</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-surface-border text-sm bg-surface-section">
-          <!-- حالة عدم وجود بيانات (Empty State) بتصميم هادئ -->
-          <tr v-if="!expenses.list || expenses.list.length === 0">
-            <td colspan="2" class="px-5 py-10 text-center text-text-muted">
-              <div class="flex flex-col items-center gap-3">
-                <div class="p-3 rounded-full bg-surface-ground">
-                  <svg
-                    class="w-6 h-6 opacity-40 text-text-muted"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="1.5"
-                      d="M20 12H4M8 16l-4-4 4-4"
-                    ></path>
-                  </svg>
-                </div>
-                <span class="text-sm">لا توجد حركات صرف مسجلة في هذا النطاق الزمني.</span>
+        <tbody class="divide-y divide-surface-border/60 text-xs sm:text-sm">
+          <tr
+            v-for="(item, index) in itemsList"
+            :key="`${item.expense_id || 'exp'}-${index}`"
+            class="transition-colors duration-150 hover:bg-rose-500/[0.04] dark:hover:bg-rose-500/[0.08]"
+          >
+            <td class="py-2.5 px-2 text-center font-bold text-text-muted tabular-nums">
+              {{ index + 1 }}
+            </td>
+
+            <td class="py-2.5 px-3">
+              <p class="font-bold text-text-primary">{{ item.expense_name }}</p>
+              <div
+                class="mt-1.5 h-1.5 w-full max-w-[190px] rounded-full bg-surface-ground overflow-hidden"
+              >
+                <div
+                  class="h-full rounded-full bg-gradient-to-l from-rose-500 to-amber-400 transition-all duration-500"
+                  :style="{ width: `${getPercentage(item.total_spent)}%` }"
+                ></div>
               </div>
             </td>
-          </tr>
 
-          <!-- تكرار البيانات الواردة -->
-          <tr
-            v-for="expense in expenses.list"
-            :key="expense.expense_id"
-            class="hover:bg-surface-ground transition-colors duration-150 group"
-          >
-            <td class="px-5 py-3.5 text-text-primary font-medium flex items-center gap-2.5">
+            <td class="py-2.5 px-3 text-center whitespace-nowrap">
               <span
-                class="w-1.5 h-1.5 rounded-full bg-danger/60 group-hover:bg-danger transition-colors duration-150"
-              ></span>
-              {{ expense.expense_name }}
+                class="inline-flex items-center rounded-md border border-surface-border bg-surface-ground/80 px-2 py-0.5 text-[11px] font-extrabold text-text-secondary tabular-nums"
+              >
+                {{ getPercentage(item.total_spent) }}%
+              </span>
             </td>
-            <td class="px-5 py-3.5 font-bold text-danger font-mono tracking-tight text-left">
-              {{ formatCurrency(expense.total_spent) }}
+
+            <td class="py-2.5 px-3 text-left whitespace-nowrap">
+              <span class="font-black text-text-primary tabular-nums">
+                {{ formatCurrency(item.total_spent) }}
+              </span>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-
-    <!-- التذييل: الإجمالي العام (Footer) مثبت في الأسفل -->
-    <div
-      class="mt-auto pt-4 border-t border-surface-border flex items-center justify-between bg-danger/5 rounded-lg px-3 py-2"
-    >
-      <span class="text-sm font-bold text-text-secondary flex items-center gap-2">
-        <svg class="w-4 h-4 text-danger" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4"
-          ></path>
-        </svg>
-        إجمالي المصروفات:
-      </span>
-      <span class="text-xl md:text-2xl font-black text-danger tracking-tight font-mono">
-        {{ formatCurrency(expenses.grand_total) }}
-      </span>
-    </div>
-  </AppCard>
+  </article>
 </template>
 
 <script setup>
-import AppCard from '@/components/ui/AppCard.vue'
+import { computed } from 'vue'
+import { ReceiptPercentIcon, BanknotesIcon } from '@heroicons/vue/24/outline'
 
-defineProps({
+const props = defineProps({
   expenses: {
     type: Object,
-    required: true,
     default: () => ({ list: [], grand_total: 0 }),
+  },
+  staggerIndex: {
+    type: Number,
+    default: 11,
   },
 })
 
+const itemsList = computed(() => props.expenses?.list || [])
+const grandTotal = computed(() => Number(props.expenses?.grand_total) || 0)
+
+const getPercentage = (amount) => {
+  const total = grandTotal.value
+  const val = Number(amount) || 0
+  if (total <= 0 || val <= 0) return 0
+  return Math.min(100, Math.round((val / total) * 100))
+}
+
 const formatCurrency = (value) => {
-  if (value === undefined || value === null) return '0.00'
   return new Intl.NumberFormat('en-US', {
-    style: 'decimal',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(value)
+  }).format(Number(value) || 0)
 }
 </script>

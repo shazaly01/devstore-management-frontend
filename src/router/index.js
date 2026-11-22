@@ -95,12 +95,11 @@ const routes = [
     component: AppLayout,
     meta: { requiresAuth: true },
     children: [
-      // لوحة التحكم الأساسية
+      // لوحة التحكم الأساسية (متاحة لجميع المستخدمين المسجلين كصفحة هبوط افتراضية آمنة)
       {
         path: 'dashboard',
         name: 'Dashboard',
         component: DashboardView,
-        meta: { permission: 'dashboard.view' },
       },
 
       // ==========================================
@@ -477,8 +476,13 @@ router.beforeEach((to, from, next) => {
         console.warn(
           `Access denied: route "${String(to.name)}" requires permission "${requiredPermission}"`,
         )
-        // إعادة التوجيه التلقائي الآمن إلى لوحة التحكم عند محاولة تخطي جدار الحماية
-        next({ name: 'Dashboard' })
+        // منع حلقة إعادة التوجيه اللانهائية في حال كان المسار المستهدف هو لوحة التحكم بالفعل
+        if (to.name === 'Dashboard') {
+          next(false)
+        } else {
+          // إعادة التوجيه التلقائي الآمن إلى لوحة التحكم عند محاولة تخطي جدار الحماية
+          next({ name: 'Dashboard' })
+        }
       } else {
         next()
       }

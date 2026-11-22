@@ -6,10 +6,7 @@ import roleService from '@/services/roleService'
 export const useRoleStore = defineStore('roles', () => {
   // --- State ---
   const roles = ref([])
-  // --- [تعديل] ---
-  // permissions سيحتوي الآن على الكائن الكامل { groups: [], actions: [] }
-  const permissions = ref({ groups: [], actions: [] })
-  // --- [نهاية التعديل] ---
+  const permissions = ref({ modules: [], actions: [] })
   const pagination = ref({})
   const loading = ref(false)
   const error = ref(null)
@@ -25,7 +22,6 @@ export const useRoleStore = defineStore('roles', () => {
   }
 
   // --- Actions ---
-
   async function fetchRoles(page = 1) {
     loading.value = true
     error.value = null
@@ -43,21 +39,15 @@ export const useRoleStore = defineStore('roles', () => {
 
   async function fetchPermissions() {
     try {
-      // --- [تعديل] ---
-      // التحقق من أن مصفوفة المجموعات فارغة قبل الجلب
-      if (permissions.value.groups && permissions.value.groups.length > 0) return
+      if (permissions.value.modules && permissions.value.modules.length > 0) return
 
       const response = await roleService.getAllPermissions()
-      // تخزين الاستجابة الكاملة كما هي
       permissions.value = response.data
-      // --- [نهاية التعديل] ---
     } catch (err) {
       console.error('Failed to fetch permissions:', err)
-      // يمكنك إضافة معالجة خطأ هنا لعرضها للمستخدم
     }
   }
 
-  // ... باقي الدوال تبقى كما هي
   async function createRole(roleData) {
     loading.value = true
     try {
@@ -87,12 +77,11 @@ export const useRoleStore = defineStore('roles', () => {
   async function updateRole(id, roleData) {
     loading.value = true
     try {
-      // نستخدم دالة update القياسية في الخدمة
       const response = await roleService.update(id, roleData)
       _updateOrAddInList(response.data.data)
     } catch (err) {
       console.error('Failed to update role:', err)
-      throw err // أعد رمي الخطأ لمعالجته في المكون
+      throw err
     } finally {
       loading.value = false
     }
@@ -116,14 +105,12 @@ export const useRoleStore = defineStore('roles', () => {
     try {
       let response
       if (roleData.id) {
-        // تحديث الاسم فقط
         response = await roleService.update(roleData.id, { name: roleData.name })
       } else {
-        // إنشاء دور جديد (بدون صلاحيات)
         response = await roleService.create({ name: roleData.name })
       }
       _updateOrAddInList(response.data.data)
-      await fetchRoles() // إعادة جلب لضمان الترتيب الصحيح
+      await fetchRoles()
     } catch (err) {
       console.error('Failed to submit role:', err)
       throw err

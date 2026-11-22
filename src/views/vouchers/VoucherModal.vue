@@ -10,7 +10,7 @@
   >
     <div
       v-if="modelValue"
-      class="fixed inset-0 bg-black/60 flex items-center justify-center z-40 p-4"
+      class="fixed inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-40 p-3 sm:p-4"
       @click.self="close"
     >
       <Transition
@@ -23,30 +23,44 @@
         leave-to-class="opacity-0 scale-95"
       >
         <div
-          class="bg-surface-section border border-surface-border rounded-xl shadow-2xl p-6 w-full max-w-3xl transform overflow-y-auto max-h-[90vh] custom-scrollbar text-right font-sans"
+          class="bg-surface-section border border-surface-border border-t-4 border-t-primary rounded-2xl shadow-2xl w-full max-w-3xl transform overflow-y-auto max-h-[92vh] custom-scrollbar text-right font-sans"
           role="dialog"
           aria-modal="true"
           :aria-labelledby="modalTitle"
           dir="rtl"
         >
-          <div class="flex justify-between items-center border-b border-surface-border pb-3 mb-5">
-            <h3
-              id="modal-title"
-              class="text-xl font-bold text-text-primary flex items-center gap-2"
-            >
+          <!-- ترويسة مصقولة للنافذة مع شارة نوع السند -->
+          <div
+            class="px-4 sm:px-5 py-3 bg-surface-header border-b border-surface-border flex justify-between items-center gap-3"
+          >
+            <div class="flex items-center gap-2.5">
               <span
-                class="w-2.5 h-2.5 rounded-full"
+                class="w-2.5 h-5 rounded-full shrink-0"
                 :class="voucher?.voucher_type === 'receipt' ? 'bg-success' : 'bg-danger'"
               ></span>
-              {{ modalTitle }}
-            </h3>
+              <h3 id="modal-title" class="text-base sm:text-lg font-black text-text-primary">
+                {{ modalTitle }}
+              </h3>
+              <span
+                class="text-[10px] px-2 py-0.5 rounded-full font-bold border whitespace-nowrap"
+                :class="
+                  voucher?.voucher_type === 'receipt'
+                    ? 'bg-success/15 text-success border-success/35'
+                    : 'bg-danger/15 text-danger border-danger/35'
+                "
+              >
+                {{ voucher?.voucher_type === 'receipt' ? 'قبض مالي' : 'صرف مالي' }}
+              </span>
+            </div>
+
             <button
+              type="button"
               @click="close"
-              class="text-text-muted hover:text-text-primary p-1.5 rounded-lg hover:bg-surface-ground transition-colors cursor-pointer"
+              class="text-text-muted hover:text-text-primary p-1.5 rounded-lg hover:bg-surface-card/80 transition-colors cursor-pointer shrink-0"
               aria-label="Close"
             >
               <svg
-                class="w-5 h-5"
+                class="w-4 h-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -55,22 +69,25 @@
                 <path
                   stroke-linecap="round"
                   stroke-linejoin="round"
-                  stroke-width="2"
+                  stroke-width="2.2"
                   d="M6 18L18 6M6 6l12 12"
                 ></path>
               </svg>
             </button>
           </div>
 
-          <VoucherForm
-            :initial-data="voucher"
-            :is-saving="isSaving"
-            :accounts="accounts"
-            :validation-errors="validationErrors"
-            :is-type-disabled="isTypeDisabled"
-            @submit="handleFormSubmit"
-            @cancel="close"
-          />
+          <!-- محتوى نموذج السند -->
+          <div class="p-3.5 sm:p-4">
+            <VoucherForm
+              :initial-data="voucher"
+              :is-saving="isSaving"
+              :accounts="accounts"
+              :validation-errors="validationErrors"
+              :is-type-disabled="isTypeDisabled"
+              @submit="handleFormSubmit"
+              @cancel="close"
+            />
+          </div>
         </div>
       </Transition>
     </div>
@@ -138,7 +155,7 @@ const handleFormSubmit = (formData) => {
   background: transparent;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background-color: var(--surface-border, #cbd5e1);
+  background-color: rgb(var(--color-surface-border));
   border-radius: 10px;
 }
 </style>

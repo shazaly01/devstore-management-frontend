@@ -1,139 +1,142 @@
 <!-- src/views/dashboard/components/CustomerDebtsTable.vue -->
 <template>
-  <AppCard class="flex flex-col h-full font-sans" dir="rtl">
-    <!-- رأس الكرت: العنوان والمؤشرات العليا للعملاء -->
-    <div class="flex items-center justify-between mb-5">
-      <div class="flex items-center gap-3">
-        <!-- أيقونة تعبر عن حسابات المقبوضات والديون الخارجية للتحصيل -->
-        <div class="p-2.5 bg-warning/10 text-warning rounded-xl border border-warning/20 shadow-sm">
-          <svg
-            class="w-5 h-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 00-2 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H7a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-            ></path>
-          </svg>
+  <article
+    class="dashboard-enter dashboard-luminous-card relative flex flex-col rounded-xl border border-surface-border bg-surface-card p-5 transition-all duration-300 hover:border-amber-500/55"
+    :style="{
+      '--stagger-index': staggerIndex,
+      '--accent-rgb': '245, 158, 11',
+    }"
+    dir="rtl"
+  >
+    <!-- رأس البطاقة -->
+    <div class="relative z-10 flex items-center justify-between gap-3 mb-4">
+      <div class="flex items-center gap-3 min-w-0">
+        <div
+          class="dashboard-icon-gem flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+        >
+          <UsersIcon class="h-5 w-5" stroke-width="1.85" />
         </div>
-        <div>
-          <h3 class="text-lg font-black text-text-primary tracking-tight">مديونيات العملاء</h3>
-          <p class="text-xs text-text-muted mt-0.5">الأرصدة اللحظية المستحقة للتحصيل الفوري</p>
+        <div class="min-w-0">
+          <h3 class="text-sm sm:text-base font-extrabold text-text-primary truncate">
+            مديونيات العملاء اللحظية
+          </h3>
+          <p class="mt-0.5 text-xs text-text-muted truncate">
+            العملاء أصحاب الأرصدة المدينة المستحقة للمنشأة
+          </p>
         </div>
       </div>
 
-      <!-- شارة توضح عدد العملاء الذين لديهم أرصدة مكشوفة -->
+      <!-- شارة إجمالي المديونيات -->
       <div
-        class="text-[11px] font-bold text-warning bg-warning/10 px-3 py-1.5 rounded-lg border border-warning/20"
+        class="shrink-0 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-1.5 text-left dark:bg-amber-400/15"
       >
-        {{ customers.list?.length || 0 }} عملاء مدينين
+        <span class="block text-[10px] font-bold text-text-muted">إجمالي الذمم</span>
+        <span class="text-xs sm:text-sm font-black text-amber-700 dark:text-amber-300 tabular-nums">
+          {{ formatCurrency(grandTotal) }}
+        </span>
       </div>
     </div>
 
-    <!-- حاوية الجدول: متجاوبة مع الجوال عبر التمرير الأفقي -->
+    <!-- حالة عدم وجود مديونيات -->
     <div
-      class="flex-1 overflow-x-auto rounded-xl border border-surface-border bg-surface-ground mb-5"
+      v-if="!itemsList.length"
+      class="relative z-10 flex flex-col items-center justify-center text-center px-4 py-10 rounded-xl border border-dashed border-emerald-500/35 bg-emerald-500/[0.04]"
     >
-      <table class="w-full text-right whitespace-nowrap">
-        <thead class="bg-surface-section text-xs text-text-secondary sticky top-0 z-10">
-          <tr>
-            <th class="px-5 py-3.5 font-bold border-b border-surface-border">اسم العميل</th>
-            <th class="px-5 py-3.5 font-bold border-b border-surface-border w-32 text-left">
-              المديونية الحالية
-            </th>
+      <div
+        class="flex h-11 w-11 items-center justify-center rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 mb-2.5 ring-1 ring-emerald-500/30"
+      >
+        <CheckCircleIcon class="h-6 w-6" />
+      </div>
+      <p class="text-sm font-bold text-text-primary">لا توجد مديونيات مستحقة على العملاء</p>
+      <p class="mt-1 text-xs text-text-muted max-w-xs">
+        جميع حسابات العملاء مسددة بالكامل ولا توجد أرصدة مدينة حالياً.
+      </p>
+    </div>
+
+    <!-- جدول مديونيات العملاء -->
+    <div v-else class="relative z-10 overflow-x-auto max-h-[360px] overflow-y-auto">
+      <table class="w-full text-right border-collapse">
+        <thead class="sticky top-0 z-10 bg-surface-card">
+          <tr
+            class="border-b border-surface-border text-[11px] font-extrabold text-text-muted uppercase tracking-wider"
+          >
+            <th class="py-2.5 px-2 w-10 text-center">#</th>
+            <th class="py-2.5 px-3">اسم العميل</th>
+            <th class="py-2.5 px-3 text-center w-24">الحصة</th>
+            <th class="py-2.5 px-3 text-left">الرصيد المستحق</th>
           </tr>
         </thead>
-        <tbody class="divide-y divide-surface-border text-sm bg-surface-section">
-          <!-- حالة عدم وجود بيانات (Empty State) -->
-          <tr v-if="!customers.list || customers.list.length === 0">
-            <td colspan="2" class="px-5 py-10 text-center text-text-muted">
-              <div class="flex flex-col items-center gap-3">
-                <div class="p-3 rounded-full bg-surface-ground">
-                  <svg
-                    class="w-6 h-6 opacity-40 text-text-muted"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="1.5"
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    ></path>
-                  </svg>
-                </div>
-                <span class="text-sm"
-                  >لا توجد مديونيات مستحقة على العملاء حالياً، الحسابات مقفلة.</span
-                >
+        <tbody class="divide-y divide-surface-border/60 text-xs sm:text-sm">
+          <tr
+            v-for="(customer, index) in itemsList"
+            :key="customer.customer_id"
+            class="transition-colors duration-150 hover:bg-amber-500/[0.05] dark:hover:bg-amber-500/[0.1]"
+          >
+            <td class="py-2.5 px-2 text-center font-bold text-text-muted tabular-nums">
+              {{ index + 1 }}
+            </td>
+
+            <td class="py-2.5 px-3">
+              <p class="font-bold text-text-primary">{{ customer.customer_name }}</p>
+              <div
+                class="mt-1.5 h-1.5 w-full max-w-[190px] rounded-full bg-surface-ground overflow-hidden"
+              >
+                <div
+                  class="h-full rounded-full bg-gradient-to-l from-amber-500 to-orange-400 transition-all duration-500"
+                  :style="{ width: `${getPercentage(customer.current_balance)}%` }"
+                ></div>
               </div>
             </td>
-          </tr>
 
-          <!-- تكرار حركات العملاء مرتبة تنازلياً من الأعلى مديونية -->
-          <tr
-            v-for="customer in customers.list"
-            :key="customer.customer_id"
-            class="hover:bg-surface-ground transition-colors duration-150 group"
-          >
-            <td class="px-5 py-3.5 text-text-primary font-medium flex items-center gap-2.5">
+            <td class="py-2.5 px-3 text-center whitespace-nowrap">
               <span
-                class="w-1.5 h-1.5 rounded-full bg-warning/60 group-hover:bg-warning transition-colors duration-150"
-              ></span>
-              {{ customer.customer_name }}
+                class="inline-flex items-center rounded-md border border-surface-border bg-surface-ground/80 px-2 py-0.5 text-[11px] font-extrabold text-text-secondary tabular-nums"
+              >
+                {{ getPercentage(customer.current_balance) }}%
+              </span>
             </td>
-            <td class="px-5 py-3.5 font-bold text-warning font-mono tracking-tight text-left">
-              {{ formatCurrency(customer.current_balance) }}
+
+            <td class="py-2.5 px-3 text-left whitespace-nowrap">
+              <span class="font-black text-amber-700 dark:text-amber-300 tabular-nums">
+                {{ formatCurrency(customer.current_balance) }}
+              </span>
             </td>
           </tr>
         </tbody>
       </table>
     </div>
-
-    <!-- التذييل: إجمالي مديونيات كل العملاء في نهاية الجدول -->
-    <div
-      class="mt-auto pt-4 border-t border-surface-border flex items-center justify-between bg-warning/5 rounded-lg px-3 py-2"
-    >
-      <span class="text-sm font-bold text-text-secondary flex items-center gap-2">
-        <svg class="w-4 h-4 text-warning" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            stroke-linecap="round"
-            stroke-linejoin="round"
-            stroke-width="2"
-            d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-          ></path>
-        </svg>
-        إجمالي مستحقات العملاء:
-      </span>
-      <span class="text-xl md:text-2xl font-black text-warning tracking-tight font-mono">
-        {{ formatCurrency(customers.grand_total) }}
-      </span>
-    </div>
-  </AppCard>
+  </article>
 </template>
 
 <script setup>
-import AppCard from '@/components/ui/AppCard.vue'
+import { computed } from 'vue'
+import { UsersIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
 
-defineProps({
+const props = defineProps({
   customers: {
     type: Object,
-    required: true,
     default: () => ({ list: [], grand_total: 0 }),
+  },
+  staggerIndex: {
+    type: Number,
+    default: 12,
   },
 })
 
+const itemsList = computed(() => props.customers?.list || [])
+const grandTotal = computed(() => Number(props.customers?.grand_total) || 0)
+
+const getPercentage = (amount) => {
+  const total = grandTotal.value
+  const val = Number(amount) || 0
+  if (total <= 0 || val <= 0) return 0
+  return Math.min(100, Math.round((val / total) * 100))
+}
+
 const formatCurrency = (value) => {
-  if (value === undefined || value === null) return '0.00'
   return new Intl.NumberFormat('en-US', {
-    style: 'decimal',
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
-  }).format(value)
+  }).format(Number(value) || 0)
 }
 </script>

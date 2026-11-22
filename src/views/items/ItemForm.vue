@@ -537,7 +537,23 @@ const submitForm = async () => {
       resetForm()
     }
   } catch (err) {
-    if (err.response?.status !== 422) {
+    if (err.response?.status === 422) {
+      const nameError = itemStore.validationErrors?.name?.[0]
+      const errorMessage =
+        nameError || itemStore.error || 'عفواً، يرجى مراجعة وتصحيح أخطاء التحقق بالبيانات المدخلة.'
+      toast.error(errorMessage)
+
+      // في حال كان الخطأ متعلقاً باسم الصنف، يتم نقل التركيز والتمرير السلس لحقل الاسم مباشرة
+      if (nameError) {
+        nextTick(() => {
+          const nameInput = document.getElementById('item-name')
+          if (nameInput) {
+            nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' })
+            nameInput.focus()
+          }
+        })
+      }
+    } else {
       toast.error(itemStore.error || 'فشلت معالجة الطلب بسبب خطأ داخلي غير متوقع بالبيانات.')
     }
   }
