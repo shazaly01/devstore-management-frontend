@@ -7,60 +7,106 @@
   >
     <!-- شريط التحكم والتخصيص (مخفي بالكامل أثناء الطباعة) -->
     <div
-      class="no-print w-full max-w-4xl bg-white rounded-xl shadow-md border border-slate-200 p-3 mb-4 flex flex-wrap items-center justify-between gap-3 text-xs"
+      class="no-print w-full max-w-4xl bg-white rounded-xl shadow-sm border border-slate-200 p-3 mb-4 text-xs"
     >
-      <div class="flex items-center gap-4 flex-wrap">
-        <!-- اختيار شكل الترويسة والشعار -->
-        <div class="flex items-center gap-1.5">
-          <label class="font-bold text-slate-700">شكل الترويسة:</label>
-          <select
-            v-model="selectedHeader"
-            @change="savePreferences"
-            class="border border-slate-300 rounded-lg px-2.5 py-1.5 bg-slate-50 text-slate-800 font-bold focus:outline-none focus:border-orange-500"
-          >
-            <option value="side">شعار جانبي (النمط الكلاسيكي)</option>
-            <option value="centered">شعار بالمنتصف (نمط متوازن)</option>
-            <option value="banner">ترويسة كاملة (نمط بانر)</option>
-          </select>
+      <!-- الصف الأول: القوائم الأساسية يميناً وأزرار الطباعة يساراً -->
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-3">
+          <!-- اختيار شكل الترويسة والشعار -->
+          <div class="flex items-center gap-2">
+            <label class="font-bold text-slate-600 whitespace-nowrap">شكل الترويسة:</label>
+            <select
+              v-model="selectedHeader"
+              @change="savePreferences"
+              class="border border-slate-300 rounded-lg px-2.5 py-1.5 bg-slate-50 hover:bg-white text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition cursor-pointer"
+            >
+              <option value="side">شعار جانبي (النمط الكلاسيكي)</option>
+              <option value="centered">شعار بالمنتصف (نمط متوازن)</option>
+              <option value="banner">ترويسة كاملة (نمط بانر)</option>
+              <option value="full-logo">شعار كامل</option>
+            </select>
+          </div>
+
+          <!-- اختيار مقاس الورق -->
+          <div class="flex items-center gap-2">
+            <label class="font-bold text-slate-600 whitespace-nowrap">مقاس الورق:</label>
+            <select
+              v-model="selectedPaperSize"
+              @change="savePreferences"
+              class="border border-slate-300 rounded-lg px-2.5 py-1.5 bg-slate-50 hover:bg-white text-slate-800 font-bold focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition cursor-pointer"
+            >
+              <option value="a4">A4 قياسي (مكتبي)</option>
+              <option value="a5">A5 طولي (مخصص للموبايل والورق الموفر)</option>
+            </select>
+          </div>
         </div>
 
-        <!-- اختيار مقاس الورق -->
-        <div class="flex items-center gap-1.5">
-          <label class="font-bold text-slate-700">مقاس الورق:</label>
-          <select
-            v-model="selectedPaperSize"
-            @change="savePreferences"
-            class="border border-slate-300 rounded-lg px-2.5 py-1.5 bg-slate-50 text-slate-800 font-bold focus:outline-none focus:border-orange-500"
+        <!-- أزرار الإجراءات -->
+        <div class="flex items-center gap-2 mr-auto">
+          <button
+            @click="executePrint"
+            class="flex items-center gap-1.5 px-4 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-bold transition shadow-sm cursor-pointer"
           >
-            <option value="a4">A4 قياسي (مكتبي)</option>
-            <option value="a5">A5 طولي (مخصص للموبايل والورق الموفر)</option>
-          </select>
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
+              />
+            </svg>
+            <span>طباعة الفاتورة</span>
+          </button>
+
+          <button
+            @click="closeWindow"
+            class="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-lg font-bold transition cursor-pointer"
+          >
+            إغلاق
+          </button>
         </div>
       </div>
 
-      <!-- أزرار الإجراءات -->
-      <div class="flex items-center gap-2">
-        <button
-          @click="executePrint"
-          class="flex items-center gap-1 px-4 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg font-bold transition shadow-sm"
+      <!-- الصف الثاني: شريط التحكم بارتفاع الشعار (يظهر فقط عند اختيار شعار كامل) -->
+      <div
+        v-if="selectedHeader === 'full-logo'"
+        class="mt-2.5 pt-2.5 border-t border-slate-100 flex items-center justify-between gap-3 bg-slate-50/80 px-3 py-2 rounded-lg border border-slate-200/70"
+      >
+        <label
+          for="logo-height-slider"
+          class="font-bold text-slate-700 whitespace-nowrap flex items-center gap-1.5"
         >
-          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              stroke-width="2"
-              d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"
-            />
-          </svg>
-          <span>طباعة الفاتورة</span>
-        </button>
+          <span class="w-2 h-2 rounded-full bg-orange-500 inline-block"></span>
+          <span>ارتفاع الشعار:</span>
+        </label>
 
-        <button
-          @click="closeWindow"
-          class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 rounded-lg font-bold transition"
-        >
-          إغلاق
-        </button>
+        <input
+          id="logo-height-slider"
+          type="range"
+          v-model.number="logoHeight"
+          min="50"
+          max="240"
+          step="5"
+          @input="savePreferences"
+          class="flex-1 h-1.5 bg-slate-200 rounded-lg accent-orange-600 cursor-pointer"
+        />
+
+        <div class="flex items-center gap-2 flex-shrink-0">
+          <span
+            dir="ltr"
+            class="font-mono font-bold text-[11px] text-orange-700 bg-orange-50 border border-orange-200 px-2 py-0.5 rounded-md min-w-[52px] text-center"
+          >
+            {{ logoHeight }}px
+          </span>
+          <button
+            type="button"
+            @click="resetLogoHeight"
+            title="إعادة الارتفاع الافتراضي"
+            class="px-2 py-0.5 rounded-md bg-white border border-slate-200 hover:border-orange-300 hover:text-orange-600 text-[11px] font-bold text-slate-600 transition cursor-pointer"
+          >
+            افتراضي
+          </button>
+        </div>
       </div>
     </div>
 
@@ -115,6 +161,7 @@
             :logo="reportLogoUrl"
             :company-name="companyName"
             :paper-size="selectedPaperSize"
+            :logo-height="logoHeight"
           />
 
           <!-- تفاصيل العميل والموظف المعتمد -->
@@ -134,13 +181,18 @@
                     class="font-black text-slate-900 pr-2.5"
                     :class="selectedPaperSize === 'a5' ? 'text-xs' : 'text-sm'"
                   >
-                    {{ currentSale.customer_name || currentSale.customer?.name || '-' }}
-                  </p>
-                  <p
-                    v-if="currentSale.customer_name_text"
-                    class="text-orange-600 font-bold text-[11px] pr-2.5"
-                  >
-                    {{ currentSale.customer_name_text }}
+                    <span>{{
+                      currentSale.customer_name || currentSale.customer?.name || '-'
+                    }}</span>
+                    <template
+                      v-if="
+                        currentSale.customer_name_text &&
+                        String(currentSale.customer_name_text).trim()
+                      "
+                    >
+                      <span class="mx-1 text-slate-700">:</span>
+                      <span>{{ String(currentSale.customer_name_text).trim() }}</span>
+                    </template>
                   </p>
                   <p class="text-slate-500 text-[10px] pr-2.5">
                     الموظف المسؤول: {{ currentSale.user_name || currentSale.user?.name || '-' }}
@@ -252,73 +304,52 @@
           </div>
         </div>
 
-        <!-- التذييل المالي والتوقيعات -->
+        <!-- التذييل المالي -->
         <div>
           <!-- شريط الإجماليات المالية المنسق هندسياً والمحاذى جهة اليسار موازياً لعمود الإجمالي -->
-          <div class="mb-2">
-            <div
-              class="relative bg-gradient-to-r from-orange-50/30 via-white to-slate-50/60 rounded-lg border border-slate-200 border-t-2 border-t-orange-500 border-r-4 border-r-orange-500 shadow-sm flex justify-end items-center text-xs"
-              :class="selectedPaperSize === 'a5' ? 'p-2' : 'p-3'"
-            >
-              <!-- كتلة الإجماليات محاذاة في أقصى اليسار تحت عمود الإجمالي مباشرة -->
-              <div :class="selectedPaperSize === 'a5' ? 'w-48' : 'w-60'" class="space-y-1 text-xs">
-                <!-- المجموع الفرعي -->
-                <div class="flex justify-between items-center px-1">
-                  <span class="text-slate-500 font-bold text-[11px]">المجموع الفرعي:</span>
-                  <span class="font-mono font-bold text-slate-800 text-left">
-                    {{ formatNumber(currentSale.subtotal || 0) }}
-                  </span>
-                </div>
+          <div
+            class="relative bg-gradient-to-r from-orange-50/30 via-white to-slate-50/60 rounded-lg border border-slate-200 border-t-2 border-t-orange-500 border-r-4 border-r-orange-500 shadow-sm flex justify-end items-center text-xs"
+            :class="selectedPaperSize === 'a5' ? 'p-2' : 'p-3'"
+          >
+            <!-- كتلة الإجماليات محاذاة في أقصى اليسار تحت عمود الإجمالي مباشرة -->
+            <div :class="selectedPaperSize === 'a5' ? 'w-48' : 'w-60'" class="space-y-1 text-xs">
+              <!-- المجموع الفرعي -->
+              <div class="flex justify-between items-center px-1">
+                <span class="text-slate-500 font-bold text-[11px]">المجموع الفرعي:</span>
+                <span class="font-mono font-bold text-slate-800 text-left">
+                  {{ formatNumber(currentSale.subtotal || 0) }}
+                </span>
+              </div>
 
-                <!-- الخصم (إن وجد) -->
-                <div class="flex justify-between items-center px-1 text-rose-600">
-                  <span class="font-bold text-[11px]">الخصم:</span>
-                  <span class="font-mono font-bold text-left">
-                    -{{ formatNumber(currentSale.discount_amount || 0) }}
-                  </span>
-                </div>
+              <!-- الخصم (إن وجد) -->
+              <div class="flex justify-between items-center px-1 text-rose-600">
+                <span class="font-bold text-[11px]">الخصم:</span>
+                <span class="font-mono font-bold text-left">
+                  -{{ formatNumber(currentSale.discount_amount || 0) }}
+                </span>
+              </div>
 
-                <!-- الضريبة (إن وجدت) -->
-                <div class="flex justify-between items-center px-1 text-blue-600">
-                  <span class="font-bold text-[11px]">الضريبة:</span>
-                  <span class="font-mono font-bold text-left">
-                    {{ formatNumber(currentSale.tax_amount || 0) }}
-                  </span>
-                </div>
+              <!-- الضريبة (إن وجدت) -->
+              <div class="flex justify-between items-center px-1 text-blue-600">
+                <span class="font-bold text-[11px]">الضريبة:</span>
+                <span class="font-mono font-bold text-left">
+                  {{ formatNumber(currentSale.tax_amount || 0) }}
+                </span>
+              </div>
 
-                <!-- الصافي الفعلي النهائي -->
+              <!-- الصافي الفعلي النهائي -->
+              <div
+                class="flex justify-between items-center bg-orange-500 text-white rounded-md px-2.5 py-1.5 shadow-sm mt-1"
+              >
+                <span class="font-black text-xs">الصافي الفعلي:</span>
                 <div
-                  class="flex justify-between items-center bg-orange-500 text-white rounded-md px-2.5 py-1.5 shadow-sm mt-1"
+                  class="flex items-center gap-1 font-mono font-black"
+                  :class="selectedPaperSize === 'a5' ? 'text-xs' : 'text-sm'"
                 >
-                  <span class="font-black text-xs">الصافي الفعلي:</span>
-                  <div
-                    class="flex items-center gap-1 font-mono font-black"
-                    :class="selectedPaperSize === 'a5' ? 'text-xs' : 'text-sm'"
-                  >
-                    <span>{{ formatNumber(currentSale.grand_total || 0) }}</span>
-                    <span class="font-sans font-bold text-[10px] text-orange-100">جنيه</span>
-                  </div>
+                  <span>{{ formatNumber(currentSale.grand_total || 0) }}</span>
+                  <span class="font-sans font-bold text-[10px] text-orange-100">جنيه</span>
                 </div>
               </div>
-            </div>
-          </div>
-
-          <!-- التوقيعات الرسمية -->
-          <div
-            class="grid grid-cols-3 gap-3 text-center text-xs text-slate-500"
-            :class="selectedPaperSize === 'a5' ? 'py-2' : 'py-4'"
-          >
-            <div>
-              <p class="font-bold text-slate-700 text-[11px]">توقيع المنشئ</p>
-              <div class="border-b border-dashed border-slate-300 mx-auto w-20 pt-3"></div>
-            </div>
-            <div>
-              <p class="font-bold text-slate-700 text-[11px]">توقيع المحاسب</p>
-              <div class="border-b border-dashed border-slate-300 mx-auto w-20 pt-3"></div>
-            </div>
-            <div>
-              <p class="font-bold text-slate-700 text-[11px]">توقيع المستلم</p>
-              <div class="border-b border-dashed border-slate-300 mx-auto w-20 pt-3"></div>
             </div>
           </div>
         </div>
@@ -337,6 +368,7 @@ import { storeToRefs } from 'pinia'
 import HeaderSideLogo from './headers/HeaderSideLogo.vue'
 import HeaderCenteredLogo from './headers/HeaderCenteredLogo.vue'
 import HeaderFullBanner from './headers/HeaderFullBanner.vue'
+import HeaderFullLogo from './headers/HeaderFullLogo.vue'
 
 const route = useRoute()
 const saleStore = useSaleStore()
@@ -349,9 +381,12 @@ const companyName = import.meta.env.VITE_COMPANY_NAME || ''
 // التفضيلات المحلية المحفوظة
 const STORAGE_KEY_HEADER = 'panda_invoice_header_layout'
 const STORAGE_KEY_PAPER = 'panda_invoice_paper_size'
+const STORAGE_KEY_LOGO_HEIGHT = 'panda_invoice_logo_height'
+const DEFAULT_LOGO_HEIGHT = 110
 
 const selectedHeader = ref('side')
 const selectedPaperSize = ref('a4')
+const logoHeight = ref(DEFAULT_LOGO_HEIGHT)
 
 // دالة تنسيق الأرقام بدون كتابة العملة
 const formatNumber = (value) => {
@@ -371,22 +406,37 @@ const activeHeaderComponent = computed(() => {
       return HeaderCenteredLogo
     case 'banner':
       return HeaderFullBanner
+    case 'full-logo':
+      return HeaderFullLogo
     case 'side':
     default:
       return HeaderSideLogo
   }
 })
 
+const resetLogoHeight = () => {
+  logoHeight.value = DEFAULT_LOGO_HEIGHT
+  savePreferences()
+}
+
 const savePreferences = () => {
   localStorage.setItem(STORAGE_KEY_HEADER, selectedHeader.value)
   localStorage.setItem(STORAGE_KEY_PAPER, selectedPaperSize.value)
+  localStorage.setItem(STORAGE_KEY_LOGO_HEIGHT, String(logoHeight.value))
 }
 
 const loadPreferences = () => {
   const savedHeader = localStorage.getItem(STORAGE_KEY_HEADER)
   const savedPaper = localStorage.getItem(STORAGE_KEY_PAPER)
+  const savedLogoHeight = localStorage.getItem(STORAGE_KEY_LOGO_HEIGHT)
   if (savedHeader) selectedHeader.value = savedHeader
   if (savedPaper) selectedPaperSize.value = savedPaper
+  if (savedLogoHeight !== null) {
+    const parsed = Number(savedLogoHeight)
+    if (!isNaN(parsed) && parsed >= 50 && parsed <= 240) {
+      logoHeight.value = parsed
+    }
+  }
 }
 
 const executePrint = () => {
